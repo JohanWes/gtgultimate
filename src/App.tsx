@@ -37,10 +37,10 @@ function App() {
           </button>
           <button
             onClick={() => setMode('arcade')}
-            className={`px-4 py-2 rounded-md text-sm font-bold transition-colors ${mode === 'arcade' ? 'bg-purple-600 text-white' : 'text-gray-400 hover:text-white'
+            className={`px-4 py-2 rounded-md text-sm font-bold transition-colors ${mode === 'arcade' ? 'bg-slate-600 text-white' : 'text-gray-400 hover:text-white'
               }`}
           >
-            Arcade (Roguelike)
+            Endless
           </button>
         </div>
       </div>

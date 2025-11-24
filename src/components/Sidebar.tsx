@@ -1,6 +1,7 @@
 
 import { CheckCircle, XCircle, Circle, Trophy } from 'lucide-react';
 import { clsx } from 'clsx';
+import gtgLogo from '../assets/gtgultimate.jpg';
 import type { LevelProgress } from '../types';
 
 interface SidebarProps {
@@ -33,11 +34,9 @@ export function Sidebar({ totalLevels, currentLevel, progress, onSelectLevel, is
                 "fixed md:sticky md:top-0 md:h-screen inset-y-0 left-0 z-50 w-64 bg-surface border-r border-white/10 transform transition-transform duration-300 ease-in-out md:transform-none flex flex-col",
                 isOpen ? "translate-x-0" : "-translate-x-full"
             )}>
-                <div className="px-4 py-3 border-b border-white/10 flex-shrink-0">
-                    <h1 className="text-xl font-bold bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
-                        GuessTheGame
-                    </h1>
-                    <div className="mt-2 flex items-center gap-2 text-xs text-muted">
+                <div className="px-4 py-3 border-b border-white/10 flex-shrink-0 flex flex-col gap-3">
+                    <img src={gtgLogo} alt="GuessTheGame" className="w-full h-auto rounded-md" />
+                    <div className="flex items-center gap-2 text-xs text-muted">
                         <Trophy size={14} className="text-yellow-500" />
                         <span>{completedCount} / {totalLevels} Completed</span>
                     </div>

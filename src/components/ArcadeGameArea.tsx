@@ -361,13 +361,13 @@ export const ArcadeGameArea: React.FC<ArcadeGameAreaProps> = ({
                                 className={clsx(
                                     "w-full py-3 px-4 rounded-lg font-bold transition-all border flex items-center justify-between group",
                                     state.lifelines.consultant && state.status === 'playing' && !doubleTroubleGame
-                                        ? 'bg-gray-800 border-purple-500/30 text-purple-400 hover:bg-gray-750 hover:border-purple-500/50'
+                                        ? 'bg-gray-800 border-slate-500/30 text-slate-400 hover:bg-gray-750 hover:border-slate-500/50'
                                         : 'bg-gray-900/50 border-gray-800 text-gray-600 cursor-not-allowed',
                                     animatingButton === 'consultant' && 'animate-lifeline-pop'
                                 )}
                             >
                                 <span className="text-sm">Consultant</span>
-                                <span className={`text-xs px-1.5 py-0.5 rounded ${state.lifelines.consultant ? 'bg-purple-500/20 text-purple-300' : 'bg-gray-800 text-gray-600'}`}>
+                                <span className={`text-xs px-1.5 py-0.5 rounded ${state.lifelines.consultant ? 'bg-slate-500/20 text-slate-300' : 'bg-gray-800 text-gray-600'}`}>
                                     {state.lifelines.consultant ? '1' : '0'}
                                 </span>
                             </button>

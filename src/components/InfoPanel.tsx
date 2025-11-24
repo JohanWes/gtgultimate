@@ -25,7 +25,7 @@ export function InfoPanel({ game, guessesMade, status }: InfoPanelProps) {
             value: game.platform,
             icon: Monitor,
             revealed: showAll || guessesMade >= 2,
-            color: 'text-purple-400'
+            color: 'text-slate-400'
         },
         {
             label: 'Genre',

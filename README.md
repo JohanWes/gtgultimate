@@ -1,8 +1,8 @@
-# Guess the Game
+# GuessTheGameUltimate
 
-**Test your gaming knowledge in this screenshot-based guessing game!** Identify video games from progressively revealing screenshots and metadata. Choose your challenge: play casually through 995 curated levels in **Standard Mode**, or test your skills in the high-stakes **Arcade Mode** roguelike with lifelines, permadeath, and a scoring system.
+**Test your gaming knowledge in this screenshot-based guessing game!** Identify video games from progressively revealing screenshots and metadata. Choose your challenge: play casually through 995 curated levels in **Standard Mode**, or test your skills in the high-stakes **Endless Mode** with lifelines, permadeath, and a scoring system.
 
-![Game Modes](https://img.shields.io/badge/Game%20Modes-Standard%20%7C%20Arcade-blue) ![Games](https://img.shields.io/badge/Games-995-green) ![Built With](https://img.shields.io/badge/Built%20With-React%20%2B%20TypeScript-61dafb)
+![Game Modes](https://img.shields.io/badge/Game%20Modes-Standard%20%7C%20Endless-blue) ![Games](https://img.shields.io/badge/Games-995-green) ![Built With](https://img.shields.io/badge/Built%20With-React%20%2B%20TypeScript-61dafb)
 
 ---
 
@@ -16,8 +16,8 @@
 - **Skip button** — No penalty, just moves to the next clue
 - **No pressure** — Take your time, replay any level
 
-### Arcade Mode (Roguelike)
-**High-stakes challenge mode** — One run, one life, permadeath.
+### Endless Mode 🔥
+**High-stakes challenge mode** — One run, one life, permadeath. How far can you go?
 
 - **Permadeath** — 5 wrong guesses and it's game over
 - **Scoring system** — Earn 5/3/2/1 points based on how many guesses you needed (5 points for first guess, 0 for wrong answer)
@@ -179,11 +179,11 @@ The database is pre-built and bundled with the app — no runtime API calls need
 
 ## How to Play
 
-1. **Choose your mode** — Standard for casual play, Arcade for challenge
+1. **Choose your mode** — Standard for casual play, Endless for challenge
 2. **Guess the game** — Type in the search box (fuzzy search enabled!)
 3. **Wrong guess?** — Another screenshot and clue unlock
 4. **Win or lose after 5 guesses** — Move to the next level
-5. **In Arcade:** Use lifelines strategically, spend points wisely in the shop!
+5. **In Endless:** Use lifelines strategically, spend points wisely in the shop!
 
 ---
 
