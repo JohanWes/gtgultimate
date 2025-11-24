@@ -37770,5 +37770,233 @@
         "y": 58
       }
     ]
+  },
+  {
+    "id": 4786,
+    "name": "The Evil Within",
+    "year": 2014,
+    "platform": "PlayStation 3",
+    "genre": "Shooter",
+    "rating": 75,
+    "screenshots": [
+      "https://images.igdb.com/igdb/image/upload/t_720p/vijpv4dvt06fsimepmc0.jpg",
+      "https://images.igdb.com/igdb/image/upload/t_720p/yl1heuwq3kk2szoh5nwk.jpg",
+      "https://images.igdb.com/igdb/image/upload/t_720p/n7koht6e3j6nooarwxej.jpg",
+      "https://images.igdb.com/igdb/image/upload/t_720p/gal6crdb4gj3dzc5zahq.jpg",
+      "https://images.igdb.com/igdb/image/upload/t_720p/gnajbm5mhsnbdqtozbia.jpg"
+    ],
+    "cover": "https://images.igdb.com/igdb/image/upload/t_cover_big/co5wgs.jpg",
+    "cropPositions": [
+      {
+        "x": 46,
+        "y": 37
+      },
+      {
+        "x": 34,
+        "y": 73
+      },
+      {
+        "x": 70,
+        "y": 3
+      },
+      {
+        "x": 71,
+        "y": 32
+      },
+      {
+        "x": 85,
+        "y": 73
+      }
+    ]
+  },
+  {
+    "id": 111,
+    "name": "Amnesia: The Dark Descent",
+    "year": 2010,
+    "platform": "PlayStation 4",
+    "genre": "Puzzle",
+    "rating": 89,
+    "screenshots": [
+      "https://images.igdb.com/igdb/image/upload/t_720p/l2d3w5bt2mfpwxp84xs0.jpg",
+      "https://images.igdb.com/igdb/image/upload/t_720p/cwjli17pk0x9qk4af1dc.jpg",
+      "https://images.igdb.com/igdb/image/upload/t_720p/xvuh525qyxihrn8bnru0.jpg",
+      "https://images.igdb.com/igdb/image/upload/t_720p/wad51g1rxhpwmkmbzyoi.jpg",
+      "https://images.igdb.com/igdb/image/upload/t_720p/gyyicpkwuffdypssnuc2.jpg"
+    ],
+    "cover": "https://images.igdb.com/igdb/image/upload/t_cover_big/co1qq5.jpg",
+    "cropPositions": [
+      {
+        "x": 15,
+        "y": 79
+      },
+      {
+        "x": 68,
+        "y": 90
+      },
+      {
+        "x": 7,
+        "y": 88
+      },
+      {
+        "x": 52,
+        "y": 5
+      },
+      {
+        "x": 60,
+        "y": 98
+      }
+    ]
+  },
+  {
+    "id": 1910,
+    "name": "Outlast",
+    "year": 2013,
+    "platform": "PlayStation 4",
+    "genre": "Adventure",
+    "rating": 77,
+    "screenshots": [
+      "https://images.igdb.com/igdb/image/upload/t_720p/ttchmblgwxki9el4eptq.jpg",
+      "https://images.igdb.com/igdb/image/upload/t_720p/cd3kd3uqohq7cnjmeqpi.jpg",
+      "https://images.igdb.com/igdb/image/upload/t_720p/bkr3mqgzalcpzo259ahm.jpg",
+      "https://images.igdb.com/igdb/image/upload/t_720p/sc6e8v.jpg",
+      "https://images.igdb.com/igdb/image/upload/t_720p/sc6e8w.jpg"
+    ],
+    "cover": "https://images.igdb.com/igdb/image/upload/t_cover_big/co1yat.jpg",
+    "cropPositions": [
+      {
+        "x": 65,
+        "y": 18
+      },
+      {
+        "x": 94,
+        "y": 99
+      },
+      {
+        "x": 2,
+        "y": 77
+      },
+      {
+        "x": 79,
+        "y": 36
+      },
+      {
+        "x": 55,
+        "y": 60
+      }
+    ]
+  },
+  {
+    "id": 142813,
+    "name": "Resident Evil Village & Resident Evil 7 Complete Bundle",
+    "year": 2021,
+    "platform": "Xbox Series X|S",
+    "genre": "Shooter",
+    "rating": 0,
+    "screenshots": [
+      "https://images.igdb.com/igdb/image/upload/t_720p/sc8zry.jpg",
+      "https://images.igdb.com/igdb/image/upload/t_720p/sc8zrz.jpg",
+      "https://images.igdb.com/igdb/image/upload/t_720p/sc8zs0.jpg",
+      "https://images.igdb.com/igdb/image/upload/t_720p/sc8zs1.jpg",
+      "https://images.igdb.com/igdb/image/upload/t_720p/sc8zs2.jpg"
+    ],
+    "cover": "https://images.igdb.com/igdb/image/upload/t_cover_big/co2oyw.jpg",
+    "cropPositions": [
+      {
+        "x": 28,
+        "y": 70
+      },
+      {
+        "x": 85,
+        "y": 28
+      },
+      {
+        "x": 19,
+        "y": 43
+      },
+      {
+        "x": 79,
+        "y": 28
+      },
+      {
+        "x": 48,
+        "y": 0
+      }
+    ]
+  },
+  {
+    "id": 51149,
+    "name": "Fatal Frame: Maiden of Black Water",
+    "year": 2014,
+    "platform": "Wii U",
+    "genre": "Puzzle",
+    "rating": 61,
+    "screenshots": [
+      "https://images.igdb.com/igdb/image/upload/t_720p/q95psgu29xpvvxyjnmmg.jpg",
+      "https://images.igdb.com/igdb/image/upload/t_720p/xqstceuwodwgdv35n2xu.jpg",
+      "https://images.igdb.com/igdb/image/upload/t_720p/vlf6sx5xmni6kgxf4eif.jpg",
+      "https://images.igdb.com/igdb/image/upload/t_720p/vlpe149l2ywgapmwsa8o.jpg",
+      "https://images.igdb.com/igdb/image/upload/t_720p/gs9hozp9gyo54npdaya5.jpg"
+    ],
+    "cover": "https://images.igdb.com/igdb/image/upload/t_cover_big/co2zcv.jpg",
+    "cropPositions": [
+      {
+        "x": 86,
+        "y": 9
+      },
+      {
+        "x": 73,
+        "y": 74
+      },
+      {
+        "x": 26,
+        "y": 71
+      },
+      {
+        "x": 16,
+        "y": 20
+      },
+      {
+        "x": 86,
+        "y": 23
+      }
+    ]
+  },
+  {
+    "id": 847,
+    "name": "Resident Evil 5",
+    "year": 2009,
+    "platform": "PlayStation 3",
+    "genre": "Shooter",
+    "rating": 78,
+    "screenshots": [
+      "https://images.igdb.com/igdb/image/upload/t_720p/sc6sy4.jpg",
+      "https://images.igdb.com/igdb/image/upload/t_720p/sc6sy6.jpg",
+      "https://images.igdb.com/igdb/image/upload/t_720p/sc6sy3.jpg",
+      "https://images.igdb.com/igdb/image/upload/t_720p/sc6sy5.jpg",
+      "https://images.igdb.com/igdb/image/upload/t_720p/sc6sy7.jpg"
+    ],
+    "cover": "https://images.igdb.com/igdb/image/upload/t_cover_big/co2vzi.jpg",
+    "cropPositions": [
+      {
+        "x": 26,
+        "y": 43
+      },
+      {
+        "x": 67,
+        "y": 90
+      },
+      {
+        "x": 18,
+        "y": 78
+      },
+      {
+        "x": 76,
+        "y": 30
+      },
+      {
+        "x": 52,
+        "y": 80
+      }
+    ]
   }
 ]
