@@ -6,7 +6,7 @@
 
 ---
 
-## 🎮 Game Modes
+## Game Modes
 
 ### Standard Mode
 **Casual level-by-level progression** — Work through 995 games at your own pace with full freedom to jump between levels.
@@ -16,8 +16,8 @@
 - **Skip button** — No penalty, just moves to the next clue
 - **No pressure** — Take your time, replay any level
 
-### Arcade Mode (Roguelike) 🔥
-**High-stakes challenge mode** — One run, one life, permadeath. How far can you go?
+### Arcade Mode (Roguelike)
+**High-stakes challenge mode** — One run, one life, permadeath.
 
 - **Permadeath** — 5 wrong guesses and it's game over
 - **Scoring system** — Earn 5/3/2/1 points based on how many guesses you needed (5 points for first guess, 0 for wrong answer)
@@ -32,7 +32,7 @@
 
 ---
 
-## 🚀 Quick Start
+## Quick Start
 
 ### Option 1: Docker Deployment (Recommended for Unraid/Servers)
 
@@ -140,7 +140,7 @@ For development or local testing without Docker.
 
 ---
 
-## 🎯 Features
+## Features
 
 - **995 curated games** from IGDB (Internet Game Database)
 - **Smart search** with fuzzy matching — Type "wild hunt" to find "The Witcher 3: Wild Hunt", or "botw" for "Breath of the Wild"
@@ -153,7 +153,7 @@ For development or local testing without Docker.
 
 ---
 
-## 🛠️ Tech Stack
+## Tech Stack
 
 - **Frontend:** React 19 + TypeScript
 - **Build Tool:** Vite
@@ -164,7 +164,7 @@ For development or local testing without Docker.
 
 ---
 
-## 📊 Game Database
+## Game Database
 
 The game list is curated from IGDB with quality filters:
 - **Popularity:** rating_count > 100
@@ -177,7 +177,7 @@ The database is pre-built and bundled with the app — no runtime API calls need
 
 ---
 
-## 🎲 How to Play
+## How to Play
 
 1. **Choose your mode** — Standard for casual play, Arcade for challenge
 2. **Guess the game** — Type in the search box (fuzzy search enabled!)
@@ -192,8 +192,3 @@ The database is pre-built and bundled with the app — no runtime API calls need
 This project is for personal/family use. Game data and screenshots sourced from IGDB.
 
 ---
-
-## 🙏 Credits
-
-- Game data from [IGDB (Internet Game Database)](https://www.igdb.com/)
-- Built with [React](https://react.dev/) + [Vite](https://vitejs.dev/) + [Tailwind CSS](https://tailwindcss.com/)
