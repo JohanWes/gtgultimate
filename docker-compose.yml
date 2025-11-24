@@ -1,0 +1,17 @@
+version: '3.8'
+
+services:
+  guessthegame:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        - VITE_IGDB_CLIENT_ID=${VITE_IGDB_CLIENT_ID}
+        - VITE_IGDB_CLIENT_SECRET=${VITE_IGDB_CLIENT_SECRET}
+        - VITE_PORT=${VITE_PORT:-5173}
+    container_name: guessthegame-app
+    ports:
+      - "${VITE_PORT:-5173}:80"
+    restart: unless-stopped
+    environment:
+      - NODE_ENV=production
