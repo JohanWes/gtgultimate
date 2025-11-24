@@ -12,6 +12,16 @@ function getSeriesName(gameName: string): string {
         .trim();
 }
 
+// Proper Fisher-Yates shuffle algorithm (unbiased)
+function shuffleArray<T>(array: T[]): T[] {
+    const result = [...array];
+    for (let i = result.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [result[i], result[j]] = [result[j], result[i]];
+    }
+    return result;
+}
+
 const STORAGE_KEY = 'guessthegame_arcade_state';
 const HIGH_SCORE_KEY = 'guessthegame_arcade_highscore';
 
@@ -44,7 +54,7 @@ export const useArcadeState = (allGames: Game[]) => {
 
         // Ensure high score is up to date
         if (savedHighScore) {
-            parsedState.highScore = Math.max(parsedState.highScore, parseInt(savedHighScore, 10));
+            parsedState.highScore = Math.max(parsedState.highScore, Number.parseInt(savedHighScore, 10));
         }
 
         return parsedState;
@@ -53,7 +63,7 @@ export const useArcadeState = (allGames: Game[]) => {
     // Initialize game order if empty
     useEffect(() => {
         if (state.gameOrder.length === 0 && allGames.length > 0) {
-            const shuffledIds = [...allGames].sort(() => 0.5 - Math.random()).map(g => g.id);
+            const shuffledIds = shuffleArray(allGames).map(g => g.id);
             setState(prev => ({ ...prev, gameOrder: shuffledIds }));
         }
     }, [allGames, state.gameOrder.length]);
@@ -137,8 +147,8 @@ export const useArcadeState = (allGames: Game[]) => {
 
     const nextLevel = useCallback(() => {
         if (state.isGameOver) {
-            // Reset run
-            const shuffledIds = [...allGames].sort(() => 0.5 - Math.random()).map(g => g.id);
+            // Reset run with a fresh shuffled game order
+            const shuffledIds = shuffleArray(allGames).map(g => g.id);
             setState({
                 ...INITIAL_STATE,
                 highScore: state.highScore,

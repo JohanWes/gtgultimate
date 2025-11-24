@@ -39,35 +39,35 @@ export const getShopItems = (): ShopItem[] => [
         id: 'safety_first',
         name: 'Safety First',
         description: 'Refill "Skip" Lifeline',
-        cost: 20,
+        cost: 5,
         type: 'refill_skip'
     },
     {
         id: 'utility_anagram',
         name: 'Anagram',
         description: 'Refill "Anagram" Lifeline',
-        cost: 10,
+        cost: 2,
         type: 'refill_anagram'
     },
     {
         id: 'utility_consultant',
         name: 'Consultant',
         description: 'Refill "Consultant" Lifeline',
-        cost: 10,
+        cost: 3,
         type: 'refill_consultant'
     },
     {
         id: 'utility_double_trouble',
         name: 'Double Trouble',
         description: 'Refill "Double Trouble" Lifeline',
-        cost: 5,
+        cost: 1,
         type: 'refill_double_trouble'
     },
     {
         id: 'utility_zoom_out',
         name: 'Zoom Out',
         description: 'Refill "Zoom Out" Lifeline',
-        cost: 5,
+        cost: 2,
         type: 'refill_zoom_out'
     },
     {

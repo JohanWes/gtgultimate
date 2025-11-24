@@ -13,11 +13,13 @@ interface SearchInputProps {
 }
 
 export function SearchInput({ games, onGuess, disabled }: SearchInputProps) {
-    const [query, setQuery] = useState('');
+    const [searchQuery, setSearchQuery] = useState('');
+    const [displayValue, setDisplayValue] = useState('');
     const [isOpen, setIsOpen] = useState(false);
     const [selectedIndex, setSelectedIndex] = useState(0);
     const inputRef = useRef<HTMLInputElement>(null);
     const listRef = useRef<HTMLUListElement>(null);
+    const skipNextFocus = useRef(false);
 
     // Initialize both search indexes
     useMemo(() => {
@@ -28,9 +30,9 @@ export function SearchInput({ games, onGuess, disabled }: SearchInputProps) {
     }, [games]);
 
     const results = useMemo(() => {
-        if (!query) return [];
-        const allResults = searchCombined(query);
-        
+        if (!searchQuery) return [];
+        const allResults = searchCombined(searchQuery);
+
         // Deduplicate by name (case-insensitive)
         const seen = new Set<string>();
         return allResults.filter(result => {
@@ -41,41 +43,66 @@ export function SearchInput({ games, onGuess, disabled }: SearchInputProps) {
             seen.add(lowerName);
             return true;
         });
-    }, [query]);
+    }, [searchQuery]);
 
     useEffect(() => {
         setSelectedIndex(0);
     }, [results]);
+
+    useEffect(() => {
+        if (isOpen && listRef.current) {
+            const selectedElement = listRef.current.children[selectedIndex] as HTMLElement;
+            if (selectedElement) {
+                selectedElement.scrollIntoView({ block: 'nearest' });
+            }
+        }
+    }, [selectedIndex, isOpen]);
 
     const handleSubmit = (e?: React.FormEvent) => {
         e?.preventDefault();
         if (disabled) return;
 
         if (results.length > 0 && isOpen) {
-            handleSelect(results[selectedIndex].name);
-        } else if (query) {
+            submitGuess(results[selectedIndex].name);
+        } else if (displayValue) {
             // If exact match exists in database, allow it, otherwise ignore
-            const exactMatch = games.find(g => g.name.toLowerCase() === query.toLowerCase());
+            const exactMatch = games.find(g => g.name.toLowerCase() === displayValue.toLowerCase());
             if (exactMatch) {
-                handleSelect(exactMatch.name);
+                submitGuess(exactMatch.name);
             }
         }
     };
 
-    const handleSelect = (name: string) => {
+    const submitGuess = (name: string) => {
         onGuess(name);
-        setQuery('');
+        setSearchQuery('');
+        setDisplayValue('');
         setIsOpen(false);
-        inputRef.current?.blur();
+    };
+
+    const fillQuery = (name: string) => {
+        setSearchQuery(name);
+        setDisplayValue(name);
+        setIsOpen(false);
+        skipNextFocus.current = true;
+        inputRef.current?.focus();
     };
 
     const handleKeyDown = (e: React.KeyboardEvent) => {
         if (e.key === 'ArrowDown') {
             e.preventDefault();
-            setSelectedIndex(prev => (prev + 1) % results.length);
+            const nextIndex = (selectedIndex + 1) % results.length;
+            setSelectedIndex(nextIndex);
+            if (results[nextIndex]) {
+                setDisplayValue(results[nextIndex].name);
+            }
         } else if (e.key === 'ArrowUp') {
             e.preventDefault();
-            setSelectedIndex(prev => (prev - 1 + results.length) % results.length);
+            const prevIndex = (selectedIndex - 1 + results.length) % results.length;
+            setSelectedIndex(prevIndex);
+            if (results[prevIndex]) {
+                setDisplayValue(results[prevIndex].name);
+            }
         } else if (e.key === 'Escape') {
             setIsOpen(false);
         }
@@ -91,12 +118,21 @@ export function SearchInput({ games, onGuess, disabled }: SearchInputProps) {
                     <input
                         ref={inputRef}
                         type="text"
-                        value={query}
+                        value={displayValue}
                         onChange={e => {
-                            setQuery(e.target.value);
+                            const val = e.target.value;
+                            setSearchQuery(val);
+                            setDisplayValue(val);
                             setIsOpen(true);
                         }}
-                        onFocus={() => setIsOpen(true)}
+                        onFocus={() => {
+                            if (skipNextFocus.current) {
+                                skipNextFocus.current = false;
+                                return;
+                            }
+                            setIsOpen(true);
+                        }}
+                        onClick={() => setIsOpen(true)}
                         onKeyDown={handleKeyDown}
                         disabled={disabled}
                         placeholder={disabled ? "Game Over" : "Type to search for a game..."}
@@ -104,7 +140,7 @@ export function SearchInput({ games, onGuess, disabled }: SearchInputProps) {
                     />
                     <button
                         type="submit"
-                        disabled={disabled || !query}
+                        disabled={disabled || !displayValue}
                         className="absolute inset-y-0 right-0 pr-3 flex items-center text-muted hover:text-white disabled:opacity-50 transition-colors"
                     >
                         <Send size={18} />
@@ -122,11 +158,11 @@ export function SearchInput({ games, onGuess, disabled }: SearchInputProps) {
                         const buttonClass = isSelected
                             ? "bg-primary/20 text-white"
                             : "text-muted hover:bg-white/5 hover:text-white";
-                        
+
                         return (
                             <li key={game.id}>
                                 <button
-                                    onClick={() => handleSelect(game.name)}
+                                    onClick={() => fillQuery(game.name)}
                                     className={clsx(
                                         "w-full text-left px-3 py-2 flex items-center justify-between transition-colors text-sm",
                                         buttonClass

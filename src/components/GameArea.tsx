@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { InfoPanel } from './InfoPanel';
 import { SearchInput } from './SearchInput';
 import { ScreenshotViewer } from './ScreenshotViewer';
@@ -20,6 +20,18 @@ interface GameAreaProps {
 export function GameArea({ game, allGames, guesses, status, allProgress, onGuess, onSkip, onNextLevel }: GameAreaProps) {
     const revealedCount = status === 'playing' ? guesses.length + 1 : 5;
     const [errorMessage, setErrorMessage] = useState<string | null>(null);
+    const [sameSeriesMessage, setSameSeriesMessage] = useState<boolean>(false);
+
+    // Detect same series guess
+    useEffect(() => {
+        if (guesses.length > 0) {
+            const lastGuess = guesses[guesses.length - 1];
+            if (lastGuess.result === 'same-series') {
+                setSameSeriesMessage(true);
+                setTimeout(() => setSameSeriesMessage(false), 2000);
+            }
+        }
+    }, [guesses]);
 
     const handleGuess = (name: string) => {
         const guessedGame = allGames.find(g => g.name === name);
@@ -61,6 +73,14 @@ export function GameArea({ game, allGames, guesses, status, allProgress, onGuess
                             >
                                 SKIP
                             </button>
+                        )}
+                        {sameSeriesMessage && (
+                            <div className="absolute top-4 left-0 right-0 flex justify-center pointer-events-none z-50">
+                                <div className="bg-warning text-black px-4 py-2 rounded-full shadow-lg font-bold animate-in fade-in slide-in-from-bottom-2 border border-yellow-500 flex items-center gap-2">
+                                    <AlertCircle size={18} />
+                                    <span>Same Series!</span>
+                                </div>
+                            </div>
                         )}
                     </div>
                 </div>

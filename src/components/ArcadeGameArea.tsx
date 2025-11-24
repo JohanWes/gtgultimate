@@ -7,6 +7,8 @@ import { SearchInput } from './SearchInput';
 import { ScreenshotViewer } from './ScreenshotViewer';
 import { InfoPanel } from './InfoPanel';
 import { ConsultantOptions, type ConsultantOptionsHandle } from './ConsultantOptions';
+import { HighScoreModal } from './HighScoreModal';
+import { TopScoresTicker } from './TopScoresTicker';
 import { clsx } from 'clsx';
 import { AlertCircle, X, ArrowRight } from 'lucide-react';
 
@@ -39,6 +41,19 @@ export const ArcadeGameArea: React.FC<ArcadeGameAreaProps> = ({
 
     // Animation states
     const [animatingButton, setAnimatingButton] = useState<LifelineType | null>(null);
+    const [errorMessage, setErrorMessage] = useState<string | null>(null);
+    const [sameSeriesMessage, setSameSeriesMessage] = useState<boolean>(false);
+
+    // Detect same series guess
+    useEffect(() => {
+        if (state.guesses.length > 0) {
+            const lastGuess = state.guesses[state.guesses.length - 1];
+            if (lastGuess.result === 'same-series') {
+                setSameSeriesMessage(true);
+                setTimeout(() => setSameSeriesMessage(false), 2000);
+            }
+        }
+    }, [state.guesses]);
 
     // Generate random crop positions for this level
     // We use useMemo to keep them stable during the level, but regenerate when game.id changes
@@ -98,8 +113,6 @@ export const ArcadeGameArea: React.FC<ArcadeGameAreaProps> = ({
         onUseLifeline(type);
     };
 
-    const [errorMessage, setErrorMessage] = useState<string | null>(null);
-
     const handleSearchInputGuess = (name: string) => {
         const guessedGame = allGames.find(g => g.name === name);
         if (guessedGame) {
@@ -154,6 +167,18 @@ export const ArcadeGameArea: React.FC<ArcadeGameAreaProps> = ({
         );
     }
 
+    if (state.isGameOver) {
+        return (
+            <HighScoreModal
+                score={state.score}
+                onPlayAgain={() => {
+                    consultantRef.current?.stopSounds();
+                    onNextLevel(); // This triggers reset/restart in parent
+                }}
+            />
+        );
+    }
+
     const revealedCount = state.status === 'playing' ? state.guesses.length + 1 : 5;
 
     return (
@@ -188,6 +213,16 @@ export const ArcadeGameArea: React.FC<ArcadeGameAreaProps> = ({
                                 <span className="bg-black/70 text-yellow-300 px-4 py-2 rounded-full text-lg font-mono tracking-widest border border-yellow-500/30 shadow-lg backdrop-blur-sm animate-lifeline-shake">
                                     {anagramHint}
                                 </span>
+                            </div>
+                        )}
+
+                        {/* Same Series Popup */}
+                        {sameSeriesMessage && (
+                            <div className="absolute top-4 left-0 right-0 flex justify-center pointer-events-none z-50">
+                                <div className="bg-yellow-500 text-black px-4 py-2 rounded-full shadow-lg font-bold animate-in fade-in slide-in-from-bottom-2 border border-yellow-400 flex items-center gap-2">
+                                    <AlertCircle size={18} />
+                                    <span>Same Series!</span>
+                                </div>
                             </div>
                         )}
                     </div>
@@ -289,6 +324,9 @@ export const ArcadeGameArea: React.FC<ArcadeGameAreaProps> = ({
 
                 {/* Right Column: Sidebar (HUD + Info + Lifelines) */}
                 <div className="lg:w-72 w-full flex-shrink-0 flex flex-col gap-3">
+                    {/* Top Scores Ticker */}
+                    <TopScoresTicker />
+
                     {/* HUD Card */}
                     <div className="bg-gray-800/50 p-4 rounded-xl backdrop-blur-sm border border-gray-700 shadow-lg">
                         <div className="grid grid-cols-3 gap-2 text-center">

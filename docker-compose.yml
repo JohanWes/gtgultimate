@@ -1,17 +1,37 @@
 version: '3.8'
 
+networks:
+  proxynet:
+    name: proxynet
+    external: true
+
 services:
   guessthegame:
+    ports:
+      - "5173:80"
     build:
       context: .
       dockerfile: Dockerfile
       args:
-        - VITE_IGDB_CLIENT_ID=${VITE_IGDB_CLIENT_ID}
-        - VITE_IGDB_CLIENT_SECRET=${VITE_IGDB_CLIENT_SECRET}
-        - VITE_PORT=${VITE_PORT:-5173}
-    container_name: guessthegame-app
-    ports:
-      - "${VITE_PORT:-5173}:80"
+        VITE_IGDB_CLIENT_ID: ""
+        VITE_IGDB_CLIENT_SECRET: ""
+        VITE_PORT: "5173"
+        CACHE_BUST: "1"
+    image: guessthegame
+    container_name: guessthegame
     restart: unless-stopped
     environment:
-      - NODE_ENV=production
+      NODE_ENV: "production"
+    networks:
+      - proxynet
+
+  backend:
+    build:
+      context: ./backend
+    container_name: guessthegame-backend
+    restart: unless-stopped
+    volumes:
+      - ./backend/highscores.json:/app/highscores.json
+    networks:
+      - proxynet
+

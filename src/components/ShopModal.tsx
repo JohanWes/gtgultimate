@@ -1,4 +1,5 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import confetti from 'canvas-confetti';
 import { getShopItems } from '../utils/arcadeUtils';
 
 interface ShopModalProps {
@@ -10,6 +11,45 @@ interface ShopModalProps {
 export const ShopModal: React.FC<ShopModalProps> = ({ score, onBuy, onContinue }) => {
     const items = getShopItems();
     const [purchasedItems, setPurchasedItems] = useState<Set<string>>(new Set());
+
+    useEffect(() => {
+        // Grand entrance effect
+        const duration = 3000;
+        const end = Date.now() + duration;
+
+        // 1. Central explosion
+        confetti({
+            particleCount: 75,
+            spread: 100,
+            origin: { y: 0.6 },
+            colors: ['#FFD700', '#FFA500', '#FFFFFF', '#FF0000'],
+            zIndex: 10000 // Higher than modal
+        });
+
+        // 2. Side cannons
+        (function frame() {
+            confetti({
+                particleCount: 2,
+                angle: 60,
+                spread: 55,
+                origin: { x: 0 },
+                colors: ['#FFD700', '#FFA500'],
+                zIndex: 10000
+            });
+            confetti({
+                particleCount: 2,
+                angle: 120,
+                spread: 55,
+                origin: { x: 1 },
+                colors: ['#FFD700', '#FFA500'],
+                zIndex: 10000
+            });
+
+            if (Date.now() < end) {
+                requestAnimationFrame(frame);
+            }
+        }());
+    }, []);
 
     // Check if "Greed is Good" has been purchased
     const greedPurchased = purchasedItems.has('greed');

@@ -12,9 +12,9 @@ RUN npm ci
 # Copy source code
 COPY . .
 
-# Build arguments for environment variables
-ARG VITE_IGDB_CLIENT_ID
-ARG VITE_IGDB_CLIENT_SECRET
+# Build arguments with defaults (set via docker-compose or docker build --build-arg)
+ARG VITE_IGDB_CLIENT_ID=""
+ARG VITE_IGDB_CLIENT_SECRET=""
 ARG VITE_PORT=5173
 
 # Set environment variables for build
