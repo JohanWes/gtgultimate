@@ -47,5 +47,6 @@ if (encodingSuspects.length > 0) {
 }
 
 // Write back the cleaned list
-// baitGamesData.baitGames = kept;
-// fs.writeFileSync(baitGamesPath, JSON.stringify(baitGamesData, null, 2));
+baitGamesData.baitGames = kept;
+fs.writeFileSync(baitGamesPath, JSON.stringify(baitGamesData, null, 2));
+console.log(`Cleaned bait_games.json: ${kept.length} kept, ${toRemove.length} removed.`);
