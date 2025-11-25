@@ -11,9 +11,10 @@ interface SearchInputProps {
     readonly onGuess: (name: string) => void;
     readonly disabled: boolean;
     readonly autoFocus?: boolean;
+    readonly correctAnswers?: string[];
 }
 
-export function SearchInput({ games, onGuess, disabled, autoFocus }: SearchInputProps) {
+export function SearchInput({ games, onGuess, disabled, autoFocus, correctAnswers }: SearchInputProps) {
     const [searchQuery, setSearchQuery] = useState('');
     const [displayValue, setDisplayValue] = useState('');
     const [isOpen, setIsOpen] = useState(false);
@@ -47,7 +48,7 @@ export function SearchInput({ games, onGuess, disabled, autoFocus }: SearchInput
 
         // Deduplicate by name (case-insensitive)
         const seen = new Set<string>();
-        return allResults.filter(result => {
+        const uniqueResults = allResults.filter(result => {
             const lowerName = result.name.toLowerCase();
             if (seen.has(lowerName)) {
                 return false;
@@ -55,7 +56,43 @@ export function SearchInput({ games, onGuess, disabled, autoFocus }: SearchInput
             seen.add(lowerName);
             return true;
         });
-    }, [searchQuery]);
+
+        // Prioritize correct answers if they exist in the results
+        if (correctAnswers && correctAnswers.length > 0) {
+            const correctMatches: typeof uniqueResults = [];
+            const otherMatches: typeof uniqueResults = [];
+
+            uniqueResults.forEach(result => {
+                if (correctAnswers.includes(result.name)) {
+                    correctMatches.push(result);
+                } else {
+                    otherMatches.push(result);
+                }
+            });
+
+            // If we found correct matches, shuffle them into the top 5
+            if (correctMatches.length > 0) {
+                // Take enough other matches to fill up to 5 slots (or less if not enough results)
+                const poolSize = 5;
+                const slotsNeeded = Math.max(0, poolSize - correctMatches.length);
+                const topOthers = otherMatches.slice(0, slotsNeeded);
+                const remainingOthers = otherMatches.slice(slotsNeeded);
+
+                // Combine and shuffle the top pool
+                const topPool = [...correctMatches, ...topOthers];
+
+                // Fisher-Yates shuffle for the top pool
+                for (let i = topPool.length - 1; i > 0; i--) {
+                    const j = Math.floor(Math.random() * (i + 1));
+                    [topPool[i], topPool[j]] = [topPool[j], topPool[i]];
+                }
+
+                return [...topPool, ...remainingOthers];
+            }
+        }
+
+        return uniqueResults;
+    }, [searchQuery, correctAnswers]);
 
     useEffect(() => {
         setSelectedIndex(0);

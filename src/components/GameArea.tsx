@@ -229,6 +229,7 @@ export function GameArea({ game, allGames, guesses, status, allProgress, onGuess
                     onGuess={handleGuess}
                     disabled={status !== 'playing'}
                     autoFocus={true}
+                    correctAnswers={[game.name]}
                 />
             </div>
 

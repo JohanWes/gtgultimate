@@ -28,10 +28,9 @@ services:
       NODE_ENV: "${NODE_ENV:-production}"
       HOST: "${HOST:-0.0.0.0}"
       PORT: "${PORT:-3000}"
+      ADMIN_KEY: "${ADMIN_KEY}"
     volumes:
       # Mount data directory for persistent highscores
       - ./data:/app/data
     networks:
       - proxynet
-
-

@@ -396,6 +396,7 @@ export function EndlessGameArea({
                                 onGuess={handleSearchInputGuess}
                                 disabled={state.status !== 'playing'}
                                 autoFocus={true}
+                                correctAnswers={doubleTroubleGame ? [game.name, doubleTroubleGame.name] : [game.name]}
                             />
                         )}
                     </div>
