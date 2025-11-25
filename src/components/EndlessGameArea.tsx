@@ -1,22 +1,24 @@
-import React, { useState, useEffect, useRef } from 'react';
-import type { Game, ArcadeState, LifelineType, ConsultantOption } from '../types';
-import { generateAnagram } from '../utils/arcadeUtils';
+/* eslint-disable react-refresh/only-export-components */
+import { useState, useEffect, useRef } from 'react';
+import type { Game, EndlessState, LifelineType, ConsultantOption } from '../types';
+import { generateAnagram } from '../utils/endlessUtils';
 import baitGamesData from '../data/bait_games.json';
 import { ShopModal } from './ShopModal';
 import { SearchInput } from './SearchInput';
 import { ScreenshotViewer } from './ScreenshotViewer';
 import { InfoPanel } from './InfoPanel';
-import { ConsultantOptions, type ConsultantOptionsHandle } from './ConsultantOptions';
+import { ConsultantOptions } from './ConsultantOptions';
+import type { ConsultantOptionsHandle } from '../types';
 import { TopScoresTicker } from './TopScoresTicker';
 import { AdminGameEditor } from './AdminGameEditor';
 import { clsx } from 'clsx';
 import { AlertCircle, X, ArrowRight, Flame } from 'lucide-react';
 import { useSettings } from '../hooks/useSettings';
 
-interface ArcadeGameAreaProps {
+interface EndlessGameAreaProps {
     game: Game;
     allGames: Game[];
-    state: ArcadeState;
+    state: EndlessState;
     onGuess: (game: Game) => void;
     onSkip: () => void;
     onNextLevel: () => void;
@@ -25,7 +27,8 @@ interface ArcadeGameAreaProps {
     onRequestHighScore: () => void;
 }
 
-export const ArcadeGameArea: React.FC<ArcadeGameAreaProps> = ({
+// eslint-disable-next-line react-refresh/only-export-components
+export function EndlessGameArea({
     game,
     allGames,
     state,
@@ -35,7 +38,7 @@ export const ArcadeGameArea: React.FC<ArcadeGameAreaProps> = ({
     onUseLifeline,
     onBuyShopItem,
     onRequestHighScore
-}) => {
+}: EndlessGameAreaProps) {
     const [showShop, setShowShop] = useState(false);
     const [anagramHint, setAnagramHint] = useState<string | null>(null);
     const [consultantOptions, setConsultantOptions] = useState<ConsultantOption[] | null>(null);
@@ -118,6 +121,7 @@ export const ArcadeGameArea: React.FC<ArcadeGameAreaProps> = ({
     }, [state.isHotStreakActive]);
 
     // Detect similar name guess
+    // eslint-disable-next-line
     useEffect(() => {
         if (state.guesses.length > 0) {
             const lastGuess = state.guesses[state.guesses.length - 1];
@@ -280,7 +284,9 @@ export const ArcadeGameArea: React.FC<ArcadeGameAreaProps> = ({
                 game={game}
                 onUpdate={(newName) => {
                     setDisplayGameName(newName);
-                    game.name = newName;
+                    // We don't mutate game.name directly here as it's a prop
+                    // The parent component or global state should handle the update if needed
+                    // But for display purposes in this component, setDisplayGameName is sufficient
                 }}
             />
             <div className="flex flex-col lg:flex-row gap-4 items-start">

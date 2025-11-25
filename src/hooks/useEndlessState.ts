@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
-import type { Game, ArcadeState, LifelineType, GuessResult } from '../types';
-import { calculateScore, getShopItems, generateRandomCrop } from '../utils/arcadeUtils';
+import type { Game, EndlessState, LifelineType, GuessResult } from '../types';
+import { calculateScore, getShopItems, generateRandomCrop } from '../utils/endlessUtils';
 import { areSimilarNames } from '../utils/seriesDetection';
 
 
@@ -14,10 +14,10 @@ function shuffleArray<T>(array: T[]): T[] {
     return result;
 }
 
-const STORAGE_KEY = 'guessthegame_arcade_state';
-const HIGH_SCORE_KEY = 'guessthegame_arcade_highscore';
+const STORAGE_KEY = 'guessthegame_endless_state';
+const HIGH_SCORE_KEY = 'guessthegame_endless_highscore';
 
-const INITIAL_STATE: ArcadeState = {
+const INITIAL_STATE: EndlessState = {
     score: 0,
     streak: 0,
     highScore: 0,
@@ -42,8 +42,8 @@ const INITIAL_STATE: ArcadeState = {
     isHotStreakActive: false
 };
 
-export const useArcadeState = (allGames: Game[]) => {
-    const [state, setState] = useState<ArcadeState>(() => {
+export const useEndlessState = (allGames: Game[]) => {
+    const [state, setState] = useState<EndlessState>(() => {
         const saved = localStorage.getItem(STORAGE_KEY);
         const savedHighScore = localStorage.getItem(HIGH_SCORE_KEY);
         const parsedState = saved ? JSON.parse(saved) : INITIAL_STATE;
@@ -55,7 +55,7 @@ export const useArcadeState = (allGames: Game[]) => {
 
         // Ensure crop positions exist (for legacy state or fresh start)
         if (!parsedState.cropPositions || parsedState.cropPositions.length === 0) {
-            parsedState.cropPositions = Array(5).fill(0).map(() => generateRandomCrop(1920, 1080));
+            parsedState.cropPositions = Array(5).fill(0).map(() => generateRandomCrop());
         }
 
         return parsedState;
@@ -169,7 +169,7 @@ export const useArcadeState = (allGames: Game[]) => {
                 highScore: state.highScore,
                 highScoreModalShown: false, // Reset for new game
                 gameOrder: shuffledIds,
-                cropPositions: Array(5).fill(0).map(() => generateRandomCrop(1920, 1080))
+                cropPositions: Array(5).fill(0).map(() => generateRandomCrop())
             });
         } else {
             setState(prev => ({
@@ -179,7 +179,7 @@ export const useArcadeState = (allGames: Game[]) => {
                 guesses: [],
                 doubleTroubleGameId: null,
                 zoomOutActive: false,
-                cropPositions: Array(5).fill(0).map(() => generateRandomCrop(1920, 1080))
+                cropPositions: Array(5).fill(0).map(() => generateRandomCrop())
             }));
         }
     }, [state.isGameOver, state.highScore, allGames]);
@@ -223,7 +223,7 @@ export const useArcadeState = (allGames: Game[]) => {
         if (state.score < item.cost) return; // Should be handled by UI too
 
         setState(prev => {
-            let newLifelines = { ...prev.lifelines };
+            const newLifelines = { ...prev.lifelines };
             if (item.type === 'refill_skip') newLifelines.skip += 1;
             if (item.type === 'refill_anagram') newLifelines.anagram += 1;
             if (item.type === 'refill_consultant') newLifelines.consultant += 1;

@@ -15,6 +15,8 @@ export function AdminGameEditor({ isOpen, onClose, game, onUpdate }: AdminGameEd
     const [isLoading, setIsLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
 
+    const { settings } = useSettings();
+
     useEffect(() => {
         if (game) {
             setName(game.name);
@@ -22,8 +24,6 @@ export function AdminGameEditor({ isOpen, onClose, game, onUpdate }: AdminGameEd
     }, [game]);
 
     if (!isOpen || !game) return null;
-
-    const { settings } = useSettings();
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -54,7 +54,7 @@ export function AdminGameEditor({ isOpen, onClose, game, onUpdate }: AdminGameEd
             } else {
                 setError(data.error || 'Unknown error');
             }
-        } catch (err) {
+        } catch {
             setError('Failed to connect to server');
         } finally {
             setIsLoading(false);

@@ -52,10 +52,10 @@ export function Sidebar({ totalLevels, currentLevel, progress, onSelectLevel, is
                             Standard
                         </button>
                         <button
-                            onClick={() => onModeSwitch('arcade')}
+                            onClick={() => onModeSwitch('endless')}
                             className={clsx(
                                 "flex-1 py-1.5 text-xs font-bold rounded-md transition-all",
-                                currentMode === 'arcade'
+                                currentMode === 'endless'
                                     ? "bg-orange-600 text-white shadow-sm"
                                     : "text-muted hover:text-white hover:bg-white/5"
                             )}

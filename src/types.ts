@@ -20,7 +20,7 @@ export interface BaitGame {
 
 export type ConsultantOption = Game | BaitGame;
 
-export type GameMode = 'standard' | 'arcade';
+export type GameMode = 'standard' | 'endless';
 
 export type GameStatus = 'playing' | 'won' | 'lost';
 
@@ -52,7 +52,7 @@ export interface Lifelines {
     zoom_out: number;
 }
 
-export interface ArcadeState {
+export interface EndlessState {
     score: number;
     streak: number;
     highScore: number;
@@ -77,4 +77,8 @@ export interface ShopItem {
     description: string;
     cost: number;
     type: 'refill_skip' | 'refill_anagram' | 'refill_consultant' | 'refill_double_trouble' | 'refill_zoom_out' | 'bonus_points';
+}
+
+export interface ConsultantOptionsHandle {
+    stopSounds: () => void;
 }

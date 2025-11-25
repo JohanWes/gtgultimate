@@ -1,10 +1,10 @@
 import { useState } from 'react';
 import { Layout } from './components/Layout';
 import { GameArea } from './components/GameArea';
-import { ArcadeGameArea } from './components/ArcadeGameArea';
+import { EndlessGameArea } from './components/EndlessGameArea';
 import { HighScoreModal } from './components/HighScoreModal';
 import { useGameState } from './hooks/useGameState';
-import { useArcadeState } from './hooks/useArcadeState';
+import { useEndlessState } from './hooks/useEndlessState';
 import type { GameMode } from './types';
 
 function App() {
@@ -14,7 +14,7 @@ function App() {
   const gameState = useGameState();
   const { currentGame, currentProgress, games, submitGuess, nextLevel } = gameState;
 
-  const arcadeState = useArcadeState(games);
+  const endlessState = useEndlessState(games);
 
   const handleModeSwitch = (newMode: GameMode) => {
     if (mode === newMode) return;
@@ -27,17 +27,17 @@ function App() {
 
   const handlePlayAgain = () => {
     setShowHighScoreModal(false);
-    arcadeState.nextLevel();
+    endlessState.nextLevel();
   };
 
   const handleRequestHighScore = () => {
     // Only show the modal if it hasn't been shown yet for this game over
-    if (!arcadeState.state.highScoreModalShown) {
+    if (!endlessState.state.highScoreModalShown) {
       setShowHighScoreModal(true);
-      arcadeState.markHighScoreModalShown();
+      endlessState.markHighScoreModalShown();
     } else {
       // If already shown, just restart the game
-      arcadeState.nextLevel();
+      endlessState.nextLevel();
     }
   };
 
@@ -70,16 +70,16 @@ function App() {
           />
         )
       ) : (
-        arcadeState.currentGame && (
-          <ArcadeGameArea
-            game={arcadeState.currentGame}
+        endlessState.currentGame && (
+          <EndlessGameArea
+            game={endlessState.currentGame}
             allGames={games}
-            state={arcadeState.state}
-            onGuess={arcadeState.submitGuess}
-            onSkip={arcadeState.skipGuess}
-            onNextLevel={arcadeState.nextLevel}
-            onUseLifeline={arcadeState.useLifeline}
-            onBuyShopItem={arcadeState.buyShopItem}
+            state={endlessState.state}
+            onGuess={endlessState.submitGuess}
+            onSkip={endlessState.skipGuess}
+            onNextLevel={endlessState.nextLevel}
+            onUseLifeline={endlessState.useLifeline}
+            onBuyShopItem={endlessState.buyShopItem}
             onRequestHighScore={handleRequestHighScore}
           />
         )
@@ -87,7 +87,7 @@ function App() {
 
       {showHighScoreModal && (
         <HighScoreModal
-          score={arcadeState.state.score}
+          score={endlessState.state.score}
           onPlayAgain={handlePlayAgain}
           onClose={handleModalClose}
         />

@@ -11,7 +11,7 @@ export const calculateScore = (guessCount: number): number => {
     }
 };
 
-export const generateRandomCrop = (_width: number, _height: number, _difficultyMultiplier: number = 1): { x: number, y: number } => {
+export const generateRandomCrop = (): { x: number, y: number } => {
     // This is a placeholder. In a real implementation, we'd need the actual image dimensions.
     // For now, we'll return a percentage-based position (0-100).
     // As difficulty increases, the crop might become more obscure or smaller (if we controlled zoom).

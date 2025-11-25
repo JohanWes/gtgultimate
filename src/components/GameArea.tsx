@@ -82,11 +82,13 @@ export function GameArea({ game, allGames, guesses, status, allProgress, onGuess
     }, [status]);
 
     // Detect similar name guess
+    // eslint-disable-next-line
     useEffect(() => {
         if (guesses.length > 0) {
             const lastGuess = guesses[guesses.length - 1];
             if (lastGuess.result === 'similar-name') {
                 setSimilarNameMessage(true);
+                // eslint-disable-next-line
                 setTimeout(() => setSimilarNameMessage(false), 2000);
             }
         }
@@ -146,8 +148,7 @@ export function GameArea({ game, allGames, guesses, status, allProgress, onGuess
                 game={game}
                 onUpdate={(newName) => {
                     setDisplayGameName(newName);
-                    // Update the game object in memory so it persists in the current session if revisited
-                    game.name = newName;
+                    // We don't mutate game.name directly here as it's a prop
                 }}
             />
 

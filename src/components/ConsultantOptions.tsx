@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef, useImperativeHandle, forwardRef } from 'react';
-import type { Game, ConsultantOption } from '../types';
+import type { Game, ConsultantOption, ConsultantOptionsHandle } from '../types';
 import { clsx } from 'clsx';
 import confetti from 'canvas-confetti';
 
@@ -7,10 +7,6 @@ interface ConsultantOptionsProps {
     options: ConsultantOption[];
     correctGameId: number;
     onGuess: (game: Game) => void;
-}
-
-export interface ConsultantOptionsHandle {
-    stopSounds: () => void;
 }
 
 export const ConsultantOptions = forwardRef<ConsultantOptionsHandle, ConsultantOptionsProps>(

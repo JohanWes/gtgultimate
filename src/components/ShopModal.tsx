@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import confetti from 'canvas-confetti';
-import { getShopItems } from '../utils/arcadeUtils';
+import { getShopItems } from '../utils/endlessUtils';
 
 interface ShopModalProps {
     score: number;

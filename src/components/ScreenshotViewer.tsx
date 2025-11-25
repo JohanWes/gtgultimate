@@ -3,7 +3,7 @@ import { useState, useEffect } from 'react';
 import { clsx } from 'clsx';
 import { Lock, Maximize2, Minimize2 } from 'lucide-react';
 import type { Game } from '../types';
-import { getDifficultyZoomBonus } from '../utils/arcadeUtils';
+import { getDifficultyZoomBonus } from '../utils/endlessUtils';
 
 interface ScreenshotViewerProps {
     screenshots: string[];
