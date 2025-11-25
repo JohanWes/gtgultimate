@@ -20,6 +20,8 @@ export interface BaitGame {
 
 export type ConsultantOption = Game | BaitGame;
 
+export type GameMode = 'standard' | 'arcade';
+
 export type GameStatus = 'playing' | 'won' | 'lost';
 
 export type GuessResult = 'wrong' | 'similar-name' | 'correct' | 'skipped';

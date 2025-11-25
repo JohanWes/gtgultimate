@@ -3,13 +3,16 @@ import { Menu, Settings } from 'lucide-react';
 import { Sidebar } from './Sidebar';
 import { useGameState } from '../hooks/useGameState';
 import { SettingsModal } from './SettingsModal';
+import type { GameMode } from '../types';
 
 interface LayoutProps {
     children: React.ReactNode;
     gameState: ReturnType<typeof useGameState>;
+    currentMode: GameMode;
+    onModeSwitch: (mode: GameMode) => void;
 }
 
-export function Layout({ children, gameState }: LayoutProps) {
+export function Layout({ children, gameState, currentMode, onModeSwitch }: LayoutProps) {
     const [isSidebarOpen, setIsSidebarOpen] = useState(false);
     const [showSettingsModal, setShowSettingsModal] = useState(false);
 
@@ -22,6 +25,8 @@ export function Layout({ children, gameState }: LayoutProps) {
                 onSelectLevel={gameState.goToLevel}
                 isOpen={isSidebarOpen}
                 onClose={() => setIsSidebarOpen(false)}
+                currentMode={currentMode}
+                onModeSwitch={onModeSwitch}
             />
 
             <div className="flex-1 flex flex-col min-w-0">

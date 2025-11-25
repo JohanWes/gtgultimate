@@ -5,8 +5,7 @@ import { ArcadeGameArea } from './components/ArcadeGameArea';
 import { HighScoreModal } from './components/HighScoreModal';
 import { useGameState } from './hooks/useGameState';
 import { useArcadeState } from './hooks/useArcadeState';
-
-type GameMode = 'standard' | 'arcade';
+import type { GameMode } from './types';
 
 function App() {
   const [mode, setMode] = useState<GameMode>('standard');
@@ -51,25 +50,11 @@ function App() {
   }
 
   return (
-    <Layout gameState={gameState}>
-      <div className="flex justify-center mb-4">
-        <div className="bg-gray-800 p-1 rounded-lg flex gap-1">
-          <button
-            onClick={() => handleModeSwitch('standard')}
-            className={`px-4 py-2 rounded-md text-sm font-bold transition-colors ${mode === 'standard' ? 'bg-blue-600 text-white' : 'text-gray-400 hover:text-white'
-              }`}
-          >
-            Standard
-          </button>
-          <button
-            onClick={() => handleModeSwitch('arcade')}
-            className={`px-4 py-2 rounded-md text-sm font-bold transition-colors ${mode === 'arcade' ? 'bg-slate-600 text-white' : 'text-gray-400 hover:text-white'
-              }`}
-          >
-            Endless
-          </button>
-        </div>
-      </div>
+    <Layout
+      gameState={gameState}
+      currentMode={mode}
+      onModeSwitch={handleModeSwitch}
+    >
 
       {mode === 'standard' ? (
         currentGame && (

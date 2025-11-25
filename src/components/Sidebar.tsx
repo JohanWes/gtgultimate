@@ -1,8 +1,7 @@
-
 import { CheckCircle, XCircle, Circle, Trophy } from 'lucide-react';
 import { clsx } from 'clsx';
 import gtgLogo from '../assets/gtgultimate.jpg';
-import type { LevelProgress } from '../types';
+import type { LevelProgress, GameMode } from '../types';
 
 interface SidebarProps {
     totalLevels: number;
@@ -11,9 +10,11 @@ interface SidebarProps {
     onSelectLevel: (level: number) => void;
     isOpen: boolean;
     onClose: () => void;
+    currentMode: GameMode;
+    onModeSwitch: (mode: GameMode) => void;
 }
 
-export function Sidebar({ totalLevels, currentLevel, progress, onSelectLevel, isOpen, onClose }: SidebarProps) {
+export function Sidebar({ totalLevels, currentLevel, progress, onSelectLevel, isOpen, onClose, currentMode, onModeSwitch }: SidebarProps) {
     const levels = Array.from({ length: totalLevels }, (_, i) => i + 1);
 
     const completedCount = Object.values(progress).filter(p => p.status === 'won').length;
@@ -36,6 +37,33 @@ export function Sidebar({ totalLevels, currentLevel, progress, onSelectLevel, is
             )}>
                 <div className="px-4 py-3 border-b border-white/10 flex-shrink-0 flex flex-col gap-3">
                     <img src={gtgLogo} alt="GuessTheGame" className="w-full h-auto rounded-md" />
+
+                    {/* Game Mode Toggles */}
+                    <div className="flex bg-black/20 p-1 rounded-lg">
+                        <button
+                            onClick={() => onModeSwitch('standard')}
+                            className={clsx(
+                                "flex-1 py-1.5 text-xs font-bold rounded-md transition-all",
+                                currentMode === 'standard'
+                                    ? "bg-primary text-white shadow-sm"
+                                    : "text-muted hover:text-white hover:bg-white/5"
+                            )}
+                        >
+                            Standard
+                        </button>
+                        <button
+                            onClick={() => onModeSwitch('arcade')}
+                            className={clsx(
+                                "flex-1 py-1.5 text-xs font-bold rounded-md transition-all",
+                                currentMode === 'arcade'
+                                    ? "bg-orange-600 text-white shadow-sm"
+                                    : "text-muted hover:text-white hover:bg-white/5"
+                            )}
+                        >
+                            Endless
+                        </button>
+                    </div>
+
                     <div className="flex items-center gap-2 text-xs text-muted">
                         <Trophy size={14} className="text-yellow-500" />
                         <span>{completedCount} / {totalLevels} Completed</span>
