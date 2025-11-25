@@ -11,7 +11,6 @@ type GameMode = 'standard' | 'arcade';
 function App() {
   const [mode, setMode] = useState<GameMode>('standard');
   const [showHighScoreModal, setShowHighScoreModal] = useState(false);
-  const [pendingMode, setPendingMode] = useState<GameMode | null>(null);
 
   const gameState = useGameState();
   const { currentGame, currentProgress, games, submitGuess, nextLevel } = gameState;
@@ -20,30 +19,25 @@ function App() {
 
   const handleModeSwitch = (newMode: GameMode) => {
     if (mode === newMode) return;
-
-    // If we are in Arcade mode and the game is over, show the high score modal first
-    if (mode === 'arcade' && arcadeState.state.isGameOver) {
-      setPendingMode(newMode);
-      setShowHighScoreModal(true);
-    } else {
-      setMode(newMode);
-    }
+    setMode(newMode);
   };
 
   const handleModalClose = () => {
     setShowHighScoreModal(false);
-    if (pendingMode) {
-      setMode(pendingMode);
-      setPendingMode(null);
-    }
   };
 
   const handlePlayAgain = () => {
     setShowHighScoreModal(false);
-    if (pendingMode) {
-      setMode(pendingMode);
-      setPendingMode(null);
+    arcadeState.nextLevel();
+  };
+
+  const handleRequestHighScore = () => {
+    // Only show the modal if it hasn't been shown yet for this game over
+    if (!arcadeState.state.highScoreModalShown) {
+      setShowHighScoreModal(true);
+      arcadeState.markHighScoreModalShown();
     } else {
+      // If already shown, just restart the game
       arcadeState.nextLevel();
     }
   };
@@ -101,7 +95,7 @@ function App() {
             onNextLevel={arcadeState.nextLevel}
             onUseLifeline={arcadeState.useLifeline}
             onBuyShopItem={arcadeState.buyShopItem}
-            onRequestHighScore={() => setShowHighScoreModal(true)}
+            onRequestHighScore={handleRequestHighScore}
           />
         )
       )}

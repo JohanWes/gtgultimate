@@ -31,6 +31,7 @@ const INITIAL_STATE: ArcadeState = {
     currentLevelIndex: 0,
     gameOrder: [],
     isGameOver: false,
+    highScoreModalShown: false,
     status: 'playing',
     guesses: [],
     history: [],
@@ -107,6 +108,7 @@ export const useArcadeState = (allGames: Game[]) => {
             setState(prev => ({
                 ...prev,
                 isGameOver: true,
+                highScoreModalShown: false, // Reset when game over happens
                 status: 'lost',
                 guesses: newGuesses,
                 history: [...prev.history, { gameId: currentGame.id, score: 0, status: 'lost' }]
@@ -129,6 +131,7 @@ export const useArcadeState = (allGames: Game[]) => {
             setState(prev => ({
                 ...prev,
                 isGameOver: true,
+                highScoreModalShown: false, // Reset when game over happens
                 status: 'lost',
                 guesses: newGuesses,
                 history: [...prev.history, { gameId: currentGame.id, score: 0, status: 'lost' }]
@@ -148,6 +151,7 @@ export const useArcadeState = (allGames: Game[]) => {
             setState({
                 ...INITIAL_STATE,
                 highScore: state.highScore,
+                highScoreModalShown: false, // Reset for new game
                 gameOrder: shuffledIds,
                 cropPositions: Array(5).fill(0).map(() => generateRandomCrop(1920, 1080))
             });
@@ -216,6 +220,10 @@ export const useArcadeState = (allGames: Game[]) => {
         });
     }, [state.score]);
 
+    const markHighScoreModalShown = useCallback(() => {
+        setState(prev => ({ ...prev, highScoreModalShown: true }));
+    }, []);
+
     return {
         state,
         currentGame,
@@ -223,6 +231,7 @@ export const useArcadeState = (allGames: Game[]) => {
         skipGuess,
         nextLevel,
         useLifeline,
-        buyShopItem
+        buyShopItem,
+        markHighScoreModalShown
     };
 };

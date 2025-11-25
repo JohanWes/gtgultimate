@@ -7,24 +7,31 @@ networks:
 
 services:
   guessthegame:
+    # Map external port to internal port
+    # Format: "HOST_PORT:CONTAINER_PORT"
+    # Change 5173 to any port you want to access on your host
     ports:
-      - "5173:3000"
+      - "${VITE_PORT:-5173}:${PORT:-3000}"
     build:
       context: .
       dockerfile: Dockerfile
       args:
-        VITE_IGDB_CLIENT_ID: ""
-        VITE_IGDB_CLIENT_SECRET: ""
-        VITE_PORT: "5173"
-        CACHE_BUST: "1"
+        # These build args are baked into the built app
+        VITE_IGDB_CLIENT_ID: "${VITE_IGDB_CLIENT_ID}"
+        VITE_IGDB_CLIENT_SECRET: "${VITE_IGDB_CLIENT_SECRET}"
+        VITE_PORT: "${VITE_PORT:-5173}"
     image: guessthegame
     container_name: guessthegame
     restart: unless-stopped
     environment:
-      NODE_ENV: "production"
-      PORT: "3000"
+      # Runtime environment variables
+      NODE_ENV: "${NODE_ENV:-production}"
+      HOST: "${HOST:-0.0.0.0}"
+      PORT: "${PORT:-3000}"
     volumes:
+      # Mount data directory for persistent highscores
       - ./data:/app/data
     networks:
       - proxynet
+
 

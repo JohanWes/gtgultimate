@@ -13,6 +13,7 @@ RUN npm ci
 COPY . .
 
 # Build arguments with defaults (set via docker-compose or docker build --build-arg)
+# These are used during the build process and get baked into the built application
 ARG VITE_IGDB_CLIENT_ID=""
 ARG VITE_IGDB_CLIENT_SECRET=""
 ARG VITE_PORT=5173
@@ -42,7 +43,11 @@ COPY --from=builder /app/dist ./dist
 # Copy server script
 COPY prod-server.js .
 
-# Expose port
+# Runtime environment variables (can be overridden in docker-compose or docker run)
+ENV HOST=0.0.0.0
+ENV PORT=3000
+
+# Expose port (this should match the PORT env var)
 EXPOSE 3000
 
 # Start server

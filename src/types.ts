@@ -58,6 +58,7 @@ export interface ArcadeState {
     currentLevelIndex: number; // Index in the randomized game list
     gameOrder: number[]; // Array of game IDs for the current run
     isGameOver: boolean;
+    highScoreModalShown: boolean; // Track if the high score modal has been shown for this game over
     status: GameStatus;
     guesses: GuessWithResult[];
     history: Array<{ gameId: number; score: number; status: 'won' | 'skipped' | 'lost' }>;
