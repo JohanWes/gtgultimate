@@ -42,6 +42,7 @@ COPY --from=builder /app/dist ./dist
 
 # Copy server script
 COPY prod-server.js .
+COPY src/data ./src/data
 
 # Runtime environment variables (can be overridden in docker-compose or docker run)
 ENV HOST=0.0.0.0
