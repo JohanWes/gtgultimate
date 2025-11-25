@@ -22,11 +22,11 @@ const INITIAL_STATE: ArcadeState = {
     streak: 0,
     highScore: 0,
     lifelines: {
-        skip: true,
-        anagram: true,
-        consultant: true,
-        double_trouble: true,
-        zoom_out: true
+        skip: 1,
+        anagram: 1,
+        consultant: 1,
+        double_trouble: 1,
+        zoom_out: 1
     },
     currentLevelIndex: 0,
     gameOrder: [],
@@ -185,10 +185,10 @@ export const useArcadeState = (allGames: Game[]) => {
     }, [state.isGameOver, state.highScore, allGames]);
 
     const useLifeline = useCallback((type: LifelineType) => {
-        if (!state.lifelines[type] || state.status !== 'playing') return;
+        if (state.lifelines[type] <= 0 || state.status !== 'playing') return;
 
         setState(prev => {
-            const newLifelines = { ...prev.lifelines, [type]: false };
+            const newLifelines = { ...prev.lifelines, [type]: prev.lifelines[type] - 1 };
 
             if (type === 'skip') {
                 return {
@@ -224,11 +224,11 @@ export const useArcadeState = (allGames: Game[]) => {
 
         setState(prev => {
             let newLifelines = { ...prev.lifelines };
-            if (item.type === 'refill_skip') newLifelines.skip = true;
-            if (item.type === 'refill_anagram') newLifelines.anagram = true;
-            if (item.type === 'refill_consultant') newLifelines.consultant = true;
-            if (item.type === 'refill_double_trouble') newLifelines.double_trouble = true;
-            if (item.type === 'refill_zoom_out') newLifelines.zoom_out = true;
+            if (item.type === 'refill_skip') newLifelines.skip += 1;
+            if (item.type === 'refill_anagram') newLifelines.anagram += 1;
+            if (item.type === 'refill_consultant') newLifelines.consultant += 1;
+            if (item.type === 'refill_double_trouble') newLifelines.double_trouble += 1;
+            if (item.type === 'refill_zoom_out') newLifelines.zoom_out += 1;
 
             return {
                 ...prev,

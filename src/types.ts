@@ -45,11 +45,11 @@ export interface GameState {
 export type LifelineType = 'skip' | 'anagram' | 'consultant' | 'double_trouble' | 'zoom_out';
 
 export interface Lifelines {
-    skip: boolean;
-    anagram: boolean;
-    consultant: boolean;
-    double_trouble: boolean;
-    zoom_out: boolean;
+    skip: number;
+    anagram: number;
+    consultant: number;
+    double_trouble: number;
+    zoom_out: number;
 }
 
 export interface ArcadeState {
