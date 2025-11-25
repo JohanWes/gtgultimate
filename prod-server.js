@@ -87,8 +87,19 @@ app.post('/api/highscores', (req, res) => {
     res.status(201).json(newScore);
 });
 
-// Define path to games_db.json
-const GAMES_DB_FILE = path.join(__dirname, 'src', 'data', 'games_db.json');
+// Define paths
+const SOURCE_GAMES_DB = path.join(__dirname, 'src', 'data', 'games_db.json');
+const GAMES_DB_FILE = path.join(DATA_DIR, 'games_db.json');
+
+// Initialize games database if it doesn't exist in the persistent data directory
+if (!fs.existsSync(GAMES_DB_FILE)) {
+    if (fs.existsSync(SOURCE_GAMES_DB)) {
+        console.log('Initializing persistent games database from source...');
+        fs.copyFileSync(SOURCE_GAMES_DB, GAMES_DB_FILE);
+    } else {
+        console.warn('Warning: Source games database not found at', SOURCE_GAMES_DB);
+    }
+}
 
 // POST /api/admin/verify
 app.post('/api/admin/verify', (req, res) => {

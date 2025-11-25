@@ -28,5 +28,6 @@ dist-ssr
 AGENT.md
 
 # Local/Agent specific
-docker-compose.local.yml
 .agent/
+data/
+docker-compose.local.yml

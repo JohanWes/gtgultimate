@@ -32,7 +32,5 @@ services:
     volumes:
       # Mount data directory for persistent highscores
       - ./data:/app/data
-      # Mount src/data to persist game updates (names, etc) to the source code
-      - ./src/data:/app/src/data
     networks:
       - proxynet
