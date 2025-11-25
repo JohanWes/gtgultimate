@@ -1,14 +1,15 @@
 import React, { useState, useEffect } from 'react';
 import { type HighScore, fetchHighScores, submitHighScore } from '../utils/api';
-import { Trophy, RotateCcw, Send } from 'lucide-react';
+import { Trophy, RotateCcw, Send, X } from 'lucide-react';
 import { clsx } from 'clsx';
 
 interface HighScoreModalProps {
     score: number;
     onPlayAgain: () => void;
+    onClose: () => void;
 }
 
-export const HighScoreModal: React.FC<HighScoreModalProps> = ({ score, onPlayAgain }) => {
+export const HighScoreModal: React.FC<HighScoreModalProps> = ({ score, onPlayAgain, onClose }) => {
     const [highScores, setHighScores] = useState<HighScore[]>([]);
     const [name, setName] = useState('');
     const [submitted, setSubmitted] = useState(false);
@@ -39,7 +40,15 @@ export const HighScoreModal: React.FC<HighScoreModalProps> = ({ score, onPlayAga
 
     return (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm animate-in fade-in duration-300">
-            <div className="bg-gray-900 border border-gray-700 rounded-2xl shadow-2xl max-w-md w-full overflow-hidden flex flex-col max-h-[90vh]">
+            <div className="bg-gray-900 border border-gray-700 rounded-2xl shadow-2xl max-w-md w-full overflow-hidden flex flex-col max-h-[90vh] relative">
+                {/* Close Button */}
+                <button
+                    onClick={onClose}
+                    className="absolute top-4 right-4 text-gray-400 hover:text-white transition-colors z-10 p-1 hover:bg-white/10 rounded-full"
+                >
+                    <X size={24} />
+                </button>
+
                 {/* Header */}
                 <div className="p-6 bg-gradient-to-br from-purple-900/50 to-blue-900/50 border-b border-white/10 text-center">
                     <h2 className="text-3xl font-black text-white mb-2 tracking-tight">GAME OVER</h2>
@@ -150,3 +159,4 @@ export const HighScoreModal: React.FC<HighScoreModalProps> = ({ score, onPlayAga
         </div>
     );
 };
+

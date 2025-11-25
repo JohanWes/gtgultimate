@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { Layout } from './components/Layout';
 import { GameArea } from './components/GameArea';
 import { ArcadeGameArea } from './components/ArcadeGameArea';
+import { HighScoreModal } from './components/HighScoreModal';
 import { useGameState } from './hooks/useGameState';
 import { useArcadeState } from './hooks/useArcadeState';
 
@@ -9,10 +10,43 @@ type GameMode = 'standard' | 'arcade';
 
 function App() {
   const [mode, setMode] = useState<GameMode>('standard');
+  const [showHighScoreModal, setShowHighScoreModal] = useState(false);
+  const [pendingMode, setPendingMode] = useState<GameMode | null>(null);
+
   const gameState = useGameState();
   const { currentGame, currentProgress, games, submitGuess, nextLevel } = gameState;
 
   const arcadeState = useArcadeState(games);
+
+  const handleModeSwitch = (newMode: GameMode) => {
+    if (mode === newMode) return;
+
+    // If we are in Arcade mode and the game is over, show the high score modal first
+    if (mode === 'arcade' && arcadeState.state.isGameOver) {
+      setPendingMode(newMode);
+      setShowHighScoreModal(true);
+    } else {
+      setMode(newMode);
+    }
+  };
+
+  const handleModalClose = () => {
+    setShowHighScoreModal(false);
+    if (pendingMode) {
+      setMode(pendingMode);
+      setPendingMode(null);
+    }
+  };
+
+  const handlePlayAgain = () => {
+    setShowHighScoreModal(false);
+    if (pendingMode) {
+      setMode(pendingMode);
+      setPendingMode(null);
+    } else {
+      arcadeState.nextLevel();
+    }
+  };
 
   if (!currentGame && mode === 'standard') {
     return (
@@ -27,14 +61,14 @@ function App() {
       <div className="flex justify-center mb-4">
         <div className="bg-gray-800 p-1 rounded-lg flex gap-1">
           <button
-            onClick={() => setMode('standard')}
+            onClick={() => handleModeSwitch('standard')}
             className={`px-4 py-2 rounded-md text-sm font-bold transition-colors ${mode === 'standard' ? 'bg-blue-600 text-white' : 'text-gray-400 hover:text-white'
               }`}
           >
             Standard
           </button>
           <button
-            onClick={() => setMode('arcade')}
+            onClick={() => handleModeSwitch('arcade')}
             className={`px-4 py-2 rounded-md text-sm font-bold transition-colors ${mode === 'arcade' ? 'bg-slate-600 text-white' : 'text-gray-400 hover:text-white'
               }`}
           >
@@ -67,8 +101,17 @@ function App() {
             onNextLevel={arcadeState.nextLevel}
             onUseLifeline={arcadeState.useLifeline}
             onBuyShopItem={arcadeState.buyShopItem}
+            onRequestHighScore={() => setShowHighScoreModal(true)}
           />
         )
+      )}
+
+      {showHighScoreModal && (
+        <HighScoreModal
+          score={arcadeState.state.score}
+          onPlayAgain={handlePlayAgain}
+          onClose={handleModalClose}
+        />
       )}
     </Layout>
   );

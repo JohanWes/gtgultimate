@@ -4,7 +4,8 @@
   "version": "0.0.0",
   "type": "module",
   "scripts": {
-    "dev": "concurrently \"vite\" \"npm start --prefix backend\"",
+    "dev": "concurrently \"vite\" \"node prod-server.js\"",
+    "start": "node prod-server.js",
     "build": "tsc -b && vite build",
     "lint": "eslint .",
     "preview": "vite preview",
@@ -13,9 +14,12 @@
   },
   "dependencies": {
     "@types/canvas-confetti": "^1.9.0",
+    "body-parser": "^2.2.1",
     "canvas-confetti": "^1.9.4",
     "clsx": "^2.1.1",
+    "cors": "^2.8.5",
     "dotenv": "^17.2.3",
+    "express": "^5.1.0",
     "fuse.js": "^7.1.0",
     "lucide-react": "^0.554.0",
     "react": "^19.2.0",

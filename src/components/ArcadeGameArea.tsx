@@ -1,13 +1,12 @@
-import React, { useState, useEffect, useMemo, useRef } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import type { Game, ArcadeState, LifelineType, ConsultantOption } from '../types';
-import { generateAnagram, generateRandomCrop } from '../utils/arcadeUtils';
+import { generateAnagram } from '../utils/arcadeUtils';
 import baitGamesData from '../data/bait_games.json';
 import { ShopModal } from './ShopModal';
 import { SearchInput } from './SearchInput';
 import { ScreenshotViewer } from './ScreenshotViewer';
 import { InfoPanel } from './InfoPanel';
 import { ConsultantOptions, type ConsultantOptionsHandle } from './ConsultantOptions';
-import { HighScoreModal } from './HighScoreModal';
 import { TopScoresTicker } from './TopScoresTicker';
 import { clsx } from 'clsx';
 import { AlertCircle, X, ArrowRight } from 'lucide-react';
@@ -21,6 +20,7 @@ interface ArcadeGameAreaProps {
     onNextLevel: () => void;
     onUseLifeline: (type: LifelineType) => void;
     onBuyShopItem: (itemId: string) => void;
+    onRequestHighScore: () => void;
 }
 
 export const ArcadeGameArea: React.FC<ArcadeGameAreaProps> = ({
@@ -31,7 +31,8 @@ export const ArcadeGameArea: React.FC<ArcadeGameAreaProps> = ({
     onSkip,
     onNextLevel,
     onUseLifeline,
-    onBuyShopItem
+    onBuyShopItem,
+    onRequestHighScore
 }) => {
     const [showShop, setShowShop] = useState(false);
     const [anagramHint, setAnagramHint] = useState<string | null>(null);
@@ -55,11 +56,8 @@ export const ArcadeGameArea: React.FC<ArcadeGameAreaProps> = ({
         }
     }, [state.guesses]);
 
-    // Generate random crop positions for this level
-    // We use useMemo to keep them stable during the level, but regenerate when game.id changes
-    const cropPositions = useMemo(() => {
-        return Array(5).fill(0).map(() => generateRandomCrop(1920, 1080));
-    }, [game.id]);
+    // Use persisted crop positions from state
+    const cropPositions = state.cropPositions;
 
     // Show shop every 10 levels
     useEffect(() => {
@@ -167,17 +165,7 @@ export const ArcadeGameArea: React.FC<ArcadeGameAreaProps> = ({
         );
     }
 
-    if (state.isGameOver) {
-        return (
-            <HighScoreModal
-                score={state.score}
-                onPlayAgain={() => {
-                    consultantRef.current?.stopSounds();
-                    onNextLevel(); // This triggers reset/restart in parent
-                }}
-            />
-        );
-    }
+
 
     const revealedCount = state.status === 'playing' ? state.guesses.length + 1 : 5;
 
@@ -249,7 +237,11 @@ export const ArcadeGameArea: React.FC<ArcadeGameAreaProps> = ({
                             <button
                                 onClick={() => {
                                     consultantRef.current?.stopSounds();
-                                    onNextLevel();
+                                    if (state.isGameOver) {
+                                        onRequestHighScore();
+                                    } else {
+                                        onNextLevel();
+                                    }
                                 }}
                                 className="inline-flex items-center gap-2 px-5 py-2 bg-white text-black font-bold rounded-full hover:scale-105 transition-transform text-sm"
                             >

@@ -26,16 +26,24 @@ ENV VITE_PORT=${VITE_PORT}
 RUN npm run build
 
 # Production stage
-FROM nginx:alpine
+FROM node:20-alpine
 
-# Copy custom nginx config
-COPY nginx.conf /etc/nginx/conf.d/default.conf
+WORKDIR /app
 
-# Copy built files from builder stage
-COPY --from=builder /app/dist /usr/share/nginx/html
+# Copy package files
+COPY package*.json ./
 
-# Expose port 80 (nginx default)
-EXPOSE 80
+# Install production dependencies only
+RUN npm ci --only=production
 
-# Start nginx
-CMD ["nginx", "-g", "daemon off;"]
+# Copy built assets from builder stage
+COPY --from=builder /app/dist ./dist
+
+# Copy server script
+COPY prod-server.js .
+
+# Expose port
+EXPOSE 3000
+
+# Start server
+CMD ["npm", "start"]

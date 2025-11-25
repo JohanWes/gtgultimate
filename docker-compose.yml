@@ -8,7 +8,7 @@ networks:
 services:
   guessthegame:
     ports:
-      - "5173:80"
+      - "5173:3000"
     build:
       context: .
       dockerfile: Dockerfile
@@ -22,16 +22,9 @@ services:
     restart: unless-stopped
     environment:
       NODE_ENV: "production"
-    networks:
-      - proxynet
-
-  backend:
-    build:
-      context: ./backend
-    container_name: guessthegame-backend
-    restart: unless-stopped
+      PORT: "3000"
     volumes:
-      - ./backend/highscores.json:/app/highscores.json
+      - ./data:/app/data
     networks:
       - proxynet
 

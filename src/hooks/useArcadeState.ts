@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import type { Game, ArcadeState, LifelineType, GuessResult } from '../types';
-import { calculateScore, getShopItems } from '../utils/arcadeUtils';
+import { calculateScore, getShopItems, generateRandomCrop } from '../utils/arcadeUtils';
 
 // Extract base series name from a game name
 function getSeriesName(gameName: string): string {
@@ -43,7 +43,8 @@ const INITIAL_STATE: ArcadeState = {
     guesses: [],
     history: [],
     doubleTroubleGameId: null,
-    zoomOutActive: false
+    zoomOutActive: false,
+    cropPositions: []
 };
 
 export const useArcadeState = (allGames: Game[]) => {
@@ -55,6 +56,11 @@ export const useArcadeState = (allGames: Game[]) => {
         // Ensure high score is up to date
         if (savedHighScore) {
             parsedState.highScore = Math.max(parsedState.highScore, Number.parseInt(savedHighScore, 10));
+        }
+
+        // Ensure crop positions exist (for legacy state or fresh start)
+        if (!parsedState.cropPositions || parsedState.cropPositions.length === 0) {
+            parsedState.cropPositions = Array(5).fill(0).map(() => generateRandomCrop(1920, 1080));
         }
 
         return parsedState;
@@ -152,7 +158,8 @@ export const useArcadeState = (allGames: Game[]) => {
             setState({
                 ...INITIAL_STATE,
                 highScore: state.highScore,
-                gameOrder: shuffledIds
+                gameOrder: shuffledIds,
+                cropPositions: Array(5).fill(0).map(() => generateRandomCrop(1920, 1080))
             });
         } else {
             setState(prev => ({
@@ -161,7 +168,8 @@ export const useArcadeState = (allGames: Game[]) => {
                 status: 'playing',
                 guesses: [],
                 doubleTroubleGameId: null,
-                zoomOutActive: false
+                zoomOutActive: false,
+                cropPositions: Array(5).fill(0).map(() => generateRandomCrop(1920, 1080))
             }));
         }
     }, [state.isGameOver, state.highScore, allGames]);

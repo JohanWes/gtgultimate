@@ -20,8 +20,9 @@ if (!CLIENT_ID || !CLIENT_SECRET) {
 }
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
-const GAMES_LIST_PATH = path.join(__dirname, '../gameslist.md');
+const GAMES_LIST_PATH = path.join(__dirname, '../games.json');
 const OUTPUT_FILE = path.join(__dirname, '../src/data/games_db.json');
+const BAIT_GAMES_FILE = path.join(__dirname, '../src/data/bait_games.json');
 
 interface GameEntry {
     name: string;
@@ -60,20 +61,11 @@ async function getAccessToken() {
 
 async function parseGamesList(): Promise<GameEntry[]> {
     const content = await fs.readFile(GAMES_LIST_PATH, 'utf-8');
-    const lines = content.split('\n');
-    const games: GameEntry[] = [];
-    const regex = /^\*\s+(.*?)\s+\((\d{4})\)$/;
-
-    for (const line of lines) {
-        const match = line.trim().match(regex);
-        if (match) {
-            games.push({
-                name: match[1],
-                year: parseInt(match[2], 10),
-            });
-        }
-    }
-    return games;
+    const rawGames = JSON.parse(content);
+    return rawGames.map((g: any) => ({
+        name: g.gamename,
+        year: g.releaseyear
+    }));
 }
 
 async function searchGame(name: string, year: number, accessToken: string): Promise<IGDBGame | null> {
@@ -132,8 +124,19 @@ async function main() {
         console.log('No existing DB found, starting fresh.');
     }
 
+    let baitGames: string[] = [];
+    try {
+        const baitContent = await fs.readFile(BAIT_GAMES_FILE, 'utf-8');
+        const baitJson = JSON.parse(baitContent);
+        baitGames = baitJson.baitGames || [];
+        console.log(`Loaded ${baitGames.length} bait games.`);
+    } catch (error) {
+        console.log('No bait games found or error reading file.');
+    }
+
     const processedGames = [...existingGames];
     const existingNames = new Set(existingGames.map(g => g.name.toLowerCase()));
+    const baitNames = new Set(baitGames.map(g => g.toLowerCase()));
 
     let foundCount = 0;
     let missingCount = 0;
@@ -142,8 +145,16 @@ async function main() {
     // Process in chunks to avoid rate limits (4 requests per second is the limit, let's be safe with serial or small batches)
     // Serial for simplicity and safety
     for (const gameEntry of gamesList) {
-        if (existingNames.has(gameEntry.name.toLowerCase())) {
-            // console.log(`Skipping ${gameEntry.name} (already exists)`);
+        const lowerName = gameEntry.name.toLowerCase();
+
+        if (existingNames.has(lowerName)) {
+            // console.log(`Skipping ${gameEntry.name} (already exists in DB)`);
+            skippedCount++;
+            continue;
+        }
+
+        if (baitNames.has(lowerName)) {
+            console.log(`Skipping ${gameEntry.name} (exists in bait games)`);
             skippedCount++;
             continue;
         }

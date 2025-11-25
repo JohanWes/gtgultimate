@@ -63,6 +63,7 @@ export interface ArcadeState {
     history: Array<{ gameId: number; score: number; status: 'won' | 'skipped' | 'lost' }>;
     doubleTroubleGameId: number | null;
     zoomOutActive: boolean; // Whether Zoom Out lifeline is active for current round
+    cropPositions: Array<{ x: number; y: number }>; // Persisted crop positions for the current level
 }
 
 export interface ShopItem {

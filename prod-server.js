@@ -1,15 +1,29 @@
-const express = require('express');
-const cors = require('cors');
-const bodyParser = require('body-parser');
-const fs = require('fs');
-const path = require('path');
+import express from 'express';
+import cors from 'cors';
+import bodyParser from 'body-parser';
+import fs from 'fs';
+import path from 'path';
+import { fileURLToPath } from 'url';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 const app = express();
 const PORT = process.env.PORT || 3000;
-const DATA_FILE = path.join(__dirname, 'highscores.json');
+// Use a data directory for persistence, compatible with docker volume mounting
+const DATA_DIR = path.join(__dirname, 'data');
+const DATA_FILE = path.join(DATA_DIR, 'highscores.json');
+
+// Ensure data directory exists
+if (!fs.existsSync(DATA_DIR)) {
+    fs.mkdirSync(DATA_DIR, { recursive: true });
+}
 
 app.use(cors());
 app.use(bodyParser.json());
+
+// Serve static files from the dist directory
+app.use(express.static(path.join(__dirname, 'dist')));
 
 // Initialize highscores file if it doesn't exist
 if (!fs.existsSync(DATA_FILE)) {
@@ -69,6 +83,11 @@ app.post('/api/highscores', (req, res) => {
     writeScores(scores);
 
     res.status(201).json(newScore);
+});
+
+// Handle SPA routing - return index.html for all other routes
+app.get(/(.*)/, (req, res) => {
+    res.sendFile(path.join(__dirname, 'dist', 'index.html'));
 });
 
 app.listen(PORT, () => {
