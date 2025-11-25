@@ -63154,5 +63154,575 @@
         "y": 29
       }
     ]
+  },
+  {
+    "id": 305152,
+    "name": "Clair Obscur: Expedition 33",
+    "year": 2025,
+    "platform": "Xbox Series X|S",
+    "genre": "Role-playing (RPG)",
+    "rating": 87,
+    "screenshots": [
+      "https://images.igdb.com/igdb/image/upload/t_720p/scsodz.jpg",
+      "https://images.igdb.com/igdb/image/upload/t_720p/scsoe8.jpg",
+      "https://images.igdb.com/igdb/image/upload/t_720p/scsoe2.jpg",
+      "https://images.igdb.com/igdb/image/upload/t_720p/scsoec.jpg",
+      "https://images.igdb.com/igdb/image/upload/t_720p/scsoe7.jpg"
+    ],
+    "cover": "https://images.igdb.com/igdb/image/upload/t_cover_big/co9gam.jpg",
+    "cropPositions": [
+      {
+        "x": 64,
+        "y": 42
+      },
+      {
+        "x": 20,
+        "y": 40
+      },
+      {
+        "x": 46,
+        "y": 65
+      },
+      {
+        "x": 80,
+        "y": 24
+      },
+      {
+        "x": 34,
+        "y": 64
+      }
+    ]
+  },
+  {
+    "id": 302704,
+    "name": "Doom: The Dark Ages",
+    "year": 2025,
+    "platform": "Xbox Series X|S",
+    "genre": "Shooter",
+    "rating": 87,
+    "screenshots": [
+      "https://images.igdb.com/igdb/image/upload/t_720p/scsofy.jpg",
+      "https://images.igdb.com/igdb/image/upload/t_720p/scsofi.jpg",
+      "https://images.igdb.com/igdb/image/upload/t_720p/scsofk.jpg",
+      "https://images.igdb.com/igdb/image/upload/t_720p/scsofl.jpg",
+      "https://images.igdb.com/igdb/image/upload/t_720p/scsofj.jpg"
+    ],
+    "cover": "https://images.igdb.com/igdb/image/upload/t_cover_big/co9b3o.jpg",
+    "cropPositions": [
+      {
+        "x": 64,
+        "y": 83
+      },
+      {
+        "x": 13,
+        "y": 95
+      },
+      {
+        "x": 63,
+        "y": 0
+      },
+      {
+        "x": 46,
+        "y": 64
+      },
+      {
+        "x": 59,
+        "y": 80
+      }
+    ]
+  },
+  {
+    "id": 115289,
+    "name": "Hollow Knight: Silksong",
+    "year": 2025,
+    "platform": "Xbox Series X|S",
+    "genre": "Platform",
+    "rating": 90,
+    "screenshots": [
+      "https://images.igdb.com/igdb/image/upload/t_720p/sc63aa.jpg",
+      "https://images.igdb.com/igdb/image/upload/t_720p/sc63a9.jpg",
+      "https://images.igdb.com/igdb/image/upload/t_720p/sc63a8.jpg",
+      "https://images.igdb.com/igdb/image/upload/t_720p/sc63ac.jpg",
+      "https://images.igdb.com/igdb/image/upload/t_720p/sc63a7.jpg"
+    ],
+    "cover": "https://images.igdb.com/igdb/image/upload/t_cover_big/coaend.jpg",
+    "cropPositions": [
+      {
+        "x": 57,
+        "y": 57
+      },
+      {
+        "x": 56,
+        "y": 52
+      },
+      {
+        "x": 84,
+        "y": 81
+      },
+      {
+        "x": 85,
+        "y": 70
+      },
+      {
+        "x": 16,
+        "y": 58
+      }
+    ]
+  },
+  {
+    "id": 298526,
+    "name": "Kingdom Come: Deliverance II",
+    "year": 2025,
+    "platform": "Xbox Series X|S",
+    "genre": "Role-playing (RPG)",
+    "rating": 93,
+    "screenshots": [
+      "https://images.igdb.com/igdb/image/upload/t_720p/scs1lj.jpg",
+      "https://images.igdb.com/igdb/image/upload/t_720p/scs1lk.jpg",
+      "https://images.igdb.com/igdb/image/upload/t_720p/scs1ll.jpg",
+      "https://images.igdb.com/igdb/image/upload/t_720p/scs1lm.jpg",
+      "https://images.igdb.com/igdb/image/upload/t_720p/scs1ln.jpg"
+    ],
+    "cover": "https://images.igdb.com/igdb/image/upload/t_cover_big/co8qmv.jpg",
+    "cropPositions": [
+      {
+        "x": 14,
+        "y": 51
+      },
+      {
+        "x": 0,
+        "y": 43
+      },
+      {
+        "x": 70,
+        "y": 87
+      },
+      {
+        "x": 87,
+        "y": 13
+      },
+      {
+        "x": 80,
+        "y": 56
+      }
+    ]
+  },
+  {
+    "id": 250634,
+    "name": "Metal Gear Solid Delta: Snake Eater",
+    "year": 2025,
+    "platform": "Xbox Series X|S",
+    "genre": "Shooter",
+    "rating": 87,
+    "screenshots": [
+      "https://images.igdb.com/igdb/image/upload/t_720p/scmnkl.jpg",
+      "https://images.igdb.com/igdb/image/upload/t_720p/scmnkm.jpg",
+      "https://images.igdb.com/igdb/image/upload/t_720p/scmnkn.jpg",
+      "https://images.igdb.com/igdb/image/upload/t_720p/scmnko.jpg",
+      "https://images.igdb.com/igdb/image/upload/t_720p/scmnkp.jpg"
+    ],
+    "cover": "https://images.igdb.com/igdb/image/upload/t_cover_big/coac1n.jpg",
+    "cropPositions": [
+      {
+        "x": 39,
+        "y": 80
+      },
+      {
+        "x": 61,
+        "y": 40
+      },
+      {
+        "x": 77,
+        "y": 14
+      },
+      {
+        "x": 77,
+        "y": 89
+      },
+      {
+        "x": 62,
+        "y": 39
+      }
+    ]
+  },
+  {
+    "id": 135994,
+    "name": "Avowed",
+    "year": 2025,
+    "platform": "Xbox Series X|S",
+    "genre": "Role-playing (RPG)",
+    "rating": 85,
+    "screenshots": [
+      "https://images.igdb.com/igdb/image/upload/t_720p/sc8frz.jpg",
+      "https://images.igdb.com/igdb/image/upload/t_720p/scmwmk.jpg",
+      "https://images.igdb.com/igdb/image/upload/t_720p/scmwmm.jpg",
+      "https://images.igdb.com/igdb/image/upload/t_720p/scmwmp.jpg",
+      "https://images.igdb.com/igdb/image/upload/t_720p/scmwml.jpg"
+    ],
+    "cover": "https://images.igdb.com/igdb/image/upload/t_cover_big/co7nbb.jpg",
+    "cropPositions": [
+      {
+        "x": 10,
+        "y": 99
+      },
+      {
+        "x": 91,
+        "y": 74
+      },
+      {
+        "x": 30,
+        "y": 61
+      },
+      {
+        "x": 35,
+        "y": 39
+      },
+      {
+        "x": 93,
+        "y": 97
+      }
+    ]
+  },
+  {
+    "id": 228530,
+    "name": "Death Stranding 2: On The Beach",
+    "year": 2025,
+    "platform": "PlayStation 5",
+    "genre": "Shooter",
+    "rating": 92,
+    "screenshots": [
+      "https://images.igdb.com/igdb/image/upload/t_720p/scka9g.jpg",
+      "https://images.igdb.com/igdb/image/upload/t_720p/scka9h.jpg",
+      "https://images.igdb.com/igdb/image/upload/t_720p/scka9e.jpg",
+      "https://images.igdb.com/igdb/image/upload/t_720p/scka9j.jpg",
+      "https://images.igdb.com/igdb/image/upload/t_720p/scka9k.jpg"
+    ],
+    "cover": "https://images.igdb.com/igdb/image/upload/t_cover_big/co9ipx.jpg",
+    "cropPositions": [
+      {
+        "x": 80,
+        "y": 18
+      },
+      {
+        "x": 95,
+        "y": 71
+      },
+      {
+        "x": 56,
+        "y": 5
+      },
+      {
+        "x": 34,
+        "y": 16
+      },
+      {
+        "x": 35,
+        "y": 42
+      }
+    ]
+  },
+  {
+    "id": 305006,
+    "name": "Sid Meier's Civilization VII",
+    "year": 2025,
+    "platform": "Xbox Series X|S",
+    "genre": "Simulator",
+    "rating": 82,
+    "screenshots": [
+      "https://images.igdb.com/igdb/image/upload/t_720p/sctov0.jpg",
+      "https://images.igdb.com/igdb/image/upload/t_720p/sctov1.jpg",
+      "https://images.igdb.com/igdb/image/upload/t_720p/sctov2.jpg",
+      "https://images.igdb.com/igdb/image/upload/t_720p/sctov3.jpg",
+      "https://images.igdb.com/igdb/image/upload/t_720p/sctov4.jpg"
+    ],
+    "cover": "https://images.igdb.com/igdb/image/upload/t_cover_big/co8po2.jpg",
+    "cropPositions": [
+      {
+        "x": 97,
+        "y": 77
+      },
+      {
+        "x": 68,
+        "y": 66
+      },
+      {
+        "x": 40,
+        "y": 95
+      },
+      {
+        "x": 93,
+        "y": 14
+      },
+      {
+        "x": 54,
+        "y": 96
+      }
+    ]
+  },
+  {
+    "id": 116530,
+    "name": "Vampire: The Masquerade - Bloodlines 2",
+    "year": 2025,
+    "platform": "Xbox Series X|S",
+    "genre": "Role-playing (RPG)",
+    "rating": 79,
+    "screenshots": [
+      "https://images.igdb.com/igdb/image/upload/t_720p/sc6d68.jpg",
+      "https://images.igdb.com/igdb/image/upload/t_720p/sc6d69.jpg",
+      "https://images.igdb.com/igdb/image/upload/t_720p/sc6c1t.jpg",
+      "https://images.igdb.com/igdb/image/upload/t_720p/sc6c1r.jpg",
+      "https://images.igdb.com/igdb/image/upload/t_720p/sc6c1q.jpg"
+    ],
+    "cover": "https://images.igdb.com/igdb/image/upload/t_cover_big/coab6r.jpg",
+    "cropPositions": [
+      {
+        "x": 10,
+        "y": 34
+      },
+      {
+        "x": 58,
+        "y": 98
+      },
+      {
+        "x": 89,
+        "y": 59
+      },
+      {
+        "x": 47,
+        "y": 1
+      },
+      {
+        "x": 16,
+        "y": 39
+      }
+    ]
+  },
+  {
+    "id": 152246,
+    "name": "The Outer Worlds 2",
+    "year": 2025,
+    "platform": "Xbox Series X|S",
+    "genre": "Role-playing (RPG)",
+    "rating": 83,
+    "screenshots": [
+      "https://images.igdb.com/igdb/image/upload/t_720p/scus40.jpg",
+      "https://images.igdb.com/igdb/image/upload/t_720p/scus3v.jpg",
+      "https://images.igdb.com/igdb/image/upload/t_720p/scus3w.jpg",
+      "https://images.igdb.com/igdb/image/upload/t_720p/scus3x.jpg",
+      "https://images.igdb.com/igdb/image/upload/t_720p/scus3y.jpg"
+    ],
+    "cover": "https://images.igdb.com/igdb/image/upload/t_cover_big/co9xx4.jpg",
+    "cropPositions": [
+      {
+        "x": 93,
+        "y": 49
+      },
+      {
+        "x": 96,
+        "y": 17
+      },
+      {
+        "x": 47,
+        "y": 95
+      },
+      {
+        "x": 95,
+        "y": 9
+      },
+      {
+        "x": 51,
+        "y": 4
+      }
+    ]
+  },
+  {
+    "id": 214394,
+    "name": "Dune: Awakening",
+    "year": 2025,
+    "platform": "Xbox Series X|S",
+    "genre": "Role-playing (RPG)",
+    "rating": 89,
+    "screenshots": [
+      "https://images.igdb.com/igdb/image/upload/t_720p/scii22.jpg",
+      "https://images.igdb.com/igdb/image/upload/t_720p/scii23.jpg",
+      "https://images.igdb.com/igdb/image/upload/t_720p/scii24.jpg",
+      "https://images.igdb.com/igdb/image/upload/t_720p/scii25.jpg",
+      "https://images.igdb.com/igdb/image/upload/t_720p/scii26.jpg"
+    ],
+    "cover": "https://images.igdb.com/igdb/image/upload/t_cover_big/co9xk3.jpg",
+    "cropPositions": [
+      {
+        "x": 74,
+        "y": 7
+      },
+      {
+        "x": 62,
+        "y": 76
+      },
+      {
+        "x": 28,
+        "y": 11
+      },
+      {
+        "x": 73,
+        "y": 24
+      },
+      {
+        "x": 94,
+        "y": 25
+      }
+    ]
+  },
+  {
+    "id": 279661,
+    "name": "Monster Hunter Wilds",
+    "year": 2025,
+    "platform": "Xbox Series X|S",
+    "genre": "Role-playing (RPG)",
+    "rating": 87,
+    "screenshots": [
+      "https://images.igdb.com/igdb/image/upload/t_720p/scqcrc.jpg",
+      "https://images.igdb.com/igdb/image/upload/t_720p/scqcrd.jpg",
+      "https://images.igdb.com/igdb/image/upload/t_720p/scqcr3.jpg",
+      "https://images.igdb.com/igdb/image/upload/t_720p/scqcr4.jpg",
+      "https://images.igdb.com/igdb/image/upload/t_720p/scqcr5.jpg"
+    ],
+    "cover": "https://images.igdb.com/igdb/image/upload/t_cover_big/co904o.jpg",
+    "cropPositions": [
+      {
+        "x": 17,
+        "y": 29
+      },
+      {
+        "x": 46,
+        "y": 89
+      },
+      {
+        "x": 69,
+        "y": 62
+      },
+      {
+        "x": 4,
+        "y": 40
+      },
+      {
+        "x": 57,
+        "y": 57
+      }
+    ]
+  },
+  {
+    "id": 252826,
+    "name": "South of Midnight",
+    "year": 2025,
+    "platform": "Xbox Series X|S",
+    "genre": "Platform",
+    "rating": 86,
+    "screenshots": [
+      "https://images.igdb.com/igdb/image/upload/t_720p/scsofc.jpg",
+      "https://images.igdb.com/igdb/image/upload/t_720p/scsof9.jpg",
+      "https://images.igdb.com/igdb/image/upload/t_720p/scsof3.jpg",
+      "https://images.igdb.com/igdb/image/upload/t_720p/scsof4.jpg",
+      "https://images.igdb.com/igdb/image/upload/t_720p/scsof5.jpg"
+    ],
+    "cover": "https://images.igdb.com/igdb/image/upload/t_cover_big/co8bot.jpg",
+    "cropPositions": [
+      {
+        "x": 7,
+        "y": 5
+      },
+      {
+        "x": 14,
+        "y": 79
+      },
+      {
+        "x": 78,
+        "y": 25
+      },
+      {
+        "x": 77,
+        "y": 5
+      },
+      {
+        "x": 96,
+        "y": 22
+      }
+    ]
+  },
+  {
+    "id": 314246,
+    "name": "Borderlands 4",
+    "year": 2025,
+    "platform": "Xbox Series X|S",
+    "genre": "Shooter",
+    "rating": 87,
+    "screenshots": [
+      "https://images.igdb.com/igdb/image/upload/t_720p/scwn2x.jpg",
+      "https://images.igdb.com/igdb/image/upload/t_720p/scwn2y.jpg",
+      "https://images.igdb.com/igdb/image/upload/t_720p/scwn31.jpg",
+      "https://images.igdb.com/igdb/image/upload/t_720p/scwn2v.jpg",
+      "https://images.igdb.com/igdb/image/upload/t_720p/scwn2w.jpg"
+    ],
+    "cover": "https://images.igdb.com/igdb/image/upload/t_cover_big/co9zuq.jpg",
+    "cropPositions": [
+      {
+        "x": 90,
+        "y": 76
+      },
+      {
+        "x": 76,
+        "y": 62
+      },
+      {
+        "x": 50,
+        "y": 15
+      },
+      {
+        "x": 99,
+        "y": 92
+      },
+      {
+        "x": 36,
+        "y": 3
+      }
+    ]
+  },
+  {
+    "id": 314276,
+    "name": "Mafia: The Old Country",
+    "year": 2025,
+    "platform": "Xbox Series X|S",
+    "genre": "Shooter",
+    "rating": 78,
+    "screenshots": [
+      "https://images.igdb.com/igdb/image/upload/t_720p/sctojq.jpg",
+      "https://images.igdb.com/igdb/image/upload/t_720p/sctojm.jpg",
+      "https://images.igdb.com/igdb/image/upload/t_720p/sctojn.jpg",
+      "https://images.igdb.com/igdb/image/upload/t_720p/sctojo.jpg",
+      "https://images.igdb.com/igdb/image/upload/t_720p/sctojp.jpg"
+    ],
+    "cover": "https://images.igdb.com/igdb/image/upload/t_cover_big/coa9dq.jpg",
+    "cropPositions": [
+      {
+        "x": 47,
+        "y": 56
+      },
+      {
+        "x": 79,
+        "y": 61
+      },
+      {
+        "x": 71,
+        "y": 72
+      },
+      {
+        "x": 42,
+        "y": 32
+      },
+      {
+        "x": 53,
+        "y": 26
+      }
+    ]
   }
 ]
