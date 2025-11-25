@@ -30,6 +30,27 @@ export function useGameState() {
     // Use lazy initialization to load from localStorage only once
     const [currentLevel, setCurrentLevel] = useState<number>(() => loadInitialState().currentLevel);
     const [progress, setProgress] = useState<Record<number, LevelProgress>>(() => loadInitialState().progress);
+    const [games, setGames] = useState<Game[]>(GAMES);
+
+    // Fetch games from API on mount
+    useEffect(() => {
+        const fetchGames = async () => {
+            try {
+                const response = await fetch('/api/games');
+                if (response.ok) {
+                    const data = await response.json();
+                    console.log('✅ Loaded games from API:', data.length);
+                    setGames(data);
+                } else {
+                    console.warn('⚠️ Failed to fetch games from API, using static data');
+                }
+            } catch (error) {
+                console.error('❌ Error fetching games:', error);
+            }
+        };
+
+        fetchGames();
+    }, []);
 
     // Save to local storage whenever state changes
     useEffect(() => {
@@ -38,13 +59,13 @@ export function useGameState() {
         localStorage.setItem(STORAGE_KEY, JSON.stringify(dataToSave));
     }, [currentLevel, progress]);
 
-    const currentGame = GAMES[currentLevel - 1];
+    const currentGame = games[currentLevel - 1];
     const currentProgress = progress[currentLevel] || { status: 'playing', guesses: [] };
 
     const submitGuess = (guess: string) => {
         if (currentProgress.status !== 'playing') return;
 
-        const guessedGame = GAMES.find(g => g.name.toLowerCase() === guess.toLowerCase());
+        const guessedGame = games.find(g => g.name.toLowerCase() === guess.toLowerCase());
         const isCorrect = guess.toLowerCase() === currentGame.name.toLowerCase();
 
         let result: GuessResult = 'wrong';
@@ -94,7 +115,7 @@ export function useGameState() {
     };
 
     const goToLevel = (level: number) => {
-        if (level >= 1 && level <= GAMES.length) {
+        if (level >= 1 && level <= games.length) {
             setCurrentLevel(level);
         }
     };
@@ -104,7 +125,7 @@ export function useGameState() {
     };
 
     return {
-        games: GAMES,
+        games,
         currentLevel,
         currentGame,
         currentProgress,
@@ -113,6 +134,6 @@ export function useGameState() {
         skipGuess,
         goToLevel,
         nextLevel,
-        totalLevels: GAMES.length
+        totalLevels: games.length
     };
 }
