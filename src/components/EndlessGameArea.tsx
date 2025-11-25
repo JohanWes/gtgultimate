@@ -25,6 +25,7 @@ interface EndlessGameAreaProps {
     onUseLifeline: (type: LifelineType) => void;
     onBuyShopItem: (itemId: string) => void;
     onRequestHighScore: () => void;
+    isHighScoreModalOpen: boolean;
 }
 
 // eslint-disable-next-line react-refresh/only-export-components
@@ -37,7 +38,8 @@ export function EndlessGameArea({
     onNextLevel,
     onUseLifeline,
     onBuyShopItem,
-    onRequestHighScore
+    onRequestHighScore,
+    isHighScoreModalOpen
 }: EndlessGameAreaProps) {
     const [showShop, setShowShop] = useState(false);
     const [anagramHint, setAnagramHint] = useState<string | null>(null);
@@ -238,6 +240,9 @@ export function EndlessGameArea({
         const handleKeyDown = (e: KeyboardEvent) => {
             // Next Level on Enter
             if (state.status !== 'playing' && e.key === 'Enter') {
+                // If high score modal is open, do nothing (let the modal handle Enter for form submission)
+                if (isHighScoreModalOpen) return;
+
                 if (settings.nextLevelOnEnter) {
                     e.preventDefault();
                     consultantRef.current?.stopSounds();
@@ -260,7 +265,7 @@ export function EndlessGameArea({
 
         window.addEventListener('keydown', handleKeyDown);
         return () => window.removeEventListener('keydown', handleKeyDown);
-    }, [state.status, state.isGameOver, onNextLevel, onRequestHighScore, onSkip, settings]);
+    }, [state.status, state.isGameOver, onNextLevel, onRequestHighScore, onSkip, settings, isHighScoreModalOpen]);
 
     if (showShop) {
         return (
@@ -412,19 +417,25 @@ export function EndlessGameArea({
                                     .reverse()
                                     .map((guess, idx, arr) => {
                                         const originalIdx = arr.length - 1 - idx;
-                                        const colorClass = guess.result === 'similar-name'
-                                            ? 'text-yellow-500'
-                                            : 'text-red-500';
-                                        const label = guess.result === 'similar-name'
+                                        const isSimilar = guess.result === 'similar-name';
+                                        const isSkipped = guess.result === 'skipped';
+
+                                        const colorClass = isSimilar
+                                            ? 'text-warning'
+                                            : 'text-error';
+
+                                        const label = isSimilar
                                             ? 'Similar Name'
-                                            : guess.result === 'skipped'
+                                            : isSkipped
                                                 ? `SKIPPED ${originalIdx + 1}`
                                                 : 'Wrong';
-                                        const icon = guess.result === 'similar-name'
+
+                                        const icon = isSimilar
                                             ? <AlertCircle size={16} />
                                             : <X size={16} />;
-                                        const borderClass = guess.result === 'similar-name'
-                                            ? 'border-yellow-500'
+
+                                        const borderClass = isSimilar
+                                            ? 'border-warning'
                                             : 'border-white/5';
 
                                         return (
@@ -433,7 +444,7 @@ export function EndlessGameArea({
                                                 className={`flex items-center justify-between p-2.5 rounded-lg bg-gray-800/30 border ${borderClass} text-gray-300 animate-in slide-in-from-bottom-2 fade-in text-sm`}
                                                 style={{ animationDelay: `${idx * 100}ms` }}
                                             >
-                                                <span className="font-medium">{guess.name}</span>
+                                                <span className="font-medium text-white">{guess.name}</span>
                                                 <div className={`flex items-center gap-2 ${colorClass}`}>
                                                     <span className="text-[10px] uppercase font-bold">{label}</span>
                                                     {icon}

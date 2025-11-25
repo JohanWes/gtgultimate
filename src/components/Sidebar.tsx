@@ -1,4 +1,4 @@
-import { CheckCircle, XCircle, Circle, Trophy } from 'lucide-react';
+import { XCircle, Circle, Trophy } from 'lucide-react';
 import { clsx } from 'clsx';
 import gtgLogo from '../assets/gtgultimate.jpg';
 import type { LevelProgress, GameMode } from '../types';
@@ -92,7 +92,11 @@ export function Sidebar({ totalLevels, currentLevel, progress, onSelectLevel, is
                                 )}
                             >
                                 <span className="font-medium">Level {level}</span>
-                                {levelStatus === 'won' && <CheckCircle size={18} className="text-success" />}
+                                {levelStatus === 'won' && (
+                                    <span className="text-success font-bold text-xs border border-success/30 px-1.5 py-0.5 rounded-md bg-success/10 min-w-[32px] text-center">
+                                        {progress[level].guesses.length}/5
+                                    </span>
+                                )}
                                 {levelStatus === 'lost' && <XCircle size={18} className="text-error" />}
                                 {levelStatus === 'playing' && progress[level]?.guesses.length > 0 && (
                                     <Circle size={18} className="text-yellow-500 fill-yellow-500/20" />

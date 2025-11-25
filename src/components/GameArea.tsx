@@ -244,21 +244,25 @@ export function GameArea({ game, allGames, guesses, status, allProgress, onGuess
                             .reverse()
                             .map((guess, idx, arr) => {
                                 const originalIdx = arr.length - 1 - idx;
-                                const colorClass = guess.result === 'similar-name'
+                                const isSimilar = guess.result === 'similar-name';
+                                const isSkipped = guess.result === 'skipped';
+
+                                const colorClass = isSimilar
                                     ? 'text-warning'
-                                    : guess.result === 'skipped'
-                                        ? 'text-error'
-                                        : 'text-error';
-                                const label = guess.result === 'similar-name'
+                                    : 'text-error';
+
+                                const label = isSimilar
                                     ? 'Similar Name'
-                                    : guess.result === 'skipped'
+                                    : isSkipped
                                         ? `SKIPPED ${originalIdx + 1}`
                                         : 'Wrong';
-                                const icon = guess.result === 'similar-name'
+
+                                const icon = isSimilar
                                     ? <AlertCircle size={18} />
                                     : <X size={18} />;
-                                const borderClass = guess.result === 'similar-name'
-                                    ? 'border-yellow-500'
+
+                                const borderClass = isSimilar
+                                    ? 'border-warning'
                                     : 'border-white/5';
 
                                 return (
@@ -267,7 +271,7 @@ export function GameArea({ game, allGames, guesses, status, allProgress, onGuess
                                         className={`flex items-center justify-between p-2 rounded-lg bg-surface/50 border ${borderClass} text-muted animate-in slide-in-from-bottom-2 fade-in text-sm`}
                                         style={{ animationDelay: `${idx * 100}ms` }}
                                     >
-                                        <span className="font-medium">{guess.name}</span>
+                                        <span className="font-medium text-white">{guess.name}</span>
                                         <div className={`flex items-center gap-2 ${colorClass}`}>
                                             <span className="text-xs uppercase font-bold">{label}</span>
                                             {icon}

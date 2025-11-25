@@ -81,6 +81,7 @@ function App() {
             onUseLifeline={endlessState.useLifeline}
             onBuyShopItem={endlessState.buyShopItem}
             onRequestHighScore={handleRequestHighScore}
+            isHighScoreModalOpen={showHighScoreModal}
           />
         )
       )}
