@@ -1,16 +1,8 @@
 import { useState, useEffect, useCallback } from 'react';
 import type { Game, ArcadeState, LifelineType, GuessResult } from '../types';
 import { calculateScore, getShopItems, generateRandomCrop } from '../utils/arcadeUtils';
+import { areSameSeries } from '../utils/seriesDetection';
 
-// Extract base series name from a game name
-function getSeriesName(gameName: string): string {
-    // Remove common patterns like ": Subtitle", " 2", " II", etc.
-    return gameName
-        .replace(/:\s*.+$/, '') // Remove ": Subtitle"
-        .replace(/\s+\d+$/, '') // Remove " 2", " 3", etc.
-        .replace(/\s+[IVX]+$/, '') // Remove " II", " III", etc.
-        .trim();
-}
 
 // Proper Fisher-Yates shuffle algorithm (unbiased)
 function shuffleArray<T>(array: T[]): T[] {
@@ -92,9 +84,7 @@ export const useArcadeState = (allGames: Game[]) => {
         if (game.id === currentGame.id) {
             result = 'correct';
         } else {
-            const guessSeries = getSeriesName(game.name);
-            const correctSeries = getSeriesName(currentGame.name);
-            if (guessSeries.toLowerCase() === correctSeries.toLowerCase() && guessSeries.length > 0) {
+            if (areSameSeries(game.name, currentGame.name)) {
                 result = 'same-series';
             }
         }

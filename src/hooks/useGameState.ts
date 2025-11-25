@@ -2,6 +2,7 @@
 import { useState, useEffect } from 'react';
 import type { Game, GameStatus, LevelProgress, GuessResult } from '../types';
 import gamesData from '../data/games_db.json';
+import { areSameSeries } from '../utils/seriesDetection';
 
 const GAMES = gamesData as Game[];
 const STORAGE_KEY = 'guessthegame_unlimited_progress';
@@ -23,16 +24,6 @@ function loadInitialState() {
         console.error('Failed to parse saved game state', e);
     }
     return { currentLevel: 1, progress: {} };
-}
-
-// Extract base series name from a game name
-function getSeriesName(gameName: string): string {
-    // Remove common patterns like ": Subtitle", " 2", " II", etc.
-    return gameName
-        .replace(/:\s*.+$/, '') // Remove ": Subtitle"
-        .replace(/\s+\d+$/, '') // Remove " 2", " 3", etc.
-        .replace(/\s+[IVX]+$/, '') // Remove " II", " III", etc.
-        .trim();
 }
 
 export function useGameState() {
@@ -60,9 +51,7 @@ export function useGameState() {
         if (isCorrect) {
             result = 'correct';
         } else if (guessedGame) {
-            const guessSeries = getSeriesName(guessedGame.name);
-            const correctSeries = getSeriesName(currentGame.name);
-            if (guessSeries.toLowerCase() === correctSeries.toLowerCase() && guessSeries.length > 0) {
+            if (areSameSeries(guessedGame.name, currentGame.name)) {
                 result = 'same-series';
             }
         }
