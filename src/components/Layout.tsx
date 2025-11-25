@@ -1,8 +1,8 @@
-
 import React, { useState } from 'react';
-import { Menu } from 'lucide-react';
+import { Menu, Settings } from 'lucide-react';
 import { Sidebar } from './Sidebar';
 import { useGameState } from '../hooks/useGameState';
+import { SettingsModal } from './SettingsModal';
 
 interface LayoutProps {
     children: React.ReactNode;
@@ -11,6 +11,7 @@ interface LayoutProps {
 
 export function Layout({ children, gameState }: LayoutProps) {
     const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+    const [showSettingsModal, setShowSettingsModal] = useState(false);
 
     return (
         <div className="min-h-screen bg-background text-text flex">
@@ -33,13 +34,33 @@ export function Layout({ children, gameState }: LayoutProps) {
                         <Menu size={24} />
                     </button>
                     <span className="font-bold text-lg">Level {gameState.currentLevel}</span>
-                    <div className="w-8" /> {/* Spacer for centering */}
+                    <button
+                        onClick={() => setShowSettingsModal(true)}
+                        className="p-2 -mr-2 hover:bg-white/5 rounded-lg transition-colors"
+                    >
+                        <Settings size={24} />
+                    </button>
                 </header>
 
-                <main className="flex-1 p-2 md:p-3 overflow-y-auto custom-scrollbar">
+                {/* Desktop Settings Button (Absolute positioned) */}
+                <div className="hidden md:block absolute top-4 right-4 z-40">
+                    <button
+                        onClick={() => setShowSettingsModal(true)}
+                        className="p-2 bg-surface/50 hover:bg-surface border border-white/10 rounded-lg transition-all hover:scale-105 backdrop-blur-sm shadow-lg text-gray-400 hover:text-white"
+                        title="Settings"
+                    >
+                        <Settings size={20} />
+                    </button>
+                </div>
+
+                <main className="flex-1 p-2 md:p-3 overflow-y-auto custom-scrollbar relative">
                     {children}
                 </main>
             </div>
+
+            {showSettingsModal && (
+                <SettingsModal onClose={() => setShowSettingsModal(false)} />
+            )}
         </div>
     );
 }

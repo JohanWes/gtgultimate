@@ -10,6 +10,7 @@ import { ConsultantOptions, type ConsultantOptionsHandle } from './ConsultantOpt
 import { TopScoresTicker } from './TopScoresTicker';
 import { clsx } from 'clsx';
 import { AlertCircle, X, ArrowRight } from 'lucide-react';
+import { useSettings } from '../hooks/useSettings';
 
 interface ArcadeGameAreaProps {
     game: Game;
@@ -43,15 +44,15 @@ export const ArcadeGameArea: React.FC<ArcadeGameAreaProps> = ({
     // Animation states
     const [animatingButton, setAnimatingButton] = useState<LifelineType | null>(null);
     const [errorMessage, setErrorMessage] = useState<string | null>(null);
-    const [sameSeriesMessage, setSameSeriesMessage] = useState<boolean>(false);
+    const [similarNameMessage, setSimilarNameMessage] = useState<boolean>(false);
 
-    // Detect same series guess
+    // Detect similar name guess
     useEffect(() => {
         if (state.guesses.length > 0) {
             const lastGuess = state.guesses[state.guesses.length - 1];
-            if (lastGuess.result === 'same-series') {
-                setSameSeriesMessage(true);
-                setTimeout(() => setSameSeriesMessage(false), 2000);
+            if (lastGuess.result === 'similar-name') {
+                setSimilarNameMessage(true);
+                setTimeout(() => setSimilarNameMessage(false), 2000);
             }
         }
     }, [state.guesses]);
@@ -155,6 +156,37 @@ export const ArcadeGameArea: React.FC<ArcadeGameAreaProps> = ({
         setDoubleTroubleGame(null);
     }, [game.id]);
 
+    const { settings } = useSettings();
+
+    // Handle Enter key for Next Level / Try Again
+    useEffect(() => {
+        const handleKeyDown = (e: KeyboardEvent) => {
+            // Next Level on Enter
+            if (state.status !== 'playing' && e.key === 'Enter') {
+                if (settings.nextLevelOnEnter) {
+                    e.preventDefault();
+                    consultantRef.current?.stopSounds();
+                    if (state.isGameOver) {
+                        onRequestHighScore();
+                    } else {
+                        onNextLevel();
+                    }
+                }
+            }
+
+            // Skip on Esc
+            if (state.status === 'playing' && e.key === 'Escape') {
+                if (settings.skipOnEsc) {
+                    e.preventDefault();
+                    onSkip();
+                }
+            }
+        };
+
+        window.addEventListener('keydown', handleKeyDown);
+        return () => window.removeEventListener('keydown', handleKeyDown);
+    }, [state.status, state.isGameOver, onNextLevel, onRequestHighScore, onSkip, settings]);
+
     if (showShop) {
         return (
             <ShopModal
@@ -204,12 +236,12 @@ export const ArcadeGameArea: React.FC<ArcadeGameAreaProps> = ({
                             </div>
                         )}
 
-                        {/* Same Series Popup */}
-                        {sameSeriesMessage && (
+                        {/* Similar Name Popup */}
+                        {similarNameMessage && (
                             <div className="absolute top-4 left-0 right-0 flex justify-center pointer-events-none z-50">
                                 <div className="bg-yellow-500 text-black px-4 py-2 rounded-full shadow-lg font-bold animate-in fade-in slide-in-from-bottom-2 border border-yellow-400 flex items-center gap-2">
                                     <AlertCircle size={18} />
-                                    <span>Same Series!</span>
+                                    <span>Similar Name!</span>
                                 </div>
                             </div>
                         )}
@@ -271,6 +303,7 @@ export const ArcadeGameArea: React.FC<ArcadeGameAreaProps> = ({
                                 games={allGames}
                                 onGuess={handleSearchInputGuess}
                                 disabled={state.status !== 'playing'}
+                                autoFocus={true}
                             />
                         )}
                     </div>
@@ -282,23 +315,29 @@ export const ArcadeGameArea: React.FC<ArcadeGameAreaProps> = ({
                             <div className="space-y-2">
                                 {state.guesses
                                     .filter(guess => guess.result !== 'correct')
-                                    .map((guess, idx) => {
-                                        const colorClass = guess.result === 'same-series'
+                                    .slice() // Create a copy before reversing
+                                    .reverse()
+                                    .map((guess, idx, arr) => {
+                                        const originalIdx = arr.length - 1 - idx;
+                                        const colorClass = guess.result === 'similar-name'
                                             ? 'text-yellow-500'
                                             : 'text-red-500';
-                                        const label = guess.result === 'same-series'
-                                            ? 'Same Series'
+                                        const label = guess.result === 'similar-name'
+                                            ? 'Similar Name'
                                             : guess.result === 'skipped'
-                                                ? `SKIPPED ${idx + 1}`
+                                                ? `SKIPPED ${originalIdx + 1}`
                                                 : 'Wrong';
-                                        const icon = guess.result === 'same-series'
+                                        const icon = guess.result === 'similar-name'
                                             ? <AlertCircle size={16} />
                                             : <X size={16} />;
+                                        const borderClass = guess.result === 'similar-name'
+                                            ? 'border-yellow-500'
+                                            : 'border-white/5';
 
                                         return (
                                             <div
                                                 key={idx}
-                                                className="flex items-center justify-between p-2.5 rounded-lg bg-gray-800/30 border border-white/5 text-gray-300 animate-in slide-in-from-bottom-2 fade-in text-sm"
+                                                className={`flex items-center justify-between p-2.5 rounded-lg bg-gray-800/30 border ${borderClass} text-gray-300 animate-in slide-in-from-bottom-2 fade-in text-sm`}
                                                 style={{ animationDelay: `${idx * 100}ms` }}
                                             >
                                                 <span className="font-medium">{guess.name}</span>

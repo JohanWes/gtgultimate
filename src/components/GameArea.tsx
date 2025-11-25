@@ -5,6 +5,7 @@ import { ScreenshotViewer } from './ScreenshotViewer';
 import type { Game, GameStatus, GuessWithResult, LevelProgress } from '../types';
 import { clsx } from 'clsx';
 import { X, ArrowRight, AlertCircle } from 'lucide-react';
+import { useSettings } from '../hooks/useSettings';
 
 interface GameAreaProps {
     game: Game;
@@ -20,15 +21,15 @@ interface GameAreaProps {
 export function GameArea({ game, allGames, guesses, status, allProgress, onGuess, onSkip, onNextLevel }: GameAreaProps) {
     const revealedCount = status === 'playing' ? guesses.length + 1 : 5;
     const [errorMessage, setErrorMessage] = useState<string | null>(null);
-    const [sameSeriesMessage, setSameSeriesMessage] = useState<boolean>(false);
+    const [similarNameMessage, setSimilarNameMessage] = useState<boolean>(false);
 
-    // Detect same series guess
+    // Detect similar name guess
     useEffect(() => {
         if (guesses.length > 0) {
             const lastGuess = guesses[guesses.length - 1];
-            if (lastGuess.result === 'same-series') {
-                setSameSeriesMessage(true);
-                setTimeout(() => setSameSeriesMessage(false), 2000);
+            if (lastGuess.result === 'similar-name') {
+                setSimilarNameMessage(true);
+                setTimeout(() => setSimilarNameMessage(false), 2000);
             }
         }
     }, [guesses]);
@@ -53,6 +54,32 @@ export function GameArea({ game, allGames, guesses, status, allProgress, onGuess
         onGuess(name);
     };
 
+    const { settings } = useSettings();
+
+    // Handle Keyboard Shortcuts (Enter for Next Level, Esc for Skip)
+    useEffect(() => {
+        const handleKeyDown = (e: KeyboardEvent) => {
+            // Next Level on Enter
+            if (status !== 'playing' && e.key === 'Enter') {
+                if (settings.nextLevelOnEnter) {
+                    e.preventDefault();
+                    onNextLevel();
+                }
+            }
+
+            // Skip on Esc
+            if (status === 'playing' && e.key === 'Escape') {
+                if (settings.skipOnEsc) {
+                    e.preventDefault();
+                    onSkip();
+                }
+            }
+        };
+
+        window.addEventListener('keydown', handleKeyDown);
+        return () => window.removeEventListener('keydown', handleKeyDown);
+    }, [status, onNextLevel, onSkip, settings]);
+
     return (
         <div className="max-w-5xl mx-auto space-y-2 pb-8">
             {/* Main Layout: Image + Metadata Side by Side */}
@@ -74,11 +101,11 @@ export function GameArea({ game, allGames, guesses, status, allProgress, onGuess
                                 SKIP
                             </button>
                         )}
-                        {sameSeriesMessage && (
+                        {similarNameMessage && (
                             <div className="absolute top-4 left-0 right-0 flex justify-center pointer-events-none z-50">
                                 <div className="bg-warning text-black px-4 py-2 rounded-full shadow-lg font-bold animate-in fade-in slide-in-from-bottom-2 border border-yellow-500 flex items-center gap-2">
                                     <AlertCircle size={18} />
-                                    <span>Same Series!</span>
+                                    <span>Similar Name!</span>
                                 </div>
                             </div>
                         )}
@@ -128,6 +155,7 @@ export function GameArea({ game, allGames, guesses, status, allProgress, onGuess
                     games={allGames}
                     onGuess={handleGuess}
                     disabled={status !== 'playing'}
+                    autoFocus={true}
                 />
             </div>
 
@@ -138,25 +166,31 @@ export function GameArea({ game, allGames, guesses, status, allProgress, onGuess
                     <div className="space-y-2">
                         {guesses
                             .filter(guess => guess.result !== 'correct')
-                            .map((guess, idx) => {
-                                const colorClass = guess.result === 'same-series'
+                            .slice() // Create a copy before reversing
+                            .reverse()
+                            .map((guess, idx, arr) => {
+                                const originalIdx = arr.length - 1 - idx;
+                                const colorClass = guess.result === 'similar-name'
                                     ? 'text-warning'
                                     : guess.result === 'skipped'
                                         ? 'text-error'
                                         : 'text-error';
-                                const label = guess.result === 'same-series'
-                                    ? 'Same Series'
+                                const label = guess.result === 'similar-name'
+                                    ? 'Similar Name'
                                     : guess.result === 'skipped'
-                                        ? `SKIPPED ${idx + 1}`
+                                        ? `SKIPPED ${originalIdx + 1}`
                                         : 'Wrong';
-                                const icon = guess.result === 'same-series'
+                                const icon = guess.result === 'similar-name'
                                     ? <AlertCircle size={18} />
                                     : <X size={18} />;
+                                const borderClass = guess.result === 'similar-name'
+                                    ? 'border-yellow-500'
+                                    : 'border-white/5';
 
                                 return (
                                     <div
                                         key={idx}
-                                        className="flex items-center justify-between p-2 rounded-lg bg-surface/50 border border-white/5 text-muted animate-in slide-in-from-bottom-2 fade-in text-sm"
+                                        className={`flex items-center justify-between p-2 rounded-lg bg-surface/50 border ${borderClass} text-muted animate-in slide-in-from-bottom-2 fade-in text-sm`}
                                         style={{ animationDelay: `${idx * 100}ms` }}
                                     >
                                         <span className="font-medium">{guess.name}</span>

@@ -20,6 +20,18 @@ export const HighScoreModal: React.FC<HighScoreModalProps> = ({ score, onPlayAga
         loadHighScores();
     }, []);
 
+    // Handle ESC key to close modal
+    useEffect(() => {
+        const handleKeyDown = (e: KeyboardEvent) => {
+            if (e.key === 'Escape') {
+                onClose();
+            }
+        };
+
+        window.addEventListener('keydown', handleKeyDown);
+        return () => window.removeEventListener('keydown', handleKeyDown);
+    }, [onClose]);
+
     const loadHighScores = async () => {
         setLoading(true);
         const scores = await fetchHighScores();

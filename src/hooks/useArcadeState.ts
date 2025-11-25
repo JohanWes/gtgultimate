@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import type { Game, ArcadeState, LifelineType, GuessResult } from '../types';
 import { calculateScore, getShopItems, generateRandomCrop } from '../utils/arcadeUtils';
-import { areSameSeries } from '../utils/seriesDetection';
+import { areSimilarNames } from '../utils/seriesDetection';
 
 
 // Proper Fisher-Yates shuffle algorithm (unbiased)
@@ -85,8 +85,8 @@ export const useArcadeState = (allGames: Game[]) => {
         if (game.id === currentGame.id) {
             result = 'correct';
         } else {
-            if (areSameSeries(game.name, currentGame.name)) {
-                result = 'same-series';
+            if (areSimilarNames(game.name, currentGame.name)) {
+                result = 'similar-name';
             }
         }
 

@@ -164,9 +164,9 @@ function haveSameFirstWord(name1: string, name2: string): boolean {
 }
 
 /**
- * Main function: Check if two games belong to the same series
+ * Main function: Check if two games have similar names (likely same series)
  */
-export function areSameSeries(gameName1: string, gameName2: string): boolean {
+export function areSimilarNames(gameName1: string, gameName2: string): boolean {
     // Don't match if names are identical (same game)
     if (gameName1.toLowerCase() === gameName2.toLowerCase()) {
         return false;

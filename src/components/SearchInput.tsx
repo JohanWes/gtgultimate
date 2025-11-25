@@ -10,9 +10,10 @@ interface SearchInputProps {
     readonly games: Game[];
     readonly onGuess: (name: string) => void;
     readonly disabled: boolean;
+    readonly autoFocus?: boolean;
 }
 
-export function SearchInput({ games, onGuess, disabled }: SearchInputProps) {
+export function SearchInput({ games, onGuess, disabled, autoFocus }: SearchInputProps) {
     const [searchQuery, setSearchQuery] = useState('');
     const [displayValue, setDisplayValue] = useState('');
     const [isOpen, setIsOpen] = useState(false);
@@ -20,6 +21,17 @@ export function SearchInput({ games, onGuess, disabled }: SearchInputProps) {
     const inputRef = useRef<HTMLInputElement>(null);
     const listRef = useRef<HTMLUListElement>(null);
     const skipNextFocus = useRef(false);
+
+    // Auto-focus when enabled
+    useEffect(() => {
+        if (!disabled && autoFocus && inputRef.current) {
+            // Small timeout to ensure DOM is ready and prevent fighting with other focus events
+            const timer = setTimeout(() => {
+                inputRef.current?.focus();
+            }, 10);
+            return () => clearTimeout(timer);
+        }
+    }, [disabled, autoFocus]);
 
     // Initialize both search indexes
     useMemo(() => {
@@ -65,8 +77,10 @@ export function SearchInput({ games, onGuess, disabled }: SearchInputProps) {
         if (results.length > 0 && isOpen) {
             submitGuess(results[selectedIndex].name);
         } else if (displayValue) {
-            // If exact match exists in database, allow it, otherwise ignore
-            const exactMatch = games.find(g => g.name.toLowerCase() === displayValue.toLowerCase());
+            // If exact match exists in database (real or bait), allow it
+            const potentialMatches = searchCombined(displayValue);
+            const exactMatch = potentialMatches.find(g => g.name.toLowerCase() === displayValue.toLowerCase());
+
             if (exactMatch) {
                 submitGuess(exactMatch.name);
             }

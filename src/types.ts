@@ -22,7 +22,7 @@ export type ConsultantOption = Game | BaitGame;
 
 export type GameStatus = 'playing' | 'won' | 'lost';
 
-export type GuessResult = 'wrong' | 'same-series' | 'correct' | 'skipped';
+export type GuessResult = 'wrong' | 'similar-name' | 'correct' | 'skipped';
 
 export interface GuessWithResult {
     name: string;

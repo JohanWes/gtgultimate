@@ -2,7 +2,7 @@
 import { useState, useEffect } from 'react';
 import type { Game, GameStatus, LevelProgress, GuessResult } from '../types';
 import gamesData from '../data/games_db.json';
-import { areSameSeries } from '../utils/seriesDetection';
+import { areSimilarNames } from '../utils/seriesDetection';
 
 const GAMES = gamesData as Game[];
 const STORAGE_KEY = 'guessthegame_unlimited_progress';
@@ -51,8 +51,8 @@ export function useGameState() {
         if (isCorrect) {
             result = 'correct';
         } else if (guessedGame) {
-            if (areSameSeries(guessedGame.name, currentGame.name)) {
-                result = 'same-series';
+            if (areSimilarNames(guessedGame.name, currentGame.name)) {
+                result = 'similar-name';
             }
         }
 
