@@ -6,6 +6,28 @@
 // Common words to ignore when comparing game names
 const STOP_WORDS = new Set(['the', 'a', 'an', 'of', 'and', 'or', 'in', 'on', 'at', 'to', 'for']);
 
+// Iconic series names that should trigger a match if present in both games
+// This overrides standard logic to ensure obvious series matches are caught
+const ICONIC_SERIES = [
+    "Mario", "Zelda", "Metroid", "Pokemon", "Pokémon", "Final Fantasy",
+    "Resident Evil", "Silent Hill", "Street Fighter", "Sonic", "Halo",
+    "God of War", "Call of Duty", "Battlefield", "Assassin's Creed",
+    "Grand Theft Auto", "GTA", "Metal Gear", "Mortal Kombat", "Persona",
+    "Kingdom Hearts", "Dark Souls", "Elden Ring", "Bloodborne", "Mass Effect",
+    "Dragon Age", "Fallout", "Elder Scrolls", "Uncharted", "The Last of Us",
+    "Tomb Raider", "Civilization", "Warcraft", "StarCraft", "Diablo",
+    "Overwatch", "Doom", "Quake", "Wolfenstein", "Half-Life", "Portal",
+    "Left 4 Dead", "Counter-Strike", "Borderlands", "BioShock", "Spyro",
+    "Crash Bandicoot", "Ratchet & Clank", "Sly Cooper", "Need for Speed",
+    "Burnout", "Tony Hawk", "Guitar Hero", "Rock Band", "Lego", "Star Wars",
+    "Batman", "Spider-Man", "X-Men", "Avengers", "Mega Man", "Castlevania",
+    "Pac-Man", "Donkey Kong", "Sims", "Tetris", "Gran Turismo", "Forza",
+    "Fable", "Gears of War", "Splinter Cell", "Rainbow Six", "Ghost Recon",
+    "Hitman", "Devil May Cry", "Yakuza", "Like a Dragon", "Monster Hunter",
+    "Fire Emblem", "Xenoblade", "Dragon Quest", "Tales of", "Shin Megami Tensei",
+    "Sid Meier's"
+];
+
 // Patterns to remove when normalizing game names
 const REMOVAL_PATTERNS = [
     // Numbers (both Arabic and Roman numerals at word boundaries)
@@ -27,6 +49,13 @@ const REMOVAL_PATTERNS = [
     // Common suffixes in parentheses
     /\([^)]*\)/g,
 ];
+
+/**
+ * Escape special characters for regex
+ */
+function escapeRegExp(string: string): string {
+    return string.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+}
 
 /**
  * Normalize a game name by removing common variations
@@ -170,6 +199,7 @@ function haveSameFirstWord(name1: string, name2: string): boolean {
 /**
  * Check if one normalized name is a substring of the other
  * This catches "Super Metroid" vs "Metroid", "The Legend of Zelda" vs "Zelda"
+ * Enforces word boundaries to avoid "Metro" matching "Metroid"
  */
 function haveSubstringMatch(name1: string, name2: string): boolean {
     const n1 = normalizeGameName(name1);
@@ -180,9 +210,46 @@ function haveSubstringMatch(name1: string, name2: string): boolean {
         return false;
     }
 
-    // Check if one is contained in the other
-    if (n1.includes(n2) || n2.includes(n1)) {
-        return true;
+    // Check if shorter name is in longer name with word boundaries
+    const [shorter, longer] = n1.length < n2.length ? [n1, n2] : [n2, n1];
+
+    try {
+        const regex = new RegExp(`\\b${escapeRegExp(shorter)}\\b`, 'i');
+        return regex.test(longer);
+    } catch (e) {
+        // Fallback to simple inclusion if regex fails (unlikely)
+        return longer.includes(shorter);
+    }
+}
+
+/**
+ * Check if both games belong to the same iconic series
+ * This is a manual override for obvious series matches
+ */
+function haveIconicSeriesMatch(name1: string, name2: string): boolean {
+    // Normalize names to remove accents (e.g. Pokémon -> Pokemon)
+    // This ensures we catch variations like "Pokemon" vs "Pokémon"
+    const normalize = (str: string) => str.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+
+    const n1 = normalize(name1);
+    const n2 = normalize(name2);
+
+    for (const series of ICONIC_SERIES) {
+        const s = normalize(series);
+
+        // Check if the series name is present in BOTH game names
+        // Use word boundaries to prevent "Halo" matching "Shallow"
+        try {
+            const regex = new RegExp(`\\b${escapeRegExp(s)}\\b`, 'i');
+            if (regex.test(n1) && regex.test(n2)) {
+                return true;
+            }
+        } catch (e) {
+            // Fallback to simple inclusion
+            if (n1.includes(s) && n2.includes(s)) {
+                return true;
+            }
+        }
     }
 
     return false;
@@ -195,6 +262,11 @@ export function areSimilarNames(gameName1: string, gameName2: string): boolean {
     // Don't match if names are identical (same game)
     if (gameName1.toLowerCase() === gameName2.toLowerCase()) {
         return false;
+    }
+
+    // Strategy 0: Iconic Series Override (Highest Priority)
+    if (haveIconicSeriesMatch(gameName1, gameName2)) {
+        return true;
     }
 
     // Strategy 1: Check if they have the same core name (before the colon)
