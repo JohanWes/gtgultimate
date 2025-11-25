@@ -4,6 +4,7 @@ import bodyParser from 'body-parser';
 import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
+import 'dotenv/config';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -84,6 +85,66 @@ app.post('/api/highscores', (req, res) => {
     writeScores(scores);
 
     res.status(201).json(newScore);
+});
+
+// Define path to games_db.json
+const GAMES_DB_FILE = path.join(__dirname, 'src', 'data', 'games_db.json');
+
+// POST /api/admin/verify
+app.post('/api/admin/verify', (req, res) => {
+    const adminKey = req.headers['x-admin-key'];
+
+    if (!process.env.ADMIN_KEY) {
+        console.error('ADMIN_KEY not set in environment variables');
+        return res.status(500).json({ error: 'Server misconfiguration' });
+    }
+
+    if (adminKey === process.env.ADMIN_KEY) {
+        res.json({ success: true });
+    } else {
+        res.status(401).json({ error: 'Invalid admin key' });
+    }
+});
+
+// POST /api/admin/update-game
+app.post('/api/admin/update-game', (req, res) => {
+    const adminKey = req.headers['x-admin-key'];
+
+    if (!process.env.ADMIN_KEY || adminKey !== process.env.ADMIN_KEY) {
+        return res.status(401).json({ error: 'Unauthorized' });
+    }
+
+    const { id, name } = req.body;
+
+    if (!id || !name) {
+        return res.status(400).json({ error: 'Missing id or name' });
+    }
+
+    try {
+        if (!fs.existsSync(GAMES_DB_FILE)) {
+            return res.status(404).json({ error: 'Games database not found' });
+        }
+
+        const data = fs.readFileSync(GAMES_DB_FILE, 'utf8');
+        const games = JSON.parse(data);
+
+        const gameIndex = games.findIndex(g => g.id === id);
+        if (gameIndex === -1) {
+            return res.status(404).json({ error: 'Game not found' });
+        }
+
+        // Update the name
+        games[gameIndex].name = name.trim();
+
+        // Write back to file
+        fs.writeFileSync(GAMES_DB_FILE, JSON.stringify(games, null, 2));
+
+        console.log(`Updated game ${id} name to: ${name}`);
+        res.json({ success: true, game: games[gameIndex] });
+    } catch (err) {
+        console.error('Error updating game:', err);
+        res.status(500).json({ error: 'Internal server error' });
+    }
 });
 
 // Handle SPA routing - return index.html for all other routes

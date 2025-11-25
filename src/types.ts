@@ -67,6 +67,8 @@ export interface ArcadeState {
     doubleTroubleGameId: number | null;
     zoomOutActive: boolean; // Whether Zoom Out lifeline is active for current round
     cropPositions: Array<{ x: number; y: number }>; // Persisted crop positions for the current level
+    hotStreakCount: number; // Number of consecutive "Close to Perfect" guesses (1st or 2nd image)
+    isHotStreakActive: boolean; // Whether the hot streak effect is currently active (>= 3 hotStreakCount)
 }
 
 export interface ShopItem {

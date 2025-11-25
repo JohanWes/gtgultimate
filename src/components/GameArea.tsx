@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { InfoPanel } from './InfoPanel';
 import { SearchInput } from './SearchInput';
 import { ScreenshotViewer } from './ScreenshotViewer';
+import { AdminGameEditor } from './AdminGameEditor';
 import type { Game, GameStatus, GuessWithResult, LevelProgress } from '../types';
 import { clsx } from 'clsx';
 import { X, ArrowRight, AlertCircle } from 'lucide-react';
@@ -22,6 +23,63 @@ export function GameArea({ game, allGames, guesses, status, allProgress, onGuess
     const revealedCount = status === 'playing' ? guesses.length + 1 : 5;
     const [errorMessage, setErrorMessage] = useState<string | null>(null);
     const [similarNameMessage, setSimilarNameMessage] = useState<boolean>(false);
+
+    // Admin Mode State
+    const [adminModalOpen, setAdminModalOpen] = useState(false);
+    const [, setBackspaceCount] = useState(0);
+    const [displayGameName, setDisplayGameName] = useState(game.name);
+
+    useEffect(() => {
+        setDisplayGameName(game.name);
+    }, [game.name]);
+
+    // Admin Access Listener
+    useEffect(() => {
+        if (status === 'playing') {
+            setBackspaceCount(0);
+            return;
+        }
+
+        const handleKeyDown = (e: KeyboardEvent) => {
+            if (e.key === 'Backspace') {
+                setBackspaceCount(prev => {
+                    const newCount = prev + 1;
+                    if (newCount === 5) {
+                        // Verify admin key before opening
+                        if (!settings.adminKey) {
+                            console.log('No admin key configured');
+                            return 0;
+                        }
+
+                        fetch('/api/admin/verify', {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                                'x-admin-key': settings.adminKey
+                            }
+                        })
+                            .then(res => res.json())
+                            .then(data => {
+                                if (data.success) {
+                                    setAdminModalOpen(true);
+                                } else {
+                                    console.log('Invalid admin key');
+                                }
+                            })
+                            .catch(err => console.error('Admin verification failed', err));
+
+                        return 0;
+                    }
+                    return newCount;
+                });
+            } else {
+                setBackspaceCount(0);
+            }
+        };
+
+        window.addEventListener('keydown', handleKeyDown);
+        return () => window.removeEventListener('keydown', handleKeyDown);
+    }, [status]);
 
     // Detect similar name guess
     useEffect(() => {
@@ -82,6 +140,17 @@ export function GameArea({ game, allGames, guesses, status, allProgress, onGuess
 
     return (
         <div className="max-w-5xl mx-auto space-y-2 pb-8">
+            <AdminGameEditor
+                isOpen={adminModalOpen}
+                onClose={() => setAdminModalOpen(false)}
+                game={game}
+                onUpdate={(newName) => {
+                    setDisplayGameName(newName);
+                    // Update the game object in memory so it persists in the current session if revisited
+                    game.name = newName;
+                }}
+            />
+
             {/* Main Layout: Image + Metadata Side by Side */}
             <div className="flex flex-col lg:flex-row gap-3">
                 {/* Left: Screenshot Viewer */}
@@ -114,7 +183,7 @@ export function GameArea({ game, allGames, guesses, status, allProgress, onGuess
 
                 {/* Right: Metadata Cards */}
                 <div className="lg:w-40 flex-shrink-0">
-                    <InfoPanel game={game} guessesMade={guesses.length} status={status} />
+                    <InfoPanel game={{ ...game, name: displayGameName }} guessesMade={guesses.length} status={status} />
                 </div>
             </div>
 
@@ -131,7 +200,7 @@ export function GameArea({ game, allGames, guesses, status, allProgress, onGuess
                         {status === 'won' ? "You Got It!" : "Game Over"}
                     </h2>
                     <p className="text-base text-white mb-4">
-                        The game was <span className="font-bold">{game.name}</span>
+                        The game was <span className="font-bold">{displayGameName}</span>
                     </p>
                     <button
                         onClick={onNextLevel}

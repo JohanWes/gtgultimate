@@ -43,4 +43,19 @@
   .custom-scrollbar::-webkit-scrollbar-thumb:hover {
     background-color: #94a3b8;
   }
+
+  .animate-pulse-fire {
+    animation: pulse-fire 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+  }
+
+  @keyframes pulse-fire {
+    0%, 100% {
+      box-shadow: 0 0 20px 5px rgba(239, 68, 68, 0.5), 0 0 40px 10px rgba(249, 115, 22, 0.3);
+      border-color: rgba(239, 68, 68, 0.8);
+    }
+    50% {
+      box-shadow: 0 0 30px 10px rgba(239, 68, 68, 0.7), 0 0 60px 20px rgba(249, 115, 22, 0.5);
+      border-color: rgba(249, 115, 22, 1);
+    }
+  }
 }

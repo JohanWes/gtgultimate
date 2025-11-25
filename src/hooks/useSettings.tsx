@@ -5,16 +5,18 @@ const STORAGE_KEY = 'guessthegame_settings';
 export interface Settings {
     nextLevelOnEnter: boolean;
     skipOnEsc: boolean;
+    adminKey: string;
 }
 
 const DEFAULT_SETTINGS: Settings = {
     nextLevelOnEnter: false,
     skipOnEsc: false,
+    adminKey: ''
 };
 
 interface SettingsContextType {
     settings: Settings;
-    updateSetting: (key: keyof Settings, value: boolean) => void;
+    updateSetting: (key: keyof Settings, value: boolean | string) => void;
 }
 
 const SettingsContext = createContext<SettingsContextType | undefined>(undefined);
@@ -36,7 +38,7 @@ export function SettingsProvider({ children }: { children: React.ReactNode }) {
         localStorage.setItem(STORAGE_KEY, JSON.stringify(settings));
     }, [settings]);
 
-    const updateSetting = (key: keyof Settings, value: boolean) => {
+    const updateSetting = (key: keyof Settings, value: boolean | string) => {
         setSettings(prev => ({ ...prev, [key]: value }));
     };
 

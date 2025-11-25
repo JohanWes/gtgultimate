@@ -8,8 +8,9 @@ import { ScreenshotViewer } from './ScreenshotViewer';
 import { InfoPanel } from './InfoPanel';
 import { ConsultantOptions, type ConsultantOptionsHandle } from './ConsultantOptions';
 import { TopScoresTicker } from './TopScoresTicker';
+import { AdminGameEditor } from './AdminGameEditor';
 import { clsx } from 'clsx';
-import { AlertCircle, X, ArrowRight } from 'lucide-react';
+import { AlertCircle, X, ArrowRight, Flame } from 'lucide-react';
 import { useSettings } from '../hooks/useSettings';
 
 interface ArcadeGameAreaProps {
@@ -45,6 +46,76 @@ export const ArcadeGameArea: React.FC<ArcadeGameAreaProps> = ({
     const [animatingButton, setAnimatingButton] = useState<LifelineType | null>(null);
     const [errorMessage, setErrorMessage] = useState<string | null>(null);
     const [similarNameMessage, setSimilarNameMessage] = useState<boolean>(false);
+
+    const [showFireEffect, setShowFireEffect] = useState(false);
+
+    // Admin Mode State
+    const [adminModalOpen, setAdminModalOpen] = useState(false);
+    const [, setBackspaceCount] = useState(0);
+    const [displayGameName, setDisplayGameName] = useState(game.name);
+
+    useEffect(() => {
+        setDisplayGameName(game.name);
+    }, [game.name]);
+
+    // Admin Access Listener
+    useEffect(() => {
+        if (state.status === 'playing') {
+            setBackspaceCount(0);
+            return;
+        }
+
+        const handleKeyDown = async (e: KeyboardEvent) => {
+            if (e.key === 'Backspace') {
+                setBackspaceCount(prev => {
+                    const newCount = prev + 1;
+                    if (newCount === 5) {
+                        // Verify admin key before opening
+                        if (!settings.adminKey) {
+                            console.log('No admin key configured');
+                            return 0;
+                        }
+
+                        fetch('/api/admin/verify', {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                                'x-admin-key': settings.adminKey
+                            }
+                        })
+                            .then(res => res.json())
+                            .then(data => {
+                                if (data.success) {
+                                    setAdminModalOpen(true);
+                                } else {
+                                    console.log('Invalid admin key');
+                                }
+                            })
+                            .catch(err => console.error('Admin verification failed', err));
+
+                        return 0;
+                    }
+                    return newCount;
+                });
+            } else {
+                setBackspaceCount(0);
+            }
+        };
+
+        window.addEventListener('keydown', handleKeyDown);
+        return () => window.removeEventListener('keydown', handleKeyDown);
+    }, [state.status]);
+
+    // Handle Fire Effect Pulse
+    useEffect(() => {
+        if (state.isHotStreakActive) {
+            setShowFireEffect(true);
+            const timer = setTimeout(() => setShowFireEffect(false), 2100);
+            return () => clearTimeout(timer);
+        } else {
+            setShowFireEffect(false);
+        }
+    }, [state.isHotStreakActive]);
 
     // Detect similar name guess
     useEffect(() => {
@@ -203,11 +274,23 @@ export const ArcadeGameArea: React.FC<ArcadeGameAreaProps> = ({
 
     return (
         <div className="max-w-6xl mx-auto pb-8 px-4">
+            <AdminGameEditor
+                isOpen={adminModalOpen}
+                onClose={() => setAdminModalOpen(false)}
+                game={game}
+                onUpdate={(newName) => {
+                    setDisplayGameName(newName);
+                    game.name = newName;
+                }}
+            />
             <div className="flex flex-col lg:flex-row gap-4 items-start">
                 {/* Left Column: Game Area */}
                 <div className="flex-1 w-full space-y-4 min-w-0">
                     {/* Screenshot Viewer */}
-                    <div className="relative">
+                    <div className={clsx(
+                        "relative rounded-xl transition-all duration-500",
+                        showFireEffect && state.guesses.length < 2 && "animate-pulse-fire border-2 border-orange-500/50"
+                    )}>
                         <ScreenshotViewer
                             screenshots={game.screenshots}
                             revealedCount={revealedCount}
@@ -261,9 +344,9 @@ export const ArcadeGameArea: React.FC<ArcadeGameAreaProps> = ({
                             </h2>
                             <p className="text-base text-white mb-4">
                                 {doubleTroubleGame ? (
-                                    <>The games were <span className="font-bold">{game.name}</span> / <span className="font-bold">{doubleTroubleGame.name}</span></>
+                                    <>The games were <span className="font-bold">{displayGameName}</span> / <span className="font-bold">{doubleTroubleGame.name}</span></>
                                 ) : (
-                                    <>The game was <span className="font-bold">{game.name}</span></>
+                                    <>The game was <span className="font-bold">{displayGameName}</span></>
                                 )}
                             </p>
                             <button
@@ -369,7 +452,7 @@ export const ArcadeGameArea: React.FC<ArcadeGameAreaProps> = ({
                                         ? "text-transparent bg-clip-text bg-gradient-to-r from-orange-500 via-yellow-400 to-orange-500 animate-flame-flicker"
                                         : "text-yellow-400"
                                 )}>
-                                    {state.score >= state.highScore && state.score > 0 && "🔥 "}{state.score}{state.score >= state.highScore && state.score > 0 && " 🔥"}
+                                    {state.score >= state.highScore && state.score > 0 && "🔥 "}{state.score}{state.score >= state.highScore && state.score > 0 && " "}
                                 </span>
                             </div>
                             <div className="flex flex-col border-x border-white/5">
@@ -383,8 +466,22 @@ export const ArcadeGameArea: React.FC<ArcadeGameAreaProps> = ({
                         </div>
                     </div>
 
+                    {/* Hot Streak Indicator */}
+                    {state.isHotStreakActive && state.guesses.length < 2 && (
+                        <div className="bg-gradient-to-r from-red-600 to-orange-500 p-0.5 rounded-xl shadow-lg animate-in slide-in-from-right fade-in duration-500">
+                            <div className="bg-gray-900/90 backdrop-blur-sm rounded-[10px] p-3 flex items-center justify-center gap-3">
+                                <Flame className="text-orange-500 animate-pulse" size={24} fill="currentColor" />
+                                <div className="flex flex-col">
+                                    <span className="text-orange-500 font-black text-lg tracking-wider leading-none">HOT STREAK</span>
+                                    <span className="text-orange-300/80 text-[10px] font-bold uppercase tracking-widest">2x Score Multiplier Active!</span>
+                                </div>
+                                <Flame className="text-orange-500 animate-pulse" size={24} fill="currentColor" />
+                            </div>
+                        </div>
+                    )}
+
                     {/* Info Panel */}
-                    <InfoPanel game={game} guessesMade={state.guesses.length} status={state.status} />
+                    <InfoPanel game={{ ...game, name: displayGameName }} guessesMade={state.guesses.length} status={state.status} />
 
                     {/* Lifelines */}
                     <div className="space-y-2 mt-2">

@@ -37,7 +37,9 @@ const INITIAL_STATE: ArcadeState = {
     history: [],
     doubleTroubleGameId: null,
     zoomOutActive: false,
-    cropPositions: []
+    cropPositions: [],
+    hotStreakCount: 0,
+    isHotStreakActive: false
 };
 
 export const useArcadeState = (allGames: Game[]) => {
@@ -93,7 +95,15 @@ export const useArcadeState = (allGames: Game[]) => {
         const newGuesses = [...state.guesses, { name: game.name, result }];
 
         if (result === 'correct') {
-            const points = calculateScore(newGuesses.length);
+            const isCloseToPerfect = newGuesses.length <= 2;
+            const newHotStreakCount = isCloseToPerfect ? state.hotStreakCount + 1 : 0;
+            const isHotStreakActive = newHotStreakCount >= 3;
+
+            let points = calculateScore(newGuesses.length);
+            if (isHotStreakActive) {
+                points *= 2;
+            }
+
             setState(prev => ({
                 ...prev,
                 score: prev.score + points,
@@ -101,7 +111,9 @@ export const useArcadeState = (allGames: Game[]) => {
                 status: 'won',
                 guesses: newGuesses,
                 highScore: Math.max(prev.highScore, prev.score + points),
-                history: [...prev.history, { gameId: currentGame.id, score: points, status: 'won' }]
+                history: [...prev.history, { gameId: currentGame.id, score: points, status: 'won' }],
+                hotStreakCount: newHotStreakCount,
+                isHotStreakActive: isHotStreakActive
             }));
         } else if (newGuesses.length >= 5) {
             // Permadeath
@@ -111,7 +123,9 @@ export const useArcadeState = (allGames: Game[]) => {
                 highScoreModalShown: false, // Reset when game over happens
                 status: 'lost',
                 guesses: newGuesses,
-                history: [...prev.history, { gameId: currentGame.id, score: 0, status: 'lost' }]
+                history: [...prev.history, { gameId: currentGame.id, score: 0, status: 'lost' }],
+                hotStreakCount: 0,
+                isHotStreakActive: false
             }));
         } else {
             setState(prev => ({
@@ -134,7 +148,9 @@ export const useArcadeState = (allGames: Game[]) => {
                 highScoreModalShown: false, // Reset when game over happens
                 status: 'lost',
                 guesses: newGuesses,
-                history: [...prev.history, { gameId: currentGame.id, score: 0, status: 'lost' }]
+                history: [...prev.history, { gameId: currentGame.id, score: 0, status: 'lost' }],
+                hotStreakCount: 0,
+                isHotStreakActive: false
             }));
         } else {
             setState(prev => ({
@@ -179,7 +195,9 @@ export const useArcadeState = (allGames: Game[]) => {
                     ...prev,
                     lifelines: newLifelines,
                     status: 'won', // Treat as won but 0 points
-                    history: [...prev.history, { gameId: currentGameId, score: 0, status: 'skipped' }]
+                    history: [...prev.history, { gameId: currentGameId, score: 0, status: 'skipped' }],
+                    hotStreakCount: 0,
+                    isHotStreakActive: false
                 };
             }
 
