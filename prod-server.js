@@ -147,6 +147,49 @@ app.post('/api/admin/update-game', (req, res) => {
     }
 });
 
+// POST /api/admin/delete-game
+app.post('/api/admin/delete-game', (req, res) => {
+    const adminKey = req.headers['x-admin-key'];
+
+    if (!process.env.ADMIN_KEY || adminKey !== process.env.ADMIN_KEY) {
+        return res.status(401).json({ error: 'Unauthorized' });
+    }
+
+    const { id } = req.body;
+
+    if (!id) {
+        return res.status(400).json({ error: 'Missing id' });
+    }
+
+    try {
+        if (!fs.existsSync(GAMES_DB_FILE)) {
+            return res.status(404).json({ error: 'Games database not found' });
+        }
+
+        const data = fs.readFileSync(GAMES_DB_FILE, 'utf8');
+        let games = JSON.parse(data);
+
+        const gameIndex = games.findIndex(g => g.id === id);
+        if (gameIndex === -1) {
+            return res.status(404).json({ error: 'Game not found' });
+        }
+
+        const gameName = games[gameIndex].name;
+
+        // Remove the game
+        games.splice(gameIndex, 1);
+
+        // Write back to file
+        fs.writeFileSync(GAMES_DB_FILE, JSON.stringify(games, null, 2));
+
+        console.log(`Deleted game ${id}: ${gameName}`);
+        res.json({ success: true });
+    } catch (err) {
+        console.error('Error deleting game:', err);
+        res.status(500).json({ error: 'Internal server error' });
+    }
+});
+
 // Handle SPA routing - return index.html for all other routes
 app.get(/(.*)/, (req, res) => {
     res.sendFile(path.join(__dirname, 'dist', 'index.html'));

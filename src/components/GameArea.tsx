@@ -150,6 +150,9 @@ export function GameArea({ game, allGames, guesses, status, allProgress, onGuess
                     setDisplayGameName(newName);
                     // We don't mutate game.name directly here as it's a prop
                 }}
+                onDelete={() => {
+                    onSkip();
+                }}
             />
 
             {/* Main Layout: Image + Metadata Side by Side */}

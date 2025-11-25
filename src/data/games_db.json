@@ -1064,44 +1064,6 @@
     ]
   },
   {
-    "id": 99969,
-    "name": "Portal 2: In Motion",
-    "year": 2011,
-    "platform": "PlayStation 3",
-    "genre": "Shooter",
-    "rating": 0,
-    "screenshots": [
-      "https://images.igdb.com/igdb/image/upload/t_720p/sc5zh3.jpg",
-      "https://images.igdb.com/igdb/image/upload/t_720p/sc5zh4.jpg",
-      "https://images.igdb.com/igdb/image/upload/t_720p/sc5zh5.jpg",
-      "https://images.igdb.com/igdb/image/upload/t_720p/sc5zh2.jpg",
-      "https://images.igdb.com/igdb/image/upload/t_720p/sc5zh1.jpg"
-    ],
-    "cover": "https://images.igdb.com/igdb/image/upload/t_cover_big/co8kgw.jpg",
-    "cropPositions": [
-      {
-        "x": 45,
-        "y": 27
-      },
-      {
-        "x": 83,
-        "y": 81
-      },
-      {
-        "x": 23,
-        "y": 31
-      },
-      {
-        "x": 5,
-        "y": 72
-      },
-      {
-        "x": 50,
-        "y": 27
-      }
-    ]
-  },
-  {
     "id": 19560,
     "name": "God of War",
     "year": 2018,

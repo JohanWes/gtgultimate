@@ -288,6 +288,9 @@ export function EndlessGameArea({
                     // The parent component or global state should handle the update if needed
                     // But for display purposes in this component, setDisplayGameName is sufficient
                 }}
+                onDelete={() => {
+                    onSkip();
+                }}
             />
             <div className="flex flex-col lg:flex-row gap-4 items-start">
                 {/* Left Column: Game Area */}
