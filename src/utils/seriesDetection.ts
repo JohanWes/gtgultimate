@@ -32,7 +32,11 @@ const REMOVAL_PATTERNS = [
  * Normalize a game name by removing common variations
  */
 function normalizeGameName(name: string): string {
-    let normalized = name;
+    let normalized = name.trim();
+
+    // Remove leading articles (The, A, An)
+    // We do this BEFORE other removals to ensure clean start
+    normalized = normalized.replace(/^(The|A|An)\s+/i, '');
 
     // Apply all removal patterns
     for (const pattern of REMOVAL_PATTERNS) {
@@ -164,6 +168,27 @@ function haveSameFirstWord(name1: string, name2: string): boolean {
 }
 
 /**
+ * Check if one normalized name is a substring of the other
+ * This catches "Super Metroid" vs "Metroid", "The Legend of Zelda" vs "Zelda"
+ */
+function haveSubstringMatch(name1: string, name2: string): boolean {
+    const n1 = normalizeGameName(name1);
+    const n2 = normalizeGameName(name2);
+
+    // Ignore very short names to prevent false positives
+    if (n1.length < 3 || n2.length < 3) {
+        return false;
+    }
+
+    // Check if one is contained in the other
+    if (n1.includes(n2) || n2.includes(n1)) {
+        return true;
+    }
+
+    return false;
+}
+
+/**
  * Main function: Check if two games have similar names (likely same series)
  */
 export function areSimilarNames(gameName1: string, gameName2: string): boolean {
@@ -185,6 +210,12 @@ export function areSimilarNames(gameName1: string, gameName2: string): boolean {
 
     // Strategy 3: Check for significant token overlap
     if (haveSignificantOverlap(gameName1, gameName2)) {
+        return true;
+    }
+
+    // Strategy 4: Substring match (Aggressive)
+    // Catches "Super Metroid" vs "Metroid"
+    if (haveSubstringMatch(gameName1, gameName2)) {
         return true;
     }
 

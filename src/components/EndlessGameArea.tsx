@@ -561,10 +561,10 @@ export function EndlessGameArea({
 
                             <button
                                 onClick={() => handleUseLifeline('double_trouble')}
-                                disabled={state.lifelines.double_trouble <= 0 || state.status !== 'playing'}
+                                disabled={state.lifelines.double_trouble <= 0 || state.status !== 'playing' || !!consultantOptions}
                                 className={clsx(
                                     "w-full py-3 px-4 rounded-lg font-bold transition-all border flex items-center justify-between group",
-                                    state.lifelines.double_trouble > 0 && state.status === 'playing'
+                                    state.lifelines.double_trouble > 0 && state.status === 'playing' && !consultantOptions
                                         ? 'bg-gray-800 border-orange-500/30 text-orange-400 hover:bg-gray-750 hover:border-orange-500/50'
                                         : 'bg-gray-900/50 border-gray-800 text-gray-600 cursor-not-allowed',
                                     animatingButton === 'double_trouble' && 'animate-lifeline-shake'
