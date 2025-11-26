@@ -12,7 +12,7 @@ function App() {
   const [showHighScoreModal, setShowHighScoreModal] = useState(false);
 
   const gameState = useGameState();
-  const { currentGame, currentProgress, games, submitGuess, nextLevel } = gameState;
+  const { currentGame, currentProgress, games, submitGuess, nextLevel, isLoading, error } = gameState;
 
   const endlessState = useEndlessState(games);
 
@@ -41,10 +41,27 @@ function App() {
     }
   };
 
-  if (!currentGame && mode === 'standard') {
+  if (isLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-background text-white">
-        <div className="animate-pulse">Loading game data...</div>
+        <div className="animate-pulse text-xl">Loading game data...</div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-background text-error">
+        <div className="text-center">
+          <h1 className="text-2xl font-bold mb-2">Error Loading Data</h1>
+          <p>{error}</p>
+          <button
+            onClick={() => window.location.reload()}
+            className="mt-4 px-4 py-2 bg-white text-black rounded-lg hover:bg-gray-200"
+          >
+            Retry
+          </button>
+        </div>
       </div>
     );
   }

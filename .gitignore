@@ -29,5 +29,4 @@ AGENT.md
 
 # Local/Agent specific
 .agent/
-data/
 docker-compose.local.yml

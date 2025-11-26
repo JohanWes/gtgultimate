@@ -3,8 +3,7 @@ import path from 'path';
 import { fileURLToPath } from 'url';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
-const GAMES_DB_PATH = path.join(__dirname, '../src/data/games_db.json');
-const BAIT_GAMES_PATH = path.join(__dirname, '../src/data/bait_games.json');
+const GAMES_DB_PATH = path.join(__dirname, '../data/games_db.json');
 const TITLES_OUTPUT_PATH = path.join(__dirname, '../titles.txt');
 
 // Roman Numeral Map (1-30)
@@ -40,13 +39,10 @@ async function main() {
     // 1. Load Data
     console.log('Loading files...');
     let gamesDbRaw = await fs.readFile(GAMES_DB_PATH, 'utf-8');
-    let baitGamesRaw = await fs.readFile(BAIT_GAMES_PATH, 'utf-8');
 
     let gamesDb = JSON.parse(gamesDbRaw);
-    let baitGamesData = JSON.parse(baitGamesRaw);
-    let baitGames = baitGamesData.baitGames;
 
-    console.log(`Initial Counts - Games DB: ${gamesDb.length}, Bait Games: ${baitGames.length}`);
+    console.log(`Initial Counts - Games DB: ${gamesDb.length}`);
 
     // 2. Process Games DB
     // - Convert Roman to Arabic
@@ -78,43 +74,7 @@ async function main() {
     const cleanedGamesDb = Array.from(processedGamesMap.values());
     console.log(`Games DB Processed: ${gamesConvertedCount} titles converted. New Count: ${cleanedGamesDb.length} (Removed ${gamesDb.length - cleanedGamesDb.length} duplicates)`);
 
-    // 3. Process Bait Games
-    // - Convert Roman to Arabic
-    // - Deduplicate internally
-    // - Remove if exists in Games DB
-    console.log('Processing Bait Games...');
-    const processedBaitSet = new Set<string>(); // Store normalized names to avoid internal duplicates
-    const finalBaitGames: string[] = [];
-    let baitConvertedCount = 0;
-    let baitInDbCount = 0;
-    let baitInternalDupCount = 0;
 
-    for (const baitName of baitGames) {
-        let newName = convertRomanToArabic(baitName);
-        if (newName !== baitName) {
-            baitConvertedCount++;
-        }
-
-        const normalized = newName.toLowerCase().trim();
-
-        // Check if exists in Games DB
-        if (processedGamesMap.has(normalized)) {
-            baitInDbCount++;
-            continue; // Skip, it's in the master DB
-        }
-
-        // Check internal duplicate
-        if (processedBaitSet.has(normalized)) {
-            baitInternalDupCount++;
-            continue; // Skip, already in bait list
-        }
-
-        processedBaitSet.add(normalized);
-        finalBaitGames.push(newName);
-    }
-
-    console.log(`Bait Games Processed: ${baitConvertedCount} converted. Removed ${baitInDbCount} found in DB, ${baitInternalDupCount} internal duplicates.`);
-    console.log(`New Bait Games Count: ${finalBaitGames.length} (Original: ${baitGames.length})`);
 
     // 4. Save Files
     console.log('Saving files...');
@@ -125,9 +85,6 @@ async function main() {
     // I'll leave order as is (first occurrence order) to minimize diffs if order matters.
 
     await fs.writeFile(GAMES_DB_PATH, JSON.stringify(cleanedGamesDb, null, 2));
-
-    baitGamesData.baitGames = finalBaitGames.sort(); // Sort bait games alphabetically usually makes sense
-    await fs.writeFile(BAIT_GAMES_PATH, JSON.stringify(baitGamesData, null, 2));
 
     // 5. Extract Titles (Update titles.txt)
     console.log('Updating titles.txt...');

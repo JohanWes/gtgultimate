@@ -80,7 +80,7 @@ export const useEndlessState = (allGames: Game[]) => {
     const currentGameId = state.gameOrder[state.currentLevelIndex];
     const currentGame = allGames.find(g => g.id === currentGameId);
 
-    const submitGuess = useCallback((game: Game) => {
+    const submitGuess = useCallback((game: Game, isFatal: boolean = false) => {
         if (state.isGameOver || state.status !== 'playing' || !currentGame) return;
 
         let result: GuessResult = 'wrong';
@@ -115,8 +115,8 @@ export const useEndlessState = (allGames: Game[]) => {
                 hotStreakCount: newHotStreakCount,
                 isHotStreakActive: isHotStreakActive
             }));
-        } else if (newGuesses.length >= 5) {
-            // Permadeath
+        } else if (newGuesses.length >= 5 || isFatal) {
+            // Permadeath or Fatal Error (Consultant wrong guess)
             setState(prev => ({
                 ...prev,
                 isGameOver: true,

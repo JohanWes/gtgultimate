@@ -2,7 +2,7 @@
 import { useState, useEffect, useRef } from 'react';
 import type { Game, EndlessState, LifelineType, ConsultantOption } from '../types';
 import { generateAnagram } from '../utils/endlessUtils';
-import baitGamesData from '../data/bait_games.json';
+
 import { ShopModal } from './ShopModal';
 import { SearchInput } from './SearchInput';
 import { ScreenshotViewer } from './ScreenshotViewer';
@@ -19,7 +19,7 @@ interface EndlessGameAreaProps {
     game: Game;
     allGames: Game[];
     state: EndlessState;
-    onGuess: (game: Game) => void;
+    onGuess: (game: Game, isFatal?: boolean) => void;
     onSkip: () => void;
     onNextLevel: () => void;
     onUseLifeline: (type: LifelineType) => void;
@@ -159,25 +159,14 @@ export function EndlessGameArea({
             // Create the correct answer option
             const correctOption: ConsultantOption = game;
 
-            // Pick 1-2 random real games from the database (not the current game)
+            // Pick 3 random real games from the database (not the current game)
+            // We use 3 wrong options + 1 correct option = 4 total
             const otherRealGames = allGames
                 .filter(g => g.id !== game.id)
                 .sort(() => 0.5 - Math.random())
-                .slice(0, 2);
+                .slice(0, 3);
 
-            // Pick 1-2 random bait games to fill remaining slots (need 3 total wrong options)
-            const neededBaitCount = 3 - otherRealGames.length;
-            const shuffledBaitGames = [...baitGamesData.baitGames]
-                .sort(() => 0.5 - Math.random())
-                .slice(0, neededBaitCount)
-                .map((name, index) => ({
-                    id: `bait_${index}`,
-                    name,
-                    isBait: true as const
-                }));
-
-            // Mix them together and shuffle
-            const wrongOptions: ConsultantOption[] = [...otherRealGames, ...shuffledBaitGames];
+            const wrongOptions: ConsultantOption[] = otherRealGames;
             const options = [correctOption, ...wrongOptions].sort(() => 0.5 - Math.random());
             setConsultantOptions(options);
         } else if (type === 'double_trouble') {
@@ -209,10 +198,11 @@ export function EndlessGameArea({
                 onGuess(guessedGame);
             }
         } else {
-            // It's a bait game - create a fake Game object just for this wrong guess
-            // We need a Game object because submitGuess expects one
-            const baitGame: Game = {
-                id: -1, // Negative ID to ensure it never matches the current game
+            // If not found in allGames, it might be a partial match or typo, but we don't have bait games anymore.
+            // Just treat it as a wrong guess with a placeholder if needed, or better yet, SearchInput shouldn't allow selecting it if it's not in the list.
+            // But SearchInput allows free text? If so, we create a dummy game.
+            const dummyGame: Game = {
+                id: -1,
                 name: name,
                 year: 0,
                 platform: '',
@@ -222,7 +212,7 @@ export function EndlessGameArea({
                 cover: null,
                 cropPositions: []
             };
-            onGuess(baitGame);
+            onGuess(dummyGame);
         }
     };
 
@@ -393,7 +383,14 @@ export function EndlessGameArea({
                                 ref={consultantRef}
                                 options={consultantOptions}
                                 correctGameId={game.id}
-                                onGuess={onGuess}
+                                onGuess={(guessedGame) => {
+                                    if (guessedGame.id === game.id) {
+                                        onGuess(guessedGame);
+                                    } else {
+                                        // Wrong guess via Consultant = Instant Game Over
+                                        onGuess(guessedGame, true);
+                                    }
+                                }}
                             />
                         ) : (
                             <SearchInput

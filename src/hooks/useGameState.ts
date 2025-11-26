@@ -1,10 +1,10 @@
 
 import { useState, useEffect } from 'react';
 import type { Game, GameStatus, LevelProgress, GuessResult } from '../types';
-import gamesData from '../data/games_db.json';
+// import gamesData from '../data/games_db.json'; // Removed static import
 import { areSimilarNames } from '../utils/seriesDetection';
 
-const GAMES = gamesData as Game[];
+// const GAMES = gamesData as Game[]; // Removed static constant
 const STORAGE_KEY = 'guessthegame_unlimited_progress';
 
 // Load initial state from localStorage
@@ -27,29 +27,29 @@ function loadInitialState() {
 }
 
 export function useGameState() {
+    const [games, setGames] = useState<Game[]>([]);
+    const [isLoading, setIsLoading] = useState(true);
+    const [error, setError] = useState<string | null>(null);
+
     // Use lazy initialization to load from localStorage only once
     const [currentLevel, setCurrentLevel] = useState<number>(() => loadInitialState().currentLevel);
     const [progress, setProgress] = useState<Record<number, LevelProgress>>(() => loadInitialState().progress);
-    const [games, setGames] = useState<Game[]>(GAMES);
 
-    // Fetch games from API on mount
     useEffect(() => {
-        const fetchGames = async () => {
-            try {
-                const response = await fetch('/api/games');
-                if (response.ok) {
-                    const data = await response.json();
-                    console.log('✅ Loaded games from API:', data.length);
-                    setGames(data);
-                } else {
-                    console.warn('⚠️ Failed to fetch games from API, using static data');
-                }
-            } catch (error) {
-                console.error('❌ Error fetching games:', error);
-            }
-        };
-
-        fetchGames();
+        fetch('/api/games')
+            .then(res => {
+                if (!res.ok) throw new Error('Failed to load games');
+                return res.json();
+            })
+            .then(data => {
+                setGames(data);
+                setIsLoading(false);
+            })
+            .catch(err => {
+                console.error('Failed to load games:', err);
+                setError(err.message);
+                setIsLoading(false);
+            });
     }, []);
 
     // Save to local storage whenever state changes
@@ -126,6 +126,8 @@ export function useGameState() {
 
     return {
         games,
+        isLoading,
+        error,
         currentLevel,
         currentGame,
         currentProgress,

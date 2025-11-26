@@ -21,12 +21,12 @@ if (!CLIENT_ID || !CLIENT_SECRET) {
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const GAMES_LIST_PATH = path.join(__dirname, '../games.json');
-const OUTPUT_FILE = path.join(__dirname, '../src/data/games_db.json');
-const BAIT_GAMES_FILE = path.join(__dirname, '../src/data/bait_games.json');
+const OUTPUT_FILE = path.join(__dirname, '../data/games_db.json');
+const OUTPUT_FILE = path.join(__dirname, '../data/games_db.json');
 
 interface GameEntry {
     name: string;
-    year: number;
+    year?: number;
 }
 
 interface IGDBGame {
@@ -68,13 +68,16 @@ async function parseGamesList(): Promise<GameEntry[]> {
     }));
 }
 
-async function searchGame(name: string, year: number, accessToken: string): Promise<IGDBGame | null> {
-    const query = `
+async function searchGame(name: string, year: number | undefined, accessToken: string): Promise<IGDBGame | null> {
+    let query = `
         fields name, first_release_date, platforms.name, genres.name, aggregated_rating, rating, screenshots.url, cover.url, rating_count;
         search "${name.replace(/"/g, '\\"')}";
-        where release_dates.y = ${year};
         limit 1;
     `;
+
+    if (year) {
+        query += `where release_dates.y = ${year};`;
+    }
 
     try {
         const response = await axios.post(
@@ -112,8 +115,13 @@ function generateCropPositions(count: number) {
 
 async function main() {
     const token = await getAccessToken();
-    const gamesList = await parseGamesList();
-    console.log(`Found ${gamesList.length} games in gameslist.md`);
+    let gamesList: GameEntry[] = [];
+    try {
+        gamesList = await parseGamesList();
+        console.log(`Found ${gamesList.length} games in games.json`);
+    } catch (error) {
+        console.log('games.json not found, skipping main list update.');
+    }
 
     let existingGames: any[] = [];
     try {
@@ -124,19 +132,11 @@ async function main() {
         console.log('No existing DB found, starting fresh.');
     }
 
-    let baitGames: string[] = [];
-    try {
-        const baitContent = await fs.readFile(BAIT_GAMES_FILE, 'utf-8');
-        const baitJson = JSON.parse(baitContent);
-        baitGames = baitJson.baitGames || [];
-        console.log(`Loaded ${baitGames.length} bait games.`);
-    } catch (error) {
-        console.log('No bait games found or error reading file.');
-    }
+
 
     const processedGames = [...existingGames];
     const existingNames = new Set(existingGames.map(g => g.name.toLowerCase()));
-    const baitNames = new Set(baitGames.map(g => g.toLowerCase()));
+    const existingNames = new Set(existingGames.map(g => g.name.toLowerCase()));
 
     let foundCount = 0;
     let missingCount = 0;
@@ -153,11 +153,11 @@ async function main() {
             continue;
         }
 
-        if (baitNames.has(lowerName)) {
-            console.log(`Skipping ${gameEntry.name} (exists in bait games)`);
-            skippedCount++;
-            continue;
-        }
+        // if (baitNames.has(lowerName)) {
+        //     console.log(`Skipping ${gameEntry.name} (exists in bait games)`);
+        //     skippedCount++;
+        //     continue;
+        // }
 
         // Rate limit delay (250ms = 4 req/s)
         await new Promise(resolve => setTimeout(resolve, 300));
@@ -201,6 +201,8 @@ async function main() {
             missingCount++;
         }
     }
+
+
 
     await fs.writeFile(OUTPUT_FILE, JSON.stringify(processedGames, null, 2));
     console.log(`\nFinished! Saved ${processedGames.length} games to ${OUTPUT_FILE}`);

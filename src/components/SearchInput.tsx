@@ -3,8 +3,7 @@ import React, { useState, useMemo, useRef, useEffect } from 'react';
 import { Search, Send } from 'lucide-react';
 import { clsx } from 'clsx';
 import type { Game } from '../types';
-import { initializeSearchIndex } from '../utils/searchIndex';
-import { initializeCombinedSearchIndex, searchCombined } from '../utils/baitGamesIndex';
+import { initializeSearchIndex, search } from '../utils/searchIndex';
 
 interface SearchInputProps {
     readonly games: Game[];
@@ -34,17 +33,14 @@ export function SearchInput({ games, onGuess, disabled, autoFocus, correctAnswer
         }
     }, [disabled, autoFocus]);
 
-    // Initialize both search indexes
+    // Initialize search index
     useMemo(() => {
         initializeSearchIndex(games);
-        // Convert games to searchable format for combined index
-        const searchableGames = games.map(g => ({ id: g.id, name: g.name, isBait: false }));
-        initializeCombinedSearchIndex(searchableGames);
     }, [games]);
 
     const results = useMemo(() => {
         if (!searchQuery) return [];
-        const allResults = searchCombined(searchQuery);
+        const allResults = search(searchQuery);
 
         // Deduplicate by name (case-insensitive)
         const seen = new Set<string>();
@@ -114,8 +110,8 @@ export function SearchInput({ games, onGuess, disabled, autoFocus, correctAnswer
         if (results.length > 0 && isOpen) {
             submitGuess(results[selectedIndex].name);
         } else if (displayValue) {
-            // If exact match exists in database (real or bait), allow it
-            const potentialMatches = searchCombined(displayValue);
+            // If exact match exists in database, allow it
+            const potentialMatches = search(displayValue);
             const exactMatch = potentialMatches.find(g => g.name.toLowerCase() === displayValue.toLowerCase());
 
             if (exactMatch) {
