@@ -36,7 +36,7 @@ export const ConsultantOptions = forwardRef<ConsultantOptionsHandle, ConsultantO
 
             Object.entries(soundMap).forEach(([key, filename]) => {
                 audioRef.current[key] = new Audio(`/sounds/${filename}`);
-                audioRef.current[key].volume = 0.2;
+                audioRef.current[key].volume = 0.1;
             });
         }, []);
 

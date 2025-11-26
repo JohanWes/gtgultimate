@@ -32,8 +32,9 @@ export function Sidebar({ totalLevels, currentLevel, progress, onSelectLevel, is
 
             {/* Sidebar */}
             <div className={clsx(
-                "fixed md:sticky md:top-0 md:h-screen inset-y-0 left-0 z-50 w-64 bg-surface border-r border-white/10 transform transition-transform duration-300 ease-in-out md:transform-none flex flex-col",
-                isOpen ? "translate-x-0" : "-translate-x-full"
+                "fixed md:sticky md:top-0 md:h-screen inset-y-0 left-0 z-50 bg-surface border-r border-white/10 transform transition-all duration-300 ease-in-out md:transform-none flex flex-col",
+                isOpen ? "translate-x-0" : "-translate-x-full",
+                currentMode === 'endless' ? "w-80" : "w-64"
             )}>
                 <div className="px-4 py-3 border-b border-white/10 flex-shrink-0 flex flex-col gap-3">
                     <img src={gtgLogo} alt="GuessTheGame" className="w-full h-auto rounded-md" />
@@ -65,45 +66,58 @@ export function Sidebar({ totalLevels, currentLevel, progress, onSelectLevel, is
                     </div>
 
                     <div className="flex items-center gap-2 text-xs text-muted">
-                        <Trophy size={14} className="text-yellow-500" />
-                        <span>{completedCount} / {totalLevels} Completed</span>
+                        {currentMode === 'standard' ? (
+                            <>
+                                <Trophy size={14} className="text-yellow-500" />
+                                <span>{completedCount} / {totalLevels} Completed</span>
+                            </>
+                        ) : (
+                            <span className="font-bold uppercase tracking-wider text-orange-400">Lifelines</span>
+                        )}
                     </div>
                 </div>
 
-                <div className="flex-1 overflow-y-auto px-3 pt-2 space-y-1 custom-scrollbar" style={{ maxHeight: 'calc(min(150vh, 100vh + 800px) - 88px)' }}>
-                    {levels.map((level, index) => {
-                        const levelStatus = progress[level]?.status || 'playing';
-                        const isCurrent = currentLevel === level;
-                        const isLast = index === levels.length - 1;
+                <div className={clsx(
+                    "flex-1 px-3 pt-2 space-y-1",
+                    currentMode === 'standard' ? "overflow-y-auto custom-scrollbar" : "overflow-hidden"
+                )} style={{ maxHeight: 'calc(min(150vh, 100vh + 800px) - 88px)' }}>
+                    {currentMode === 'standard' ? (
+                        levels.map((level, index) => {
+                            const levelStatus = progress[level]?.status || 'playing';
+                            const isCurrent = currentLevel === level;
+                            const isLast = index === levels.length - 1;
 
-                        return (
-                            <button
-                                key={level}
-                                onClick={() => {
-                                    onSelectLevel(level);
-                                    if (window.innerWidth < 768) onClose();
-                                }}
-                                className={clsx(
-                                    "w-full flex items-center justify-between px-3 py-2 rounded text-sm transition-all",
-                                    isCurrent
-                                        ? "bg-primary/20 border border-primary/50 text-white"
-                                        : "hover:bg-white/5 text-muted hover:text-white",
-                                    isLast && "pb-2"
-                                )}
-                            >
-                                <span className="font-medium">Level {level}</span>
-                                {levelStatus === 'won' && (
-                                    <span className="text-success font-bold text-xs border border-success/30 px-1.5 py-0.5 rounded-md bg-success/10 min-w-[32px] text-center">
-                                        {progress[level].guesses.length}/5
-                                    </span>
-                                )}
-                                {levelStatus === 'lost' && <XCircle size={18} className="text-error" />}
-                                {levelStatus === 'playing' && progress[level]?.guesses.length > 0 && (
-                                    <Circle size={18} className="text-yellow-500 fill-yellow-500/20" />
-                                )}
-                            </button>
-                        );
-                    })}
+                            return (
+                                <button
+                                    key={level}
+                                    onClick={() => {
+                                        onSelectLevel(level);
+                                        if (window.innerWidth < 768) onClose();
+                                    }}
+                                    className={clsx(
+                                        "w-full flex items-center justify-between px-3 py-2 rounded text-sm transition-all",
+                                        isCurrent
+                                            ? "bg-primary/20 border border-primary/50 text-white"
+                                            : "hover:bg-white/5 text-muted hover:text-white",
+                                        isLast && "pb-2"
+                                    )}
+                                >
+                                    <span className="font-medium">Level {level}</span>
+                                    {levelStatus === 'won' && (
+                                        <span className="text-success font-bold text-xs border border-success/30 px-1.5 py-0.5 rounded-md bg-success/10 min-w-[32px] text-center">
+                                            {progress[level].guesses.length}/5
+                                        </span>
+                                    )}
+                                    {levelStatus === 'lost' && <XCircle size={18} className="text-error" />}
+                                    {levelStatus === 'playing' && progress[level]?.guesses.length > 0 && (
+                                        <Circle size={18} className="text-yellow-500 fill-yellow-500/20" />
+                                    )}
+                                </button>
+                            );
+                        })
+                    ) : (
+                        <div id="sidebar-lifelines-portal" className="h-full" />
+                    )}
                 </div>
             </div>
         </>

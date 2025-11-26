@@ -1,5 +1,6 @@
 /* eslint-disable react-refresh/only-export-components */
 import { useState, useEffect, useRef } from 'react';
+import { createPortal } from 'react-dom';
 import type { Game, EndlessState, LifelineType, ConsultantOption } from '../types';
 import { generateAnagram } from '../utils/endlessUtils';
 
@@ -8,6 +9,7 @@ import { SearchInput } from './SearchInput';
 import { ScreenshotViewer } from './ScreenshotViewer';
 import { InfoPanel } from './InfoPanel';
 import { ConsultantOptions } from './ConsultantOptions';
+import { Lifelines } from './Lifelines';
 import type { ConsultantOptionsHandle } from '../types';
 import { TopScoresTicker } from './TopScoresTicker';
 import { AdminGameEditor } from './AdminGameEditor';
@@ -176,7 +178,7 @@ export function EndlessGameArea({
         } else if (type === 'consultant') {
             // Play sound
             const audio = new Audio('/sounds/let-s-play.mp3');
-            audio.volume = 0.2;
+            audio.volume = 0.1;
             audio.play().catch(() => console.log('Could not play sound'));
 
             // Create the correct answer option
@@ -286,6 +288,11 @@ export function EndlessGameArea({
         window.addEventListener('keydown', handleKeyDown);
         return () => window.removeEventListener('keydown', handleKeyDown);
     }, [state.status, state.isGameOver, onNextLevel, onRequestHighScore, onSkip, settings, isHighScoreModalOpen, showCoverPeek, adminModalOpen]);
+
+    const [mounted, setMounted] = useState(false);
+    useEffect(() => {
+        setMounted(true);
+    }, []);
 
     if (showShop) {
         return (
@@ -562,113 +569,18 @@ export function EndlessGameArea({
                     {/* Info Panel */}
                     <InfoPanel game={{ ...game, name: displayGameName }} guessesMade={state.guesses.length} status={state.status} />
 
-                    {/* Lifelines */}
-                    <div className="space-y-2 mt-2">
-                        <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wider ml-1">Lifelines</h3>
-                        <div className="grid grid-cols-1 gap-2">
-                            <button
-                                onClick={() => handleUseLifeline('cover_peek')}
-                                disabled={state.lifelines.cover_peek <= 0 || state.status !== 'playing' || !game.cover}
-                                className={clsx(
-                                    "w-full py-3 px-4 rounded-lg font-bold transition-all border flex items-center justify-between group",
-                                    state.lifelines.cover_peek > 0 && state.status === 'playing' && game.cover
-                                        ? 'bg-gray-800 border-purple-500/30 text-purple-400 hover:bg-gray-750 hover:border-purple-500/50'
-                                        : 'bg-gray-900/50 border-gray-800 text-gray-600 cursor-not-allowed',
-                                    animatingButton === 'cover_peek' && 'animate-lifeline-pop'
-                                )}
-                            >
-                                <span className="text-sm">Cover Peek</span>
-                                <span className={`text-xs px-1.5 py-0.5 rounded ${state.lifelines.cover_peek > 0 ? 'bg-purple-500/20 text-purple-300' : 'bg-gray-800 text-gray-600'}`}>
-                                    {state.lifelines.cover_peek}
-                                </span>
-                            </button>
-
-                            <button
-                                onClick={() => handleUseLifeline('skip')}
-                                disabled={state.lifelines.skip <= 0 || state.status !== 'playing'}
-                                className={clsx(
-                                    "w-full py-3 px-4 rounded-lg font-bold transition-all border flex items-center justify-between group",
-                                    state.lifelines.skip > 0 && state.status === 'playing'
-                                        ? 'bg-gray-800 border-red-500/30 text-red-400 hover:bg-gray-750 hover:border-red-500/50'
-                                        : 'bg-gray-900/50 border-gray-800 text-gray-600 cursor-not-allowed',
-                                    animatingButton === 'skip' && 'animate-lifeline-slide'
-                                )}
-                            >
-                                <span className="text-sm">Skip Level</span>
-                                <span className={`text-xs px-1.5 py-0.5 rounded ${state.lifelines.skip > 0 ? 'bg-red-500/20 text-red-300' : 'bg-gray-800 text-gray-600'}`}>
-                                    {state.lifelines.skip}
-                                </span>
-                            </button>
-
-                            <button
-                                onClick={() => handleUseLifeline('anagram')}
-                                disabled={state.lifelines.anagram <= 0 || state.status !== 'playing' || !!doubleTroubleGame}
-                                className={clsx(
-                                    "w-full py-3 px-4 rounded-lg font-bold transition-all border flex items-center justify-between group",
-                                    state.lifelines.anagram > 0 && state.status === 'playing' && !doubleTroubleGame
-                                        ? 'bg-gray-800 border-blue-500/30 text-blue-400 hover:bg-gray-750 hover:border-blue-500/50'
-                                        : 'bg-gray-900/50 border-gray-800 text-gray-600 cursor-not-allowed',
-                                    animatingButton === 'anagram' && 'animate-lifeline-shake'
-                                )}
-                            >
-                                <span className="text-sm">Anagram</span>
-                                <span className={`text-xs px-1.5 py-0.5 rounded ${state.lifelines.anagram > 0 ? 'bg-blue-500/20 text-blue-300' : 'bg-gray-800 text-gray-600'}`}>
-                                    {state.lifelines.anagram}
-                                </span>
-                            </button>
-
-                            <button
-                                onClick={() => handleUseLifeline('consultant')}
-                                disabled={state.lifelines.consultant <= 0 || state.status !== 'playing' || !!doubleTroubleGame}
-                                className={clsx(
-                                    "w-full py-3 px-4 rounded-lg font-bold transition-all border flex items-center justify-between group",
-                                    state.lifelines.consultant > 0 && state.status === 'playing' && !doubleTroubleGame
-                                        ? 'bg-gray-800 border-slate-500/30 text-slate-400 hover:bg-gray-750 hover:border-slate-500/50'
-                                        : 'bg-gray-900/50 border-gray-800 text-gray-600 cursor-not-allowed',
-                                    animatingButton === 'consultant' && 'animate-lifeline-pop'
-                                )}
-                            >
-                                <span className="text-sm">Consultant</span>
-                                <span className={`text-xs px-1.5 py-0.5 rounded ${state.lifelines.consultant > 0 ? 'bg-slate-500/20 text-slate-300' : 'bg-gray-800 text-gray-600'}`}>
-                                    {state.lifelines.consultant}
-                                </span>
-                            </button>
-
-                            <button
-                                onClick={() => handleUseLifeline('double_trouble')}
-                                disabled={state.lifelines.double_trouble <= 0 || state.status !== 'playing' || !!consultantOptions}
-                                className={clsx(
-                                    "w-full py-3 px-4 rounded-lg font-bold transition-all border flex items-center justify-between group",
-                                    state.lifelines.double_trouble > 0 && state.status === 'playing' && !consultantOptions
-                                        ? 'bg-gray-800 border-orange-500/30 text-orange-400 hover:bg-gray-750 hover:border-orange-500/50'
-                                        : 'bg-gray-900/50 border-gray-800 text-gray-600 cursor-not-allowed',
-                                    animatingButton === 'double_trouble' && 'animate-lifeline-shake'
-                                )}
-                            >
-                                <span className="text-sm">Double Trouble</span>
-                                <span className={`text-xs px-1.5 py-0.5 rounded ${state.lifelines.double_trouble > 0 ? 'bg-orange-500/20 text-orange-300' : 'bg-gray-800 text-gray-600'}`}>
-                                    {state.lifelines.double_trouble}
-                                </span>
-                            </button>
-
-                            <button
-                                onClick={() => handleUseLifeline('zoom_out')}
-                                disabled={state.lifelines.zoom_out <= 0 || state.status !== 'playing'}
-                                className={clsx(
-                                    "w-full py-3 px-4 rounded-lg font-bold transition-all border flex items-center justify-between group",
-                                    state.lifelines.zoom_out > 0 && state.status === 'playing'
-                                        ? 'bg-gray-800 border-cyan-500/30 text-cyan-400 hover:bg-gray-750 hover:border-cyan-500/50'
-                                        : 'bg-gray-900/50 border-gray-800 text-gray-600 cursor-not-allowed',
-                                    animatingButton === 'zoom_out' && 'animate-lifeline-shake'
-                                )}
-                            >
-                                <span className="text-sm">Zoom Out</span>
-                                <span className={`text-xs px-1.5 py-0.5 rounded ${state.lifelines.zoom_out > 0 ? 'bg-cyan-500/20 text-cyan-300' : 'bg-gray-800 text-gray-600'}`}>
-                                    {state.lifelines.zoom_out}
-                                </span>
-                            </button>
-                        </div>
-                    </div>
+                    {/* Lifelines - Rendered via Portal to Sidebar */}
+                    {mounted && document.getElementById('sidebar-lifelines-portal') && createPortal(
+                        <Lifelines
+                            state={state}
+                            game={game}
+                            onUseLifeline={handleUseLifeline}
+                            animatingButton={animatingButton}
+                            doubleTroubleGame={doubleTroubleGame}
+                            consultantOptions={consultantOptions}
+                        />,
+                        document.getElementById('sidebar-lifelines-portal')!
+                    )}
                 </div>
             </div >
         </div >
