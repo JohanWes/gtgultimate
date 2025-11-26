@@ -1,194 +1,179 @@
-# GuessTheGameUltimate
+# Guess the Game Ultimate
 
-**Test your gaming knowledge in this screenshot-based guessing game!** Identify video games from progressively revealing screenshots and metadata. Choose your challenge: play casually through 995 curated levels in **Standard Mode**, or test your skills in the high-stakes **Endless Mode** with lifelines, permadeath, and a scoring system.
+A screenshot-based video game trivia application. Players identify games from progressively revealing screenshots across two game modes: Standard (casual progression through all levels) and Endless (high-stakes roguelike with permadeath and scoring).
 
-![Game Modes](https://img.shields.io/badge/Game%20Modes-Standard%20%7C%20Endless-blue) ![Games](https://img.shields.io/badge/Games-995-green) ![Built With](https://img.shields.io/badge/Built%20With-React%20%2B%20TypeScript-61dafb)
+![Game Modes](https://img.shields.io/badge/Game%20Modes-Standard%20%7C%20Endless-blue) ![Games](https://img.shields.io/badge/Games-1662-green) ![Built With](https://img.shields.io/badge/Built%20With-React%20%2B%20TypeScript-61dafb)
 
 ---
 
 ## Game Modes
 
 ### Standard Mode
-**Casual level-by-level progression** — Work through 995 games at your own pace with full freedom to jump between levels.
+Casual progression through all 1662 levels at your own pace.
 
-- **5 guesses per level** — Each wrong guess reveals more clues (screenshots, release year, platform, genre, rating)
-- **Progress tracking** — Levels marked as Won (✓), Lost (✗), or Unplayed
-- **Skip button** — No penalty, just moves to the next clue
-- **No pressure** — Take your time, replay any level
+- 5 guesses per game with progressive clues (screenshots, release year, platform, genre, rating)
+- Progress tracking with persistent state (won, lost, or unplayed)
+- Skip button to reveal the next clue without penalty
+- Full navigation freedom between levels
 
-### Endless Mode 🔥
-**High-stakes challenge mode** — One run, one life, permadeath. How far can you go?
+### Endless Mode
+Roguelike challenge with scoring, permadeath, and strategic lifeline usage.
 
-- **Permadeath** — 5 wrong guesses and it's game over
-- **Scoring system** — Earn 5/3/2/1 points based on how many guesses you needed (5 points for first guess, 0 for wrong answer)
-- **4 Lifelines** to help you survive:
-  - **Skip Level** — Move to next game without penalty (0 points)
-  - **Anagram** — Reveals scrambled game title
-  - **Consultant** — "Who Wants to Be a Millionaire" style 4-option multiple choice with dramatic reveal
-  - **Double Trouble** — Blend two game screenshots together; guess either one correctly to win
-- **The Shop** — Every 10 levels, spend your points to refill lifelines or grab bonus points
-- **Difficulty scaling** — Screenshots zoom in more every 10 levels (+10% zoom)
-- **High score tracking** — Beat your best streak!
+- **Permadeath**: 5 wrong guesses ends the run
+- **Scoring**: 5/3/2/1/1 points per correct guess (based on attempt number)
+- **Lifelines** (single-use, refillable in shop):
+  - Skip Level: Proceed to next game for 0 points
+  - Anagram: Scrambled game title with one extra character
+  - Consultant: Multiple choice (1 correct + 3 wrong options)
+  - Double Trouble: Overlays two games at 50% opacity; either answer wins
+  - Zoom Out: Reduces current zoom level
+  - Cover Art Peek: Shows the game's cover art
+  - Greed: +10 points instantly (costs -10 points, cannot be refilled)
+- **Shop**: Appears every 10 levels for lifeline refills and point purchases
+- **Difficulty scaling**: Screenshots zoom in by +10% every 10 levels
+- **Highscore tracking**: Local and global leaderboard
 
 ---
 
-## Quick Start
+## Setup
 
-### Option 1: Docker Deployment (Recommended for Unraid/Servers)
+### Docker Deployment (Recommended)
 
-Perfect for running on an Unraid server or any Docker-compatible environment.
+Suitable for servers (Unraid, etc.) or Docker environments.
 
-#### Prerequisites
+**Prerequisites:**
 - Docker and Docker Compose
-- IGDB API credentials ([Get them here](https://api-docs.igdb.com/#getting-started))
+- Admin key for protected features (optional)
 
-#### Steps
+**Steps:**
 
-1. **Clone the repository**:
+1. Clone the repository:
    ```bash
    git clone <repository-url>
    cd guessthegame
    ```
 
-2. **Configure environment variables**:
+2. Configure environment:
    ```bash
    cp .env.example .env
    ```
    
-   Edit the `.env` file and add your IGDB API credentials:
+   Edit `.env` as needed:
    ```env
-   VITE_IGDB_CLIENT_ID=your_client_id_here
-   VITE_IGDB_CLIENT_SECRET=your_client_secret_here
    VITE_PORT=5173
+   ADMIN_KEY=your_admin_key_here
    ```
 
-3. **Build and run**:
+3. Build and run:
    ```bash
    docker-compose up -d
    ```
 
-4. **Access the game**:
-   - Local: `http://localhost:5173`
-   - Unraid: `http://YOUR_SERVER_IP:5173`
+4. Access at `http://localhost:5173` (or `http://SERVER_IP:5173`)
 
-#### Docker Management
-
-**Update to latest version:**
-```bash
-git pull
-docker-compose up -d --build
-```
-
-**View logs:**
-```bash
-docker-compose logs -f
-```
-
-**Stop the application:**
-```bash
-docker-compose down
-```
-
-**Change port:** Modify `VITE_PORT` in `.env` and rebuild:
-```bash
-docker-compose up -d --build
-```
-
-#### Troubleshooting
-- **Application not loading** — Check container status: `docker ps`
-- **API errors** — Verify IGDB credentials in `.env`
-- **Port conflicts** — Change `VITE_PORT` to an available port
-- **Build failures** — Ensure sufficient disk space and memory allocated to Docker
+**Docker Commands:**
+- Update: `git pull && docker-compose up -d --build`
+- Logs: `docker-compose logs -f`
+- Stop: `docker-compose down`
 
 ---
 
-### Option 2: Local Development
+### Local Development
 
-For development or local testing without Docker.
-
-#### Prerequisites
-- Node.js 20 or higher
+**Prerequisites:**
+- Node.js 20+
 - npm or yarn
 
-#### Steps
+**Steps:**
 
-1. **Install dependencies**:
+1. Install dependencies:
    ```bash
    npm install
    ```
 
-2. **Set up environment** (optional, only needed if regenerating game data):
+2. Configure environment (optional):
    ```bash
    cp .env.example .env
-   # Edit .env with your IGDB credentials
+   # Edit .env with ADMIN_KEY if needed
    ```
 
-3. **Run development server**:
+3. Development server:
    ```bash
    npm run dev
    ```
 
-4. **Build for production**:
+4. Production build:
    ```bash
    npm run build
-   ```
-
-5. **Preview production build**:
-   ```bash
    npm run preview
    ```
 
 ---
 
-## Features
+## Key Features
 
-- **995 curated games** from IGDB (Internet Game Database)
-- **Smart search** with fuzzy matching — Type "wild hunt" to find "The Witcher 3: Wild Hunt", or "botw" for "Breath of the Wild"
-- **Progressive reveal system** — 5 screenshots per game, unlocking metadata with each guess
-- **Persistent progress** — All progress saved to browser localStorage
-- **Same-series detection** — Warns when you guess "Portal" instead of "Portal 2"
-- **Anti-repeat protection** — Prevents guessing previously won games
-- **Sound effects** — Consultant lifeline features dramatic "Who Wants to Be a Millionaire" audio
-- **Responsive design** — Dark mode UI built with Tailwind CSS
+- **1662 curated games** from IGDB (Internet Game Database)
+- **Fuzzy search** via Fuse.js (handles typos and abbreviations)
+- **Series detection**: Warns when guessing a game from the same series (e.g., "Portal" vs "Portal 2")
+- **Progressive reveal**: 5 screenshots per game with metadata unlocking
+- **Persistent state**: All progress stored in browser localStorage
+- **Admin mode**: In-game editor for game name corrections (password-protected)
+- **Sound effects**: Consultant lifeline includes "Who Wants to Be a Millionaire" audio
+- **Dark mode UI**: Built with Tailwind CSS v3
 
 ---
 
 ## Tech Stack
 
-- **Frontend:** React 19 + TypeScript
-- **Build Tool:** Vite
-- **Styling:** Tailwind CSS
-- **Search:** Fuse.js (fuzzy search)
-- **State:** React hooks + localStorage
-- **Deployment:** Docker + nginx (or any static hosting)
+- **Frontend**: React 19, TypeScript, Vite
+- **Styling**: Tailwind CSS v3
+- **Search**: Fuse.js
+- **State**: React hooks + localStorage
+- **Backend**: Express (production server for highscores and admin API)
+- **Database**: Static JSON (`src/data/games_db.json`)
+- **Container**: Docker (multi-stage build) + nginx
 
 ---
 
 ## Game Database
 
-The game list is curated from IGDB with quality filters:
-- **Popularity:** rating_count > 100
-- **Quality:** aggregated_rating > 70
-- **Recency:** Released after 1990
-- **Category:** Main games only (no DLC/expansions)
-- **Assets:** Minimum 5 high-resolution screenshots
+The game database (`games_db.json`) contains 1662 titles curated from IGDB with the following filters:
 
-The database is pre-built and bundled with the app — no runtime API calls needed!
+- `rating_count > 100` (popularity threshold)
+- `aggregated_rating > 70` (quality threshold)
+- Released after 1990
+- Main games only (no DLC/expansions/episodes)
+- Minimum 5 high-resolution screenshots
+
+The database is bundled with the application. No external API calls are made at runtime.
+
+**Regenerating the database** (requires IGDB API credentials):
+```bash
+node scripts/fetch_igdb.js
+```
 
 ---
 
 ## How to Play
 
-1. **Choose your mode** — Standard for casual play, Endless for challenge
-2. **Guess the game** — Type in the search box (fuzzy search enabled!)
-3. **Wrong guess?** — Another screenshot and clue unlock
-4. **Win or lose after 5 guesses** — Move to the next level
-5. **In Endless:** Use lifelines strategically, spend points wisely in the shop!
+1. Select a game mode (Standard or Endless)
+2. Type your guess in the search box (fuzzy matching enabled)
+3. Wrong guess reveals the next screenshot and additional metadata
+4. Win or lose after 5 guesses
+5. In Endless mode: manage lifelines and shop strategically to extend your run
 
 ---
 
-## 📝 License
+## Admin Features
 
-This project is for personal/family use. Game data and screenshots sourced from IGDB.
+Admin mode can be accessed by entering 5 backspaces after completing a level. Features include:
+
+- Edit game names directly in-game
+- Changes persist to the database (`games_db.json`)
+- Password-protected via `ADMIN_KEY` environment variable
 
 ---
+
+## License
+
+This project is for personal/non-commercial use. Game data and screenshots are sourced from IGDB.
