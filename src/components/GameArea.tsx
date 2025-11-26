@@ -119,6 +119,8 @@ export function GameArea({ game, allGames, guesses, status, allProgress, onGuess
     // Handle Keyboard Shortcuts (Enter for Next Level, Esc for Skip)
     useEffect(() => {
         const handleKeyDown = (e: KeyboardEvent) => {
+            if (adminModalOpen) return;
+
             // Next Level on Enter
             if (status !== 'playing' && e.key === 'Enter') {
                 if (settings.nextLevelOnEnter) {
@@ -138,7 +140,7 @@ export function GameArea({ game, allGames, guesses, status, allProgress, onGuess
 
         window.addEventListener('keydown', handleKeyDown);
         return () => window.removeEventListener('keydown', handleKeyDown);
-    }, [status, onNextLevel, onSkip, settings]);
+    }, [status, onNextLevel, onSkip, settings, adminModalOpen]);
 
     return (
         <div className="max-w-5xl mx-auto space-y-2 pb-8">

@@ -256,6 +256,8 @@ export function EndlessGameArea({
             // Disable all keyboard shortcuts when Cover Peek is active
             if (showCoverPeek) return;
 
+            if (adminModalOpen) return;
+
             // Next Level on Enter
             if (state.status !== 'playing' && e.key === 'Enter') {
                 // If high score modal is open, do nothing (let the modal handle Enter for form submission)
@@ -283,7 +285,7 @@ export function EndlessGameArea({
 
         window.addEventListener('keydown', handleKeyDown);
         return () => window.removeEventListener('keydown', handleKeyDown);
-    }, [state.status, state.isGameOver, onNextLevel, onRequestHighScore, onSkip, settings, isHighScoreModalOpen, showCoverPeek]);
+    }, [state.status, state.isGameOver, onNextLevel, onRequestHighScore, onSkip, settings, isHighScoreModalOpen, showCoverPeek, adminModalOpen]);
 
     if (showShop) {
         return (

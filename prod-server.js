@@ -205,6 +205,32 @@ app.post('/api/admin/delete-game', (req, res) => {
     }
 });
 
+// POST /api/admin/migrate-screenshots
+app.post('/api/admin/migrate-screenshots', async (req, res) => {
+    const adminKey = req.headers['x-admin-key'];
+
+    if (!process.env.ADMIN_KEY || adminKey !== process.env.ADMIN_KEY) {
+        return res.status(401).json({ error: 'Unauthorized' });
+    }
+
+    try {
+        // Dynamically import the migration module
+        const { runMigration } = await import('./scripts/migrate_screenshots.ts');
+
+        // Run the migration
+        const result = await runMigration();
+
+        res.json(result);
+    } catch (err) {
+        console.error('Error running migration:', err);
+        res.status(500).json({
+            success: false,
+            error: 'Migration failed',
+            message: err.message || 'Unknown error'
+        });
+    }
+});
+
 // Handle SPA routing - return index.html for all other routes
 app.get(/(.*)/, (req, res) => {
     res.sendFile(path.join(__dirname, 'dist', 'index.html'));

@@ -155,8 +155,24 @@ export function SearchInput({ games, onGuess, disabled, autoFocus, correctAnswer
         }
     };
 
+    const containerRef = useRef<HTMLDivElement>(null);
+
+    // Handle click outside
+    useEffect(() => {
+        const handleClickOutside = (event: MouseEvent) => {
+            if (containerRef.current && !containerRef.current.contains(event.target as Node)) {
+                setIsOpen(false);
+            }
+        };
+
+        document.addEventListener('mousedown', handleClickOutside);
+        return () => {
+            document.removeEventListener('mousedown', handleClickOutside);
+        };
+    }, []);
+
     return (
-        <div className="relative w-full z-20">
+        <div ref={containerRef} className="relative w-full z-20">
             <form onSubmit={handleSubmit} className="relative">
                 <div className="relative group">
                     <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">

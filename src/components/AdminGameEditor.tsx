@@ -1,7 +1,8 @@
 import { useState, useEffect } from 'react';
-import { X, Save, AlertTriangle } from 'lucide-react';
+import { X, AlertTriangle, Database } from 'lucide-react';
 import type { Game } from '../types';
 import { useSettings } from '../hooks/useSettings';
+import { AdminMigrationDialog } from './AdminMigrationDialog';
 
 interface AdminGameEditorProps {
     isOpen: boolean;
@@ -16,6 +17,7 @@ export function AdminGameEditor({ isOpen, onClose, game, onUpdate, onDelete }: A
     const [isLoading, setIsLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
     const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+    const [showMigrationDialog, setShowMigrationDialog] = useState(false);
 
     const { settings } = useSettings();
 
@@ -102,41 +104,55 @@ export function AdminGameEditor({ isOpen, onClose, game, onUpdate, onDelete }: A
 
     return (
         <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm animate-in fade-in duration-200">
-            <div className="bg-surface border border-red-500/30 rounded-xl p-6 max-w-md w-full shadow-2xl animate-in zoom-in-95 duration-200 relative">
-                <button
-                    onClick={onClose}
-                    className="absolute top-4 right-4 text-gray-400 hover:text-white transition-colors"
-                >
-                    <X size={24} />
-                </button>
-
-                <div className="flex items-center gap-3 mb-6">
-                    <AlertTriangle className="text-red-500" size={24} />
-                    <h2 className="text-2xl font-bold text-white">Admin Game Editor</h2>
+            <div className="bg-surface border border-white/10 rounded-xl p-6 max-w-md w-full shadow-2xl animate-in zoom-in-95 duration-200 relative">
+                {/* Header */}
+                <div className="flex items-center justify-between mb-6">
+                    <h2 className="text-xl font-bold text-white flex items-center gap-2">
+                        Edit Game
+                        <span className="text-xs font-normal text-gray-500 bg-white/5 px-2 py-0.5 rounded">ID: {game.id}</span>
+                    </h2>
+                    <div className="flex items-center gap-2">
+                        <button
+                            onClick={() => setShowMigrationDialog(true)}
+                            className="p-2 text-gray-400 hover:text-red-400 hover:bg-red-500/10 rounded-lg transition-colors"
+                            title="Database Tools"
+                        >
+                            <Database size={20} />
+                        </button>
+                        <button
+                            onClick={onClose}
+                            className="p-2 text-gray-400 hover:text-white hover:bg-white/10 rounded-lg transition-colors"
+                        >
+                            <X size={20} />
+                        </button>
+                    </div>
                 </div>
 
                 {!showDeleteConfirm ? (
                     <form onSubmit={handleSubmit} className="space-y-6">
                         <div className="space-y-2">
                             <label className="block text-sm font-medium text-gray-400">
-                                Game Name (ID: {game.id})
+                                Game Name
                             </label>
                             <input
                                 type="text"
                                 value={name}
                                 onChange={(e) => setName(e.target.value)}
-                                className="w-full bg-black/50 border border-white/10 rounded-lg px-4 py-3 text-white focus:outline-none focus:border-red-500 transition-colors"
+                                className="w-full bg-black/50 border border-white/10 rounded-lg px-4 py-3 text-white focus:outline-none focus:border-primary transition-colors"
                                 placeholder="Enter game name..."
+                                autoFocus
                             />
                         </div>
 
                         {error && (
-                            <div className="p-3 bg-red-500/10 border border-red-500/20 rounded-lg text-red-400 text-sm">
+                            <div className="p-3 bg-red-500/10 border border-red-500/20 rounded-lg text-red-400 text-sm flex items-center gap-2">
+                                <AlertTriangle size={16} />
                                 {error}
                             </div>
                         )}
 
-                        <div className="flex justify-between items-center pt-4 border-t border-white/10">
+                        {/* Footer */}
+                        <div className="flex justify-between items-center pt-6 border-t border-white/10">
                             <button
                                 type="button"
                                 onClick={() => setShowDeleteConfirm(true)}
@@ -155,10 +171,9 @@ export function AdminGameEditor({ isOpen, onClose, game, onUpdate, onDelete }: A
                                 <button
                                     type="submit"
                                     disabled={isLoading}
-                                    className="flex items-center gap-2 px-4 py-2 bg-red-600 text-white font-bold rounded-lg hover:bg-red-700 transition-colors disabled:opacity-50"
+                                    className="flex items-center gap-2 px-6 py-2 bg-primary text-white font-bold rounded-lg hover:bg-primary-hover transition-colors disabled:opacity-50"
                                 >
-                                    <Save size={18} />
-                                    {isLoading ? 'Saving...' : 'Save Changes'}
+                                    {isLoading ? 'Saving...' : 'Save'}
                                 </button>
                             </div>
                         </div>
@@ -166,11 +181,14 @@ export function AdminGameEditor({ isOpen, onClose, game, onUpdate, onDelete }: A
                 ) : (
                     <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-200">
                         <div className="p-4 bg-red-500/10 border border-red-500/20 rounded-lg">
-                            <h3 className="text-lg font-bold text-red-400 mb-2">Delete Game?</h3>
-                            <p className="text-gray-300 text-sm">
-                                Are you sure you want to permanently delete <span className="font-bold text-white">{game.name}</span> from the database?
-                                <br /><br />
-                                <span className="font-bold text-red-400">This action cannot be undone.</span>
+                            <div className="flex items-center gap-3 mb-2 text-red-400">
+                                <AlertTriangle size={20} />
+                                <h3 className="font-bold">Delete Game?</h3>
+                            </div>
+                            <p className="text-gray-300 text-sm leading-relaxed">
+                                Are you sure you want to permanently delete <span className="font-bold text-white">{game.name}</span>?
+                                <br />
+                                This action cannot be undone.
                             </p>
                         </div>
 
@@ -200,6 +218,11 @@ export function AdminGameEditor({ isOpen, onClose, game, onUpdate, onDelete }: A
                     </div>
                 )}
             </div>
+
+            <AdminMigrationDialog
+                isOpen={showMigrationDialog}
+                onClose={() => setShowMigrationDialog(false)}
+            />
         </div>
     );
 }
