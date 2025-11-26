@@ -14,6 +14,90 @@ function shuffleArray<T>(array: T[]): T[] {
     return result;
 }
 
+// Helper to generate a random integer between min and max (inclusive)
+function getRandomInt(min: number, max: number): number {
+    return Math.floor(Math.random() * (max - min + 1)) + min;
+}
+
+function generateWeightedGameOrder(allGames: Game[]): number[] {
+    // 1. Classify games into Friendly (Rated/New) and Standard pools with fuzzy thresholds
+    const friendlyRated: Game[] = [];
+    const friendlyNew: Game[] = [];
+    const standardGames: Game[] = [];
+
+    allGames.forEach(game => {
+        // Fuzzy thresholds per game
+        const ratingThreshold = getRandomInt(88, 91);
+        const yearThreshold = getRandomInt(2010, 2015);
+
+        // Check if game is "Friendly"
+        // Ensure rating exists (some games might not have it, treat as 0)
+        const rating = game.rating || 0;
+        const year = game.year || 0;
+
+        const isRated = rating >= ratingThreshold;
+        const isNew = year >= yearThreshold;
+
+        if (isRated) {
+            // Prioritize "Rated" classification for games that are both (to boost the smaller pool)
+            friendlyRated.push(game);
+        } else if (isNew) {
+            friendlyNew.push(game);
+        } else {
+            standardGames.push(game);
+        }
+    });
+
+    // Shuffle all pools initially
+    let shuffledRated = shuffleArray(friendlyRated);
+    let shuffledNew = shuffleArray(friendlyNew);
+    let shuffledStandard = shuffleArray(standardGames);
+
+    const finalOrder: number[] = [];
+    const friendlyProbabilities = [1.0, 0.9, 0.7, 0.4, 0.3]; // Probabilities for first 5 games
+
+    // 2. Select first 5 games based on probabilities
+    for (let i = 0; i < 5; i++) {
+        // If we run out of games in total, stop
+        if (shuffledRated.length === 0 && shuffledNew.length === 0 && shuffledStandard.length === 0) break;
+
+        const chance = friendlyProbabilities[i] ?? 0;
+        const roll = Math.random();
+
+        let pickedGame: Game | undefined;
+
+        if (roll < chance && (shuffledRated.length > 0 || shuffledNew.length > 0)) {
+            // Pick Friendly
+            // 50/50 chance between Rated and New (if both available)
+            const useRated = Math.random() < 0.5;
+
+            if (useRated && shuffledRated.length > 0) {
+                pickedGame = shuffledRated.pop();
+            } else if (!useRated && shuffledNew.length > 0) {
+                pickedGame = shuffledNew.pop();
+            } else {
+                // Fallback if the chosen pool was empty
+                pickedGame = shuffledRated.pop() || shuffledNew.pop();
+            }
+        } else {
+            // Pick Standard (or fallback to friendly if standard is empty)
+            pickedGame = shuffledStandard.pop() || shuffledRated.pop() || shuffledNew.pop();
+        }
+
+        if (pickedGame) {
+            finalOrder.push(pickedGame.id);
+        }
+    }
+
+    // 3. Fill the rest
+    const remainingGames = [...shuffledRated, ...shuffledNew, ...shuffledStandard];
+    const shuffledRemaining = shuffleArray(remainingGames);
+
+    shuffledRemaining.forEach(g => finalOrder.push(g.id));
+
+    return finalOrder;
+}
+
 const STORAGE_KEY = 'guessthegame_endless_state';
 const HIGH_SCORE_KEY = 'guessthegame_endless_highscore';
 
@@ -64,8 +148,8 @@ export const useEndlessState = (allGames: Game[]) => {
     // Initialize game order if empty
     useEffect(() => {
         if (state.gameOrder.length === 0 && allGames.length > 0) {
-            const shuffledIds = shuffleArray(allGames).map(g => g.id);
-            setState(prev => ({ ...prev, gameOrder: shuffledIds }));
+            const weightedIds = generateWeightedGameOrder(allGames);
+            setState(prev => ({ ...prev, gameOrder: weightedIds }));
         }
     }, [allGames, state.gameOrder.length]);
 
@@ -162,13 +246,13 @@ export const useEndlessState = (allGames: Game[]) => {
 
     const nextLevel = useCallback(() => {
         if (state.isGameOver) {
-            // Reset run with a fresh shuffled game order
-            const shuffledIds = shuffleArray(allGames).map(g => g.id);
+            // Reset run with a fresh shuffled game order (weighted)
+            const weightedIds = generateWeightedGameOrder(allGames);
             setState({
                 ...INITIAL_STATE,
                 highScore: state.highScore,
                 highScoreModalShown: false, // Reset for new game
-                gameOrder: shuffledIds,
+                gameOrder: weightedIds,
                 cropPositions: Array(5).fill(0).map(() => generateRandomCrop())
             });
         } else {
