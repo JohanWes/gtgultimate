@@ -71,6 +71,13 @@ export const getShopItems = (): ShopItem[] => [
         type: 'refill_zoom_out'
     },
     {
+        id: 'utility_cover_peek',
+        name: 'Cover Peek',
+        description: 'Refill "Cover Peek" Lifeline',
+        cost: 5,
+        type: 'refill_cover_peek'
+    },
+    {
         id: 'greed',
         name: 'Greed is Good',
         description: 'No refills. +10 Points immediately.',

@@ -54,6 +54,10 @@ export function EndlessGameArea({
 
     const [showFireEffect, setShowFireEffect] = useState(false);
 
+    // Cover Peek State
+    const [showCoverPeek, setShowCoverPeek] = useState(false);
+    const [coverPeekTimeLeft, setCoverPeekTimeLeft] = useState(5);
+
     // Admin Mode State
     const [adminModalOpen, setAdminModalOpen] = useState(false);
     const [, setBackspaceCount] = useState(0);
@@ -122,6 +126,22 @@ export function EndlessGameArea({
         }
     }, [state.isHotStreakActive]);
 
+    // Handle Cover Peek Timer
+    useEffect(() => {
+        if (showCoverPeek && coverPeekTimeLeft > 0) {
+            const timer = setInterval(() => {
+                setCoverPeekTimeLeft(prev => {
+                    if (prev <= 0.1) {
+                        setShowCoverPeek(false);
+                        return 5;
+                    }
+                    return prev - 0.1;
+                });
+            }, 100);
+            return () => clearInterval(timer);
+        }
+    }, [showCoverPeek, coverPeekTimeLeft]);
+
     // Detect similar name guess
     // eslint-disable-next-line
     useEffect(() => {
@@ -148,7 +168,10 @@ export function EndlessGameArea({
         setAnimatingButton(type);
         setTimeout(() => setAnimatingButton(null), 500); // Reset animation state
 
-        if (type === 'anagram') {
+        if (type === 'cover_peek') {
+            setShowCoverPeek(true);
+            setCoverPeekTimeLeft(5);
+        } else if (type === 'anagram') {
             setAnagramHint(generateAnagram(game.name));
         } else if (type === 'consultant') {
             // Play sound
@@ -221,6 +244,8 @@ export function EndlessGameArea({
         setAnagramHint(null);
         setConsultantOptions(null);
         setDoubleTroubleGame(null);
+        setShowCoverPeek(false);
+        setCoverPeekTimeLeft(5);
     }, [game.id]);
 
     const { settings } = useSettings();
@@ -228,6 +253,9 @@ export function EndlessGameArea({
     // Handle Enter key for Next Level / Try Again
     useEffect(() => {
         const handleKeyDown = (e: KeyboardEvent) => {
+            // Disable all keyboard shortcuts when Cover Peek is active
+            if (showCoverPeek) return;
+
             // Next Level on Enter
             if (state.status !== 'playing' && e.key === 'Enter') {
                 // If high score modal is open, do nothing (let the modal handle Enter for form submission)
@@ -255,7 +283,7 @@ export function EndlessGameArea({
 
         window.addEventListener('keydown', handleKeyDown);
         return () => window.removeEventListener('keydown', handleKeyDown);
-    }, [state.status, state.isGameOver, onNextLevel, onRequestHighScore, onSkip, settings, isHighScoreModalOpen]);
+    }, [state.status, state.isGameOver, onNextLevel, onRequestHighScore, onSkip, settings, isHighScoreModalOpen, showCoverPeek]);
 
     if (showShop) {
         return (
@@ -332,7 +360,38 @@ export function EndlessGameArea({
                                 </div>
                             </div>
                         )}
+
+                        {/* Cover Peek Overlay */}
+                        {showCoverPeek && game.cover && state.status === 'playing' && (
+                            <div className="absolute inset-0 z-30 bg-black/90 backdrop-blur-sm rounded-xl overflow-hidden animate-in fade-in duration-300 flex items-center justify-center">
+                                {/* Blurred Cover Art */}
+                                <img
+                                    src={game.cover}
+                                    alt="Cover art"
+                                    className="h-full w-auto object-contain"
+                                    style={{
+                                        filter: 'blur(9px)',
+                                        transform: 'scale(1.1)'
+                                    }}
+                                />
+                            </div>
+                        )}
                     </div>
+
+                    {/* Cover Peek Timer Bar - Below Screenshot Viewer */}
+                    {showCoverPeek && state.status === 'playing' && (
+                        <div className="w-full max-w-md mx-auto animate-in fade-in duration-300">
+                            <div className="bg-black/60 rounded-full p-1 backdrop-blur-sm border border-white/10">
+                                <div
+                                    className="h-3 bg-gradient-to-r from-purple-500 via-pink-500 to-purple-500 rounded-full transition-all duration-100 ease-linear"
+                                    style={{ width: `${(coverPeekTimeLeft / 5) * 100}%` }}
+                                />
+                            </div>
+                            <div className="text-center text-white font-bold mt-2 text-sm">
+                                {coverPeekTimeLeft.toFixed(1)}s remaining
+                            </div>
+                        </div>
+                    )}
 
                     {/* Game Over / Win Message */}
                     {state.status !== 'playing' && (
@@ -506,6 +565,23 @@ export function EndlessGameArea({
                         <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wider ml-1">Lifelines</h3>
                         <div className="grid grid-cols-1 gap-2">
                             <button
+                                onClick={() => handleUseLifeline('cover_peek')}
+                                disabled={state.lifelines.cover_peek <= 0 || state.status !== 'playing' || !game.cover}
+                                className={clsx(
+                                    "w-full py-3 px-4 rounded-lg font-bold transition-all border flex items-center justify-between group",
+                                    state.lifelines.cover_peek > 0 && state.status === 'playing' && game.cover
+                                        ? 'bg-gray-800 border-purple-500/30 text-purple-400 hover:bg-gray-750 hover:border-purple-500/50'
+                                        : 'bg-gray-900/50 border-gray-800 text-gray-600 cursor-not-allowed',
+                                    animatingButton === 'cover_peek' && 'animate-lifeline-pop'
+                                )}
+                            >
+                                <span className="text-sm">Cover Peek</span>
+                                <span className={`text-xs px-1.5 py-0.5 rounded ${state.lifelines.cover_peek > 0 ? 'bg-purple-500/20 text-purple-300' : 'bg-gray-800 text-gray-600'}`}>
+                                    {state.lifelines.cover_peek}
+                                </span>
+                            </button>
+
+                            <button
                                 onClick={() => handleUseLifeline('skip')}
                                 disabled={state.lifelines.skip <= 0 || state.status !== 'playing'}
                                 className={clsx(
@@ -592,7 +668,7 @@ export function EndlessGameArea({
                         </div>
                     </div>
                 </div>
-            </div>
+            </div >
         </div >
     );
 };
