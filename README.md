@@ -141,7 +141,7 @@ The game database (`games_db.json`) contains 1662 titles curated from IGDB with 
 
 - `rating_count > 100` (popularity threshold)
 - `aggregated_rating > 70` (quality threshold)
-- Released after 1990
+- Preferably released after 1990
 - Main games only (no DLC/expansions/episodes)
 - Minimum 5 high-resolution screenshots
 
@@ -161,19 +161,3 @@ node scripts/fetch_igdb.js
 3. Wrong guess reveals the next screenshot and additional metadata
 4. Win or lose after 5 guesses
 5. In Endless mode: manage lifelines and shop strategically to extend your run
-
----
-
-## Admin Features
-
-Admin mode can be accessed by entering 5 backspaces after completing a level. Features include:
-
-- Edit game names directly in-game
-- Changes persist to the database (`games_db.json`)
-- Password-protected via `ADMIN_KEY` environment variable
-
----
-
-## License
-
-This project is for personal/non-commercial use. Game data and screenshots are sourced from IGDB.
