@@ -1,11 +1,11 @@
+
 import { useState, useEffect } from 'react';
 import type { Game, GameStatus, LevelProgress, GuessResult } from '../types';
+// import gamesData from '../data/games_db.json'; // Removed static import
 import { areSimilarNames } from '../utils/seriesDetection';
-import { getSeededGameOrder } from '../utils/seededShuffle';
 
+// const GAMES = gamesData as Game[]; // Removed static constant
 const STORAGE_KEY = 'guessthegame_unlimited_progress';
-const MIGRATION_VERSION_KEY = 'guessthegame_version';
-const CURRENT_VERSION = 3;
 
 // Load initial state from localStorage
 function loadInitialState() {
@@ -26,50 +26,6 @@ function loadInitialState() {
     return { currentLevel: 1, progress: {} };
 }
 
-function migrateProgress(
-    savedProgress: Record<number, LevelProgress>,
-    fromGames: Game[],
-    toGames: Game[]
-): Record<number, LevelProgress> {
-    console.log('🔄 Starting progress migration...');
-    const newProgress: Record<number, LevelProgress> = {};
-
-    // Create maps for O(1) lookups
-    // fromMap: Level -> Game ID (in the old order)
-    const fromMap = new Map(fromGames.map((g, i) => [i + 1, g.id]));
-
-    // toMap: Game ID -> Level (in the new order)
-    const toMap = new Map(toGames.map((g, i) => [g.id, i + 1]));
-
-    Object.entries(savedProgress).forEach(([levelStr, progress]) => {
-        const level = parseInt(levelStr, 10);
-
-        // Find which game was at this level in the OLD order
-        const gameId = fromMap.get(level);
-
-        if (gameId !== undefined) {
-            // Find where this game is in the NEW order
-            const newLevel = toMap.get(gameId);
-
-            if (newLevel) {
-                if (level !== newLevel) {
-                    console.log(`Moving progress from Level ${level} (Game ${gameId}) to Level ${newLevel}`);
-                }
-                newProgress[newLevel] = progress;
-            } else {
-                console.warn(`Could not find new level for game ID: ${gameId}`);
-                // Fallback: keep it at the same level if possible
-                newProgress[level] = progress;
-            }
-        } else {
-            // If we can't identify the game (e.g. level out of bounds), keep it
-            newProgress[level] = progress;
-        }
-    });
-
-    return newProgress;
-}
-
 export function useGameState() {
     const [games, setGames] = useState<Game[]>([]);
     const [isLoading, setIsLoading] = useState(true);
@@ -85,36 +41,8 @@ export function useGameState() {
                 if (!res.ok) throw new Error('Failed to load games');
                 return res.json();
             })
-            .then((originalGames: Game[]) => {
-                // Determine the target shuffle (50 fixed)
-                const targetGames = getSeededGameOrder(originalGames, 50);
-                setGames(targetGames);
-
-                // Check for migration
-                const storedVersion = parseInt(localStorage.getItem(MIGRATION_VERSION_KEY) || '0', 10);
-
-                if (storedVersion < CURRENT_VERSION) {
-                    console.log(`⚠️ Migration needed (v${storedVersion} -> v${CURRENT_VERSION})`);
-
-                    // Determine "from" games based on version
-                    let fromGames: Game[] = originalGames;
-
-                    if (storedVersion === 2) {
-                        // Version 2 was "100 fixed"
-                        fromGames = getSeededGameOrder(originalGames, 100);
-                    } else {
-                        // Version 0/1 was "Original / sorted"
-                        fromGames = originalGames;
-                    }
-
-                    setProgress(prevProgress => {
-                        const migrated = migrateProgress(prevProgress, fromGames, targetGames);
-                        return migrated;
-                    });
-
-                    localStorage.setItem(MIGRATION_VERSION_KEY, CURRENT_VERSION.toString());
-                }
-
+            .then(data => {
+                setGames(data);
                 setIsLoading(false);
             })
             .catch(err => {
