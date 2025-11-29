@@ -161,7 +161,7 @@ export function EndlessGameArea({
 
     // Show shop every 10 levels
     useEffect(() => {
-        if (state.streak > 0 && state.streak % 10 === 0 && state.status === 'playing' && state.guesses.length === 0) {
+        if (state.streak > 0 && state.streak % 5 === 0 && state.status === 'playing' && state.guesses.length === 0) {
             setShowShop(true);
         }
     }, [state.streak, state.status, state.guesses.length]);

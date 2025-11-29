@@ -3,9 +3,9 @@ import type { ShopItem } from '../types';
 export const calculateScore = (guessCount: number): number => {
     switch (guessCount) {
         case 1: return 5;
-        case 2: return 3;
-        case 3: return 2;
-        case 4: return 1;
+        case 2: return 4;
+        case 3: return 3;
+        case 4: return 2;
         case 5: return 1;
         default: return 0;
     }
@@ -30,7 +30,7 @@ export const getDifficultyZoomBonus = (levelIndex: number): number => {
     // Level 10-19 (tier 1): +10%
     // Level 20-29 (tier 2): +20%
     // etc.
-    const tier = Math.floor(levelIndex / 10);
+    const tier = Math.floor(levelIndex / 5);
     return tier * 10;
 };
 
@@ -53,21 +53,21 @@ export const getShopItems = (): ShopItem[] => [
         id: 'utility_consultant',
         name: 'Consultant',
         description: 'Refill "Consultant" Lifeline',
-        cost: 3,
+        cost: 5,
         type: 'refill_consultant'
     },
     {
         id: 'utility_double_trouble',
         name: 'Double Trouble',
         description: 'Refill "Double Trouble" Lifeline',
-        cost: 1,
+        cost: 2,
         type: 'refill_double_trouble'
     },
     {
         id: 'utility_zoom_out',
         name: 'Zoom Out',
         description: 'Refill "Zoom Out" Lifeline',
-        cost: 2,
+        cost: 3,
         type: 'refill_zoom_out'
     },
     {

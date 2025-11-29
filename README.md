@@ -20,7 +20,7 @@ Casual progression through all 1662 levels at your own pace.
 Roguelike challenge with scoring, permadeath, and strategic lifeline usage.
 
 - **Permadeath**: 5 wrong guesses ends the run
-- **Scoring**: 5/3/2/1/1 points per correct guess (based on attempt number)
+- **Scoring**: 5/4/3/2/1 points per correct guess (based on attempt number)
 - **Lifelines** (single-use, refillable in shop):
   - Skip Level: Proceed to next game for 0 points
   - Anagram: Scrambled game title with one extra character
