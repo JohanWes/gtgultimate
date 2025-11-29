@@ -24,6 +24,6 @@ services:
       PORT: "${PORT:-3000}"
       ADMIN_KEY: "${ADMIN_KEY}"
     volumes:
-      - ./data:/app/data
+      - ./storage:/app/storage
     networks:
       - proxynet

@@ -13,7 +13,7 @@ const app = express();
 const PORT = process.env.PORT || 3000;
 const HOST = process.env.HOST || '0.0.0.0';
 // Use a data directory for persistence, compatible with docker volume mounting
-const DATA_DIR = path.join(__dirname, 'data');
+const DATA_DIR = path.join(__dirname, 'storage');
 const DATA_FILE = path.join(DATA_DIR, 'highscores.json');
 
 // Ensure data directory exists

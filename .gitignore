@@ -31,3 +31,5 @@ AGENT.md
 .agent/
 docker-compose.local.yml
 highscores.json
+data/highscores.json
+storage/
