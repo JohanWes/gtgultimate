@@ -250,7 +250,7 @@ export function EndlessGameArea({
         setCoverPeekTimeLeft(5);
     }, [game.id]);
 
-    const { settings } = useSettings();
+    const { settings, isSettingsOpen } = useSettings();
 
     // Handle Enter key for Next Level / Try Again
     useEffect(() => {
@@ -258,7 +258,7 @@ export function EndlessGameArea({
             // Disable all keyboard shortcuts when Cover Peek is active
             if (showCoverPeek) return;
 
-            if (adminModalOpen) return;
+            if (adminModalOpen || isSettingsOpen) return;
 
             // Next Level on Enter
             if (state.status !== 'playing' && e.key === 'Enter') {
@@ -287,7 +287,7 @@ export function EndlessGameArea({
 
         window.addEventListener('keydown', handleKeyDown);
         return () => window.removeEventListener('keydown', handleKeyDown);
-    }, [state.status, state.isGameOver, onNextLevel, onRequestHighScore, onSkip, settings, isHighScoreModalOpen, showCoverPeek, adminModalOpen]);
+    }, [state.status, state.isGameOver, onNextLevel, onRequestHighScore, onSkip, settings, isHighScoreModalOpen, showCoverPeek, adminModalOpen, isSettingsOpen]);
 
     const [mounted, setMounted] = useState(false);
     useEffect(() => {
@@ -353,10 +353,10 @@ export function EndlessGameArea({
 
                         {/* Anagram Hint Overlay */}
                         {anagramHint && state.status === 'playing' && (
-                            <div className="absolute top-4 left-0 right-0 text-center pointer-events-none z-20">
-                                <span className="bg-black/70 text-yellow-300 px-4 py-2 rounded-full text-lg font-mono tracking-widest border border-yellow-500/30 shadow-lg backdrop-blur-sm animate-lifeline-shake">
+                            <div className="absolute top-4 left-28 right-4 flex justify-start pointer-events-none z-20">
+                                <div className="bg-black/30 text-yellow-300 px-4 py-2 rounded-xl text-base font-mono tracking-wider border border-yellow-500/30 shadow-lg backdrop-blur-sm animate-lifeline-shake break-words whitespace-normal leading-tight text-left">
                                     {anagramHint}
-                                </span>
+                                </div>
                             </div>
                         )}
 
@@ -467,6 +467,7 @@ export function EndlessGameArea({
                                 disabled={state.status !== 'playing'}
                                 autoFocus={true}
                                 correctAnswers={doubleTroubleGame ? [game.name, doubleTroubleGame.name] : [game.name]}
+                                hideResults={showCoverPeek}
                             />
                         )}
                     </div>

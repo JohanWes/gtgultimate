@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { Menu, Settings } from 'lucide-react';
 import { Sidebar } from './Sidebar';
 import { useGameState } from '../hooks/useGameState';
+import { useSettings } from '../hooks/useSettings';
 import { SettingsModal } from './SettingsModal';
 import type { GameMode } from '../types';
 
@@ -14,7 +15,7 @@ interface LayoutProps {
 
 export function Layout({ children, gameState, currentMode, onModeSwitch }: LayoutProps) {
     const [isSidebarOpen, setIsSidebarOpen] = useState(false);
-    const [showSettingsModal, setShowSettingsModal] = useState(false);
+    const { isSettingsOpen, setIsSettingsOpen } = useSettings();
 
     return (
         <div className="min-h-screen bg-background text-text flex">
@@ -40,7 +41,7 @@ export function Layout({ children, gameState, currentMode, onModeSwitch }: Layou
                     </button>
                     <span className="font-bold text-lg">Level {gameState.currentLevel}</span>
                     <button
-                        onClick={() => setShowSettingsModal(true)}
+                        onClick={() => setIsSettingsOpen(true)}
                         className="p-2 -mr-2 hover:bg-white/5 rounded-lg transition-colors"
                     >
                         <Settings size={24} />
@@ -50,7 +51,7 @@ export function Layout({ children, gameState, currentMode, onModeSwitch }: Layou
                 {/* Desktop Settings Button (Absolute positioned) */}
                 <div className="hidden md:block absolute top-4 right-4 z-40">
                     <button
-                        onClick={() => setShowSettingsModal(true)}
+                        onClick={() => setIsSettingsOpen(true)}
                         className="p-2 bg-surface/50 hover:bg-surface border border-white/10 rounded-lg transition-all hover:scale-105 backdrop-blur-sm shadow-lg text-gray-400 hover:text-white"
                         title="Settings"
                     >
@@ -63,8 +64,8 @@ export function Layout({ children, gameState, currentMode, onModeSwitch }: Layou
                 </main>
             </div>
 
-            {showSettingsModal && (
-                <SettingsModal onClose={() => setShowSettingsModal(false)} />
+            {isSettingsOpen && (
+                <SettingsModal onClose={() => setIsSettingsOpen(false)} />
             )}
         </div>
     );

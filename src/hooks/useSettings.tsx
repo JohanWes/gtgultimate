@@ -17,6 +17,8 @@ const DEFAULT_SETTINGS: Settings = {
 interface SettingsContextType {
     settings: Settings;
     updateSetting: (key: keyof Settings, value: boolean | string) => void;
+    isSettingsOpen: boolean;
+    setIsSettingsOpen: (isOpen: boolean) => void;
 }
 
 const SettingsContext = createContext<SettingsContextType | undefined>(undefined);
@@ -42,9 +44,10 @@ export function SettingsProvider({ children }: { children: React.ReactNode }) {
         setSettings(prev => ({ ...prev, [key]: value }));
     };
 
+    const [isSettingsOpen, setIsSettingsOpen] = useState(false);
+
     return (
-        <SettingsContext.Provider value={{ settings, updateSetting }
-        }>
+        <SettingsContext.Provider value={{ settings, updateSetting, isSettingsOpen, setIsSettingsOpen }}>
             {children}
         </SettingsContext.Provider>
     );

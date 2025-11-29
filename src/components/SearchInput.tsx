@@ -11,9 +11,10 @@ interface SearchInputProps {
     readonly disabled: boolean;
     readonly autoFocus?: boolean;
     readonly correctAnswers?: string[];
+    readonly hideResults?: boolean;
 }
 
-export function SearchInput({ games, onGuess, disabled, autoFocus, correctAnswers }: SearchInputProps) {
+export function SearchInput({ games, onGuess, disabled, autoFocus, correctAnswers, hideResults }: SearchInputProps) {
     const [searchQuery, setSearchQuery] = useState('');
     const [displayValue, setDisplayValue] = useState('');
     const [isOpen, setIsOpen] = useState(false);
@@ -211,7 +212,7 @@ export function SearchInput({ games, onGuess, disabled, autoFocus, correctAnswer
                 </div>
             </form>
 
-            {isOpen && results.length > 0 && (
+            {isOpen && !hideResults && results.length > 0 && (
                 <ul
                     ref={listRef}
                     className="absolute w-full mt-2 bg-surface border border-white/10 rounded-xl shadow-2xl overflow-hidden max-h-48 overflow-y-auto custom-scrollbar animate-in fade-in slide-in-from-top-2"
