@@ -99,6 +99,7 @@ function App() {
             onBuyShopItem={endlessState.buyShopItem}
             onRequestHighScore={handleRequestHighScore}
             isHighScoreModalOpen={showHighScoreModal}
+            onMarkShopVisited={endlessState.markShopVisited}
           />
         )
       )}

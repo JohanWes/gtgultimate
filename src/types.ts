@@ -70,6 +70,7 @@ export interface EndlessState {
     cropPositions: Array<{ x: number; y: number }>; // Persisted crop positions for the current level
     hotStreakCount: number; // Number of consecutive "Close to Perfect" guesses (1st or 2nd image)
     isHotStreakActive: boolean; // Whether the hot streak effect is currently active (>= 3 hotStreakCount)
+    lastShopStreak: number; // The streak count at which the shop was last visited
 }
 
 export interface ShopItem {

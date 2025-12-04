@@ -28,6 +28,7 @@ interface EndlessGameAreaProps {
     onBuyShopItem: (itemId: string) => void;
     onRequestHighScore: () => void;
     isHighScoreModalOpen: boolean;
+    onMarkShopVisited: () => void;
 }
 
 // eslint-disable-next-line react-refresh/only-export-components
@@ -41,7 +42,8 @@ export function EndlessGameArea({
     onUseLifeline,
     onBuyShopItem,
     onRequestHighScore,
-    isHighScoreModalOpen
+    isHighScoreModalOpen,
+    onMarkShopVisited
 }: EndlessGameAreaProps) {
     const [showShop, setShowShop] = useState(false);
     const [anagramHint, setAnagramHint] = useState<string | null>(null);
@@ -159,12 +161,12 @@ export function EndlessGameArea({
     // Use persisted crop positions from state
     const cropPositions = state.cropPositions;
 
-    // Show shop every 10 levels
+    // Show shop every 5 levels
     useEffect(() => {
-        if (state.streak > 0 && state.streak % 5 === 0 && state.status === 'playing' && state.guesses.length === 0) {
+        if (state.streak > 0 && state.streak % 5 === 0 && state.status === 'playing' && state.guesses.length === 0 && state.streak > state.lastShopStreak) {
             setShowShop(true);
         }
-    }, [state.streak, state.status, state.guesses.length]);
+    }, [state.streak, state.status, state.guesses.length, state.lastShopStreak]);
 
     const handleUseLifeline = (type: LifelineType) => {
         setAnimatingButton(type);
@@ -299,7 +301,10 @@ export function EndlessGameArea({
             <ShopModal
                 score={state.score}
                 onBuy={onBuyShopItem}
-                onContinue={() => setShowShop(false)}
+                onContinue={() => {
+                    setShowShop(false);
+                    onMarkShopVisited();
+                }}
             />
         );
     }

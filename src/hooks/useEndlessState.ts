@@ -124,7 +124,8 @@ const INITIAL_STATE: EndlessState = {
     zoomOutActive: false,
     cropPositions: [],
     hotStreakCount: 0,
-    isHotStreakActive: false
+    isHotStreakActive: false,
+    lastShopStreak: 0
 };
 
 export const useEndlessState = (allGames: Game[]) => {
@@ -141,6 +142,11 @@ export const useEndlessState = (allGames: Game[]) => {
         // Ensure crop positions exist (for legacy state or fresh start)
         if (!parsedState.cropPositions || parsedState.cropPositions.length === 0) {
             parsedState.cropPositions = Array(5).fill(0).map(() => generateRandomCrop());
+        }
+
+        // Ensure lastShopStreak exists (for legacy state)
+        if (parsedState.lastShopStreak === undefined) {
+            parsedState.lastShopStreak = 0;
         }
 
         return parsedState;
@@ -328,6 +334,10 @@ export const useEndlessState = (allGames: Game[]) => {
         setState(prev => ({ ...prev, highScoreModalShown: true }));
     }, []);
 
+    const markShopVisited = useCallback(() => {
+        setState(prev => ({ ...prev, lastShopStreak: prev.streak }));
+    }, []);
+
     return {
         state,
         currentGame,
@@ -336,6 +346,7 @@ export const useEndlessState = (allGames: Game[]) => {
         nextLevel,
         useLifeline,
         buyShopItem,
-        markHighScoreModalShown
+        markHighScoreModalShown,
+        markShopVisited
     };
 };
