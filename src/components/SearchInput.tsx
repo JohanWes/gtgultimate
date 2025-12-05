@@ -89,7 +89,7 @@ export function SearchInput({ games, onGuess, disabled, autoFocus, correctAnswer
         }
 
         return uniqueResults;
-    }, [searchQuery, correctAnswers]);
+    }, [searchQuery, correctAnswers?.join(',')]);
 
     useEffect(() => {
         setSelectedIndex(0);
@@ -200,7 +200,7 @@ export function SearchInput({ games, onGuess, disabled, autoFocus, correctAnswer
                         onKeyDown={handleKeyDown}
                         disabled={disabled}
                         placeholder={disabled ? "Game Over" : "Type to search for a game..."}
-                        className="w-full pl-11 pr-11 py-2.5 bg-surface/50 backdrop-blur border border-white/10 rounded-xl text-base focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all shadow-lg placeholder:text-muted/50"
+                        className="w-full pl-11 pr-11 py-2.5 glass-panel rounded-xl text-base text-text focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all shadow-lg placeholder:text-muted"
                     />
                     <button
                         type="submit"

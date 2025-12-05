@@ -39,7 +39,7 @@ interface TutorialStep {
 const tutorialSteps: TutorialStep[] = [
     {
         icon: <Gamepad2 size={48} />,
-        title: "Welcome to Guess The Game!",
+        title: "Welcome to Guess The Game Ultimate!",
         accentColor: "from-purple-500 to-pink-500",
         content: (
             <div className="space-y-4">
