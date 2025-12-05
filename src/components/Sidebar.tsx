@@ -1,7 +1,9 @@
 import { XCircle, Circle, Trophy } from 'lucide-react';
 import { clsx } from 'clsx';
 import gtgLogo from '../assets/gtgultimate.jpg';
+import retroLogo from '../assets/logo-retro.png';
 import type { LevelProgress, GameMode } from '../types';
+import { useSettings } from '../hooks/useSettings';
 
 interface SidebarProps {
     totalLevels: number;
@@ -15,6 +17,9 @@ interface SidebarProps {
 }
 
 export function Sidebar({ totalLevels, currentLevel, progress, onSelectLevel, isOpen, onClose, currentMode, onModeSwitch }: SidebarProps) {
+    const { settings } = useSettings();
+    const logoSrc = settings.theme === 'retro' ? retroLogo : gtgLogo;
+
     const levels = Array.from({ length: totalLevels }, (_, i) => i + 1);
 
     const completedCount = Object.values(progress).filter(p => p.status === 'won').length;
@@ -37,7 +42,7 @@ export function Sidebar({ totalLevels, currentLevel, progress, onSelectLevel, is
                 currentMode === 'endless' ? "w-80" : "w-64"
             )}>
                 <div className="px-4 py-3 border-b border-white/10 flex-shrink-0 flex flex-col gap-3">
-                    <img src={gtgLogo} alt="GuessTheGame" className="w-full h-auto rounded-md" />
+                    <img src={logoSrc} alt="GuessTheGame" className="w-full h-auto rounded-md" />
 
                     {/* Game Mode Toggles */}
                     <div className="flex bg-black/20 p-1 rounded-lg">

@@ -52,7 +52,12 @@ function App() {
   }, [endlessState.state.history, games, endlessStats]);
 
   // Tutorial state from settings context
-  const { isTutorialOpen, setIsTutorialOpen, markTutorialSeen } = useSettings();
+  const { isTutorialOpen, setIsTutorialOpen, markTutorialSeen, settings } = useSettings();
+
+  // Apply theme
+  useEffect(() => {
+    document.body.dataset.theme = settings.theme;
+  }, [settings.theme]);
 
   const handleModeSwitch = (newMode: GameMode) => {
     if (mode === newMode) return;

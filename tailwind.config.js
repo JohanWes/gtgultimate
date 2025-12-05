@@ -8,16 +8,16 @@ export default {
     theme: {
         extend: {
             colors: {
-                background: '#0f172a', // Slate 900
-                surface: '#1e293b', // Slate 800
-                primary: '#3b82f6', // Blue 500
-                secondary: '#64748b', // Slate 500
-                accent: '#64748b', // Slate 500
-                success: '#22c55e', // Green 500
-                warning: '#fbbf24', // Amber 400
-                error: '#ef4444', // Red 500
-                text: '#f8fafc', // Slate 50
-                muted: '#94a3b8', // Slate 400
+                background: 'var(--background)',
+                surface: 'var(--surface)',
+                primary: 'var(--primary)',
+                secondary: 'var(--secondary)',
+                accent: 'var(--accent)',
+                success: 'var(--success)',
+                warning: 'var(--warning)',
+                error: 'var(--error)',
+                text: 'var(--text)',
+                muted: 'var(--muted)',
             },
             fontFamily: {
                 sans: ['Inter', 'sans-serif'],

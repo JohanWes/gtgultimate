@@ -7,12 +7,14 @@ export interface Settings {
     nextLevelOnEnter: boolean;
     skipOnEsc: boolean;
     adminKey: string;
+    theme: 'default' | 'retro';
 }
 
 const DEFAULT_SETTINGS: Settings = {
     nextLevelOnEnter: false,
     skipOnEsc: false,
-    adminKey: ''
+    adminKey: '',
+    theme: 'default'
 };
 
 interface SettingsContextType {

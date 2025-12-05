@@ -55,6 +55,21 @@ export function SettingsModal({ onClose }: SettingsModalProps) {
 
                     <div className="flex items-center justify-between pt-4 border-t border-white/10">
                         <div className="space-y-1">
+                            <h3 className="font-medium text-white">Theme</h3>
+                            <p className="text-sm text-gray-400">Select the game's visual style</p>
+                        </div>
+                        <select
+                            value={settings.theme}
+                            onChange={(e) => updateSetting('theme', e.target.value as 'default' | 'retro')}
+                            className="bg-gray-800 border border-gray-700 rounded px-3 py-1.5 text-white text-sm focus:outline-none focus:border-blue-500 w-40"
+                        >
+                            <option value="default">Default</option>
+                            <option value="retro">Retro</option>
+                        </select>
+                    </div>
+
+                    <div className="flex items-center justify-between pt-4 border-t border-white/10">
+                        <div className="space-y-1">
                             <h3 className="font-medium text-white">Game Tutorial</h3>
                             <p className="text-sm text-gray-400">Learn how to play the game</p>
                         </div>

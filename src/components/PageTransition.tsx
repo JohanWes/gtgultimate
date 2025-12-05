@@ -31,7 +31,7 @@ export const PageTransition = ({ children, className }: PageTransitionProps) => 
             transition={{
                 type: "tween",
                 ease: "easeInOut",
-                duration: 0.1
+                duration: 0.2
             }}
             className={className}
         >

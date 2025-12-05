@@ -13,10 +13,9 @@ export function useObfuscatedImages(imageUrls: string[] | undefined): string[] {
             return;
         }
 
-        const fetchImages = async () => {
-            // Create a map to keep track of this specific run to prevent race conditions
-            let isMounted = true;
+        let isMounted = true;
 
+        const fetchImages = async () => {
             try {
                 const blobs = await Promise.all(
                     imageUrls.map(async (url) => {
@@ -41,19 +40,12 @@ export function useObfuscatedImages(imageUrls: string[] | undefined): string[] {
                 console.error('Error in useObfuscatedImages:', error);
                 if (isMounted) setBlobUrls(imageUrls); // Fallback
             }
-
-            return () => {
-                isMounted = false;
-            };
         };
 
-        const cleanupPromise = fetchImages();
+        fetchImages();
 
         return () => {
-            // We can't synchronously cancel the fetch, but the cleanup logic inside fetchImages handle it.
-            // However, we DO need to cleanup the *existing* blobUrls when the component unmounts or imageUrls change.
-            // But we can't do it immediately here if we reuse the state for the new render.
-            // Actually, the standard pattern for Blob URLs is to revoke them when you're done.
+            isMounted = false;
         };
     }, [imageUrls]);
 
