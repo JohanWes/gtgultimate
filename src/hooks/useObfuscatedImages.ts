@@ -5,11 +5,17 @@ import { useState, useEffect } from 'react';
  * This obfuscates the original source URL from the DOM.
  */
 export function useObfuscatedImages(imageUrls: string[] | undefined): string[] {
-    const [blobUrls, setBlobUrls] = useState<string[]>([]);
+    // secure-key based on content to detect changes immediately
+    const currentKey = JSON.stringify(imageUrls || []);
+
+    const [state, setState] = useState<{ key: string; blobs: string[] }>({
+        key: currentKey,
+        blobs: []
+    });
 
     useEffect(() => {
         if (!imageUrls || imageUrls.length === 0) {
-            setBlobUrls([]);
+            setState({ key: currentKey, blobs: [] });
             return;
         }
 
@@ -17,6 +23,9 @@ export function useObfuscatedImages(imageUrls: string[] | undefined): string[] {
 
         const fetchImages = async () => {
             try {
+                // If the key has already changed while we were waiting to start, abort early
+                // (Though the effect cleanup handles this usually, it's good to be explicit)
+
                 const blobs = await Promise.all(
                     imageUrls.map(async (url) => {
                         try {
@@ -31,14 +40,16 @@ export function useObfuscatedImages(imageUrls: string[] | undefined): string[] {
                 );
 
                 if (isMounted) {
-                    setBlobUrls(blobs);
+                    setState({ key: currentKey, blobs });
                 } else {
                     // Cleanup if unmounted before finishing
-                    blobs.forEach(url => URL.revokeObjectURL(url));
+                    blobs.forEach(url => {
+                        if (url.startsWith('blob:')) URL.revokeObjectURL(url);
+                    });
                 }
             } catch (error) {
                 console.error('Error in useObfuscatedImages:', error);
-                if (isMounted) setBlobUrls(imageUrls); // Fallback
+                if (isMounted) setState({ key: currentKey, blobs: imageUrls }); // Fallback
             }
         };
 
@@ -47,18 +58,25 @@ export function useObfuscatedImages(imageUrls: string[] | undefined): string[] {
         return () => {
             isMounted = false;
         };
-    }, [imageUrls]);
+    }, [currentKey]); // Depend on the stringified key to re-run when content changes
 
-    // Cleanup effect when the specific blob URLs in state change (e.g. from a previous render)
+    // Cleanup effect when the specific blob URLs in state change
     useEffect(() => {
         return () => {
-            blobUrls.forEach((url) => {
+            state.blobs.forEach((url) => {
                 if (url.startsWith('blob:')) {
                     URL.revokeObjectURL(url);
                 }
             });
         };
-    }, [blobUrls]);
+    }, [state.blobs]);
 
-    return blobUrls;
+    // Derived return value:
+    // If the state key doesn't match the current prop key, it means we are in a "stale" render
+    // and the effect hasn't updated the state yet. Return empty to prevent flash of old images.
+    if (state.key !== currentKey) {
+        return [];
+    }
+
+    return state.blobs;
 }

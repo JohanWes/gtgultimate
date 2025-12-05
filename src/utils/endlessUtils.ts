@@ -81,7 +81,7 @@ export const getShopItems = (): ShopItem[] => [
         id: 'utility_synopsis',
         name: 'Synopsis',
         description: 'Refill "Synopsis" Lifeline',
-        cost: 3,
+        cost: 2,
         type: 'refill_synopsis'
     },
     {

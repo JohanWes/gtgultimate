@@ -308,11 +308,13 @@ export const useEndlessState = (allGames: Game[]) => {
         });
     }, [state.lifelines, state.status, currentGameId]);
 
-    const buyShopItem = useCallback((itemId: string) => {
+    const buyShopItem = useCallback((itemId: string, cost?: number) => {
         const item = getShopItems().find(i => i.id === itemId);
         if (!item) return;
 
-        if (state.score < item.cost) return; // Should be handled by UI too
+        const finalCost = cost !== undefined ? cost : item.cost;
+
+        if (state.score < finalCost) return; // Should be handled by UI too
 
         setState(prev => {
             const newLifelines = { ...prev.lifelines };
@@ -326,7 +328,7 @@ export const useEndlessState = (allGames: Game[]) => {
 
             return {
                 ...prev,
-                score: prev.score - item.cost, // item.cost is negative for bonus points, so this works
+                score: prev.score - finalCost, // finalCost is negative for bonus points (if bonus points could adhere to this, but they likely won't be discounted), so this works
                 lifelines: newLifelines
             };
         });

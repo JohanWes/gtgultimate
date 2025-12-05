@@ -28,7 +28,7 @@ interface EndlessGameAreaProps {
     onSkip: () => void;
     onNextLevel: () => void;
     onUseLifeline: (type: LifelineType) => void;
-    onBuyShopItem: (itemId: string) => void;
+    onBuyShopItem: (itemId: string, cost?: number) => void;
     onRequestHighScore: () => void;
     isHighScoreModalOpen: boolean;
     onMarkShopVisited: () => void;
@@ -324,18 +324,7 @@ export function EndlessGameArea({
         setMounted(true);
     }, []);
 
-    if (showShop) {
-        return (
-            <ShopModal
-                score={state.score}
-                onBuy={onBuyShopItem}
-                onContinue={() => {
-                    setShowShop(false);
-                    onMarkShopVisited();
-                }}
-            />
-        );
-    }
+    // Moved ShopModal to be rendered as an overlay at the bottom
 
 
 
@@ -517,7 +506,7 @@ export function EndlessGameArea({
                             <SearchInput
                                 games={allGames}
                                 onGuess={handleSearchInputGuess}
-                                disabled={state.status !== 'playing'}
+                                disabled={state.status !== 'playing' || showShop}
                                 autoFocus={true}
                                 correctAnswers={doubleTroubleGame ? [game.name, doubleTroubleGame.name] : [game.name]}
                                 hideResults={showCoverPeek}
@@ -632,11 +621,25 @@ export function EndlessGameArea({
                             animatingButton={animatingButton}
                             doubleTroubleGame={doubleTroubleGame}
                             consultantOptions={consultantOptions}
+                            isShopOpen={showShop}
                         />,
                         document.getElementById('sidebar-lifelines-portal')!
                     )}
                 </div>
             </div >
+            {/* Shop Modal */}
+            {showShop && (
+                <div className="relative z-50">
+                    <ShopModal
+                        score={state.score}
+                        onBuy={onBuyShopItem}
+                        onContinue={() => {
+                            setShowShop(false);
+                            onMarkShopVisited();
+                        }}
+                    />
+                </div>
+            )}
         </div >
     );
 };

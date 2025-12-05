@@ -9,6 +9,7 @@ interface LifelinesProps {
     animatingButton: LifelineType | null;
     doubleTroubleGame: Game | null;
     consultantOptions: ConsultantOption[] | null;
+    isShopOpen?: boolean;
 }
 
 export function Lifelines({
@@ -17,14 +18,15 @@ export function Lifelines({
     onUseLifeline,
     animatingButton,
     doubleTroubleGame,
-    consultantOptions
+    consultantOptions,
+    isShopOpen = false
 }: LifelinesProps) {
     return (
         <div className="space-y-2 mt-2">
             <div className="grid grid-cols-1 gap-2">
                 <button
                     onClick={() => onUseLifeline('cover_peek')}
-                    disabled={state.lifelines.cover_peek <= 0 || state.status !== 'playing' || !game.cover}
+                    disabled={isShopOpen || state.lifelines.cover_peek <= 0 || state.status !== 'playing' || !game.cover}
                     className={clsx(
                         "w-full py-3 px-4 rounded-lg font-bold transition-all border flex items-center justify-between group",
                         state.lifelines.cover_peek > 0 && state.status === 'playing' && game.cover
@@ -41,7 +43,7 @@ export function Lifelines({
 
                 <button
                     onClick={() => onUseLifeline('skip')}
-                    disabled={state.lifelines.skip <= 0 || state.status !== 'playing'}
+                    disabled={isShopOpen || state.lifelines.skip <= 0 || state.status !== 'playing'}
                     className={clsx(
                         "w-full py-3 px-4 rounded-lg font-bold transition-all border flex items-center justify-between group",
                         state.lifelines.skip > 0 && state.status === 'playing'
@@ -58,7 +60,7 @@ export function Lifelines({
 
                 <button
                     onClick={() => onUseLifeline('anagram')}
-                    disabled={state.lifelines.anagram <= 0 || state.status !== 'playing' || !!doubleTroubleGame}
+                    disabled={isShopOpen || state.lifelines.anagram <= 0 || state.status !== 'playing' || !!doubleTroubleGame}
                     className={clsx(
                         "w-full py-3 px-4 rounded-lg font-bold transition-all border flex items-center justify-between group",
                         state.lifelines.anagram > 0 && state.status === 'playing' && !doubleTroubleGame
@@ -75,7 +77,7 @@ export function Lifelines({
 
                 <button
                     onClick={() => onUseLifeline('consultant')}
-                    disabled={state.lifelines.consultant <= 0 || state.status !== 'playing' || !!doubleTroubleGame}
+                    disabled={isShopOpen || state.lifelines.consultant <= 0 || state.status !== 'playing' || !!doubleTroubleGame}
                     className={clsx(
                         "w-full py-3 px-4 rounded-lg font-bold transition-all border flex items-center justify-between group",
                         state.lifelines.consultant > 0 && state.status === 'playing' && !doubleTroubleGame
@@ -92,7 +94,7 @@ export function Lifelines({
 
                 <button
                     onClick={() => onUseLifeline('double_trouble')}
-                    disabled={state.lifelines.double_trouble <= 0 || state.status !== 'playing' || !!consultantOptions}
+                    disabled={isShopOpen || state.lifelines.double_trouble <= 0 || state.status !== 'playing' || !!consultantOptions}
                     className={clsx(
                         "w-full py-3 px-4 rounded-lg font-bold transition-all border flex items-center justify-between group",
                         state.lifelines.double_trouble > 0 && state.status === 'playing' && !consultantOptions
@@ -109,7 +111,7 @@ export function Lifelines({
 
                 <button
                     onClick={() => onUseLifeline('zoom_out')}
-                    disabled={state.lifelines.zoom_out <= 0 || state.status !== 'playing'}
+                    disabled={isShopOpen || state.lifelines.zoom_out <= 0 || state.status !== 'playing'}
                     className={clsx(
                         "w-full py-3 px-4 rounded-lg font-bold transition-all border flex items-center justify-between group",
                         state.lifelines.zoom_out > 0 && state.status === 'playing'
@@ -126,7 +128,7 @@ export function Lifelines({
 
                 <button
                     onClick={() => onUseLifeline('synopsis')}
-                    disabled={state.lifelines.synopsis <= 0 || state.status !== 'playing' || !synopsisData[game.id.toString() as keyof typeof synopsisData]}
+                    disabled={isShopOpen || state.lifelines.synopsis <= 0 || state.status !== 'playing' || !synopsisData[game.id.toString() as keyof typeof synopsisData]}
                     className={clsx(
                         "w-full py-3 px-4 rounded-lg font-bold transition-all border flex items-center justify-between group",
                         state.lifelines.synopsis > 0 && state.status === 'playing' && synopsisData[game.id.toString() as keyof typeof synopsisData]
