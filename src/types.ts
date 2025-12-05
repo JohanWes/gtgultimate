@@ -42,7 +42,7 @@ export interface GameState {
     progress: Record<number, LevelProgress>; // Map level number to progress
 }
 
-export type LifelineType = 'skip' | 'anagram' | 'consultant' | 'double_trouble' | 'zoom_out' | 'cover_peek';
+export type LifelineType = 'skip' | 'anagram' | 'consultant' | 'double_trouble' | 'zoom_out' | 'cover_peek' | 'synopsis';
 
 export interface Lifelines {
     skip: number;
@@ -51,6 +51,7 @@ export interface Lifelines {
     double_trouble: number;
     zoom_out: number;
     cover_peek: number;
+    synopsis: number;
 }
 
 export interface EndlessState {
@@ -78,7 +79,7 @@ export interface ShopItem {
     name: string;
     description: string;
     cost: number;
-    type: 'refill_skip' | 'refill_anagram' | 'refill_consultant' | 'refill_double_trouble' | 'refill_zoom_out' | 'refill_cover_peek' | 'bonus_points';
+    type: 'refill_skip' | 'refill_anagram' | 'refill_consultant' | 'refill_double_trouble' | 'refill_zoom_out' | 'refill_cover_peek' | 'refill_synopsis' | 'bonus_points';
 }
 
 export interface ConsultantOptionsHandle {

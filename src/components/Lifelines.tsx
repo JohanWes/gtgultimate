@@ -1,5 +1,6 @@
 import { clsx } from 'clsx';
 import type { Game, EndlessState, LifelineType, ConsultantOption } from '../types';
+import synopsisData from '../assets/synopsis.json';
 
 interface LifelinesProps {
     state: EndlessState;
@@ -120,6 +121,23 @@ export function Lifelines({
                     <span className="text-sm">Zoom Out</span>
                     <span className={`text-xs px-1.5 py-0.5 rounded ${state.lifelines.zoom_out > 0 ? 'bg-cyan-500/20 text-cyan-300' : 'bg-gray-800 text-gray-600'}`}>
                         {state.lifelines.zoom_out}
+                    </span>
+                </button>
+
+                <button
+                    onClick={() => onUseLifeline('synopsis')}
+                    disabled={state.lifelines.synopsis <= 0 || state.status !== 'playing' || !synopsisData[game.id.toString() as keyof typeof synopsisData]}
+                    className={clsx(
+                        "w-full py-3 px-4 rounded-lg font-bold transition-all border flex items-center justify-between group",
+                        state.lifelines.synopsis > 0 && state.status === 'playing' && synopsisData[game.id.toString() as keyof typeof synopsisData]
+                            ? 'bg-gray-800 border-green-500/30 text-green-400 hover:bg-gray-750 hover:border-green-500/50'
+                            : 'bg-gray-900/50 border-gray-800 text-gray-600 cursor-not-allowed',
+                        animatingButton === 'synopsis' && 'animate-lifeline-pop'
+                    )}
+                >
+                    <span className="text-sm">Synopsis</span>
+                    <span className={`text-xs px-1.5 py-0.5 rounded ${state.lifelines.synopsis > 0 ? 'bg-green-500/20 text-green-300' : 'bg-gray-800 text-gray-600'}`}>
+                        {state.lifelines.synopsis}
                     </span>
                 </button>
             </div>

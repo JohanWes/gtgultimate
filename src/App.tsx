@@ -1,20 +1,58 @@
-import { useState } from 'react';
+import { useState, useEffect, useRef } from 'react';
+import { AnimatePresence } from 'framer-motion';
+import { PageTransition } from './components/PageTransition';
 import { Layout } from './components/Layout';
 import { GameArea } from './components/GameArea';
 import { EndlessGameArea } from './components/EndlessGameArea';
 import { HighScoreModal } from './components/HighScoreModal';
+import { TutorialModal } from './components/TutorialModal';
 import { useGameState } from './hooks/useGameState';
 import { useEndlessState } from './hooks/useEndlessState';
+import { useEndlessStats } from './hooks/useEndlessStats';
+import { useSettings } from './hooks/useSettings';
 import type { GameMode } from './types';
 
 function App() {
   const [mode, setMode] = useState<GameMode>('standard');
   const [showHighScoreModal, setShowHighScoreModal] = useState(false);
+  const [isStatsOpen, setIsStatsOpen] = useState(false);
 
   const gameState = useGameState();
   const { currentGame, currentProgress, games, submitGuess, nextLevel, isLoading, error } = gameState;
 
   const endlessState = useEndlessState(games);
+  const endlessStats = useEndlessStats();
+
+  // Track stats when endless history changes
+  const prevHistoryLength = useRef(endlessState.state.history.length);
+  useEffect(() => {
+    const history = endlessState.state.history;
+    if (history.length > prevHistoryLength.current) {
+      // New entry added
+      const lastEntry = history[history.length - 1];
+      const game = games.find(g => g.id === lastEntry.gameId);
+      if (game) {
+        const wasCorrect = lastEntry.status === 'won';
+        // Guess count: for 'won', it's the score divided by points (approximation)
+        // Better: count guesses from the result. For skipped/lost, we don't count guess distribution.
+        // The score tells us: 5pts= 1 guess, 4= 2, 3= 3, 2= 4, 1= 5
+        // But with hot streak it doubles. Let's just use a rough estimate.
+        // Actually, let's find the guess count from the current state's guesses at time of win.
+        // Since the history entry is added at the moment of result, we can approximate:
+        // Score 5 = guess 1, 4 = guess 2, 3 = guess 3, 2 = guess 4, 1 = guess 5 (ignoring hot streak)
+        let guessCount = 5;
+        if (wasCorrect && lastEntry.score > 0) {
+          const baseScore = lastEntry.score <= 5 ? lastEntry.score : Math.ceil(lastEntry.score / 2);
+          guessCount = Math.max(1, 6 - baseScore);
+        }
+        endlessStats.recordResult(game, wasCorrect, guessCount);
+      }
+    }
+    prevHistoryLength.current = history.length;
+  }, [endlessState.state.history, games, endlessStats]);
+
+  // Tutorial state from settings context
+  const { isTutorialOpen, setIsTutorialOpen, markTutorialSeen } = useSettings();
 
   const handleModeSwitch = (newMode: GameMode) => {
     if (mode === newMode) return;
@@ -71,38 +109,54 @@ function App() {
       gameState={gameState}
       currentMode={mode}
       onModeSwitch={handleModeSwitch}
+      isStatsOpen={isStatsOpen}
+      onStatsOpenChange={setIsStatsOpen}
+      endlessStats={{
+        stats: endlessStats.stats,
+        totalGames: endlessStats.totalGames,
+        winRate: endlessStats.winRate,
+        averageGuesses: endlessStats.averageGuesses,
+        resetStats: endlessStats.resetStats,
+      }}
     >
 
-      {mode === 'standard' ? (
-        currentGame && (
-          <GameArea
-            game={currentGame}
-            allGames={games}
-            guesses={currentProgress.guesses}
-            status={currentProgress.status}
-            allProgress={gameState.allProgress}
-            onGuess={submitGuess}
-            onSkip={gameState.skipGuess}
-            onNextLevel={nextLevel}
-          />
-        )
-      ) : (
-        endlessState.currentGame && (
-          <EndlessGameArea
-            game={endlessState.currentGame}
-            allGames={games}
-            state={endlessState.state}
-            onGuess={endlessState.submitGuess}
-            onSkip={endlessState.skipGuess}
-            onNextLevel={endlessState.nextLevel}
-            onUseLifeline={endlessState.useLifeline}
-            onBuyShopItem={endlessState.buyShopItem}
-            onRequestHighScore={handleRequestHighScore}
-            isHighScoreModalOpen={showHighScoreModal}
-            onMarkShopVisited={endlessState.markShopVisited}
-          />
-        )
-      )}
+      <AnimatePresence mode="wait">
+        {mode === 'standard' ? (
+          currentGame && (
+            <PageTransition key="standard" className="h-full">
+              <GameArea
+                game={currentGame}
+                allGames={games}
+                guesses={currentProgress.guesses}
+                status={currentProgress.status}
+                allProgress={gameState.allProgress}
+                onGuess={submitGuess}
+                onSkip={gameState.skipGuess}
+                onNextLevel={nextLevel}
+              />
+            </PageTransition>
+          )
+        ) : (
+          endlessState.currentGame && (
+            <PageTransition key="endless" className="h-full">
+              <EndlessGameArea
+                game={endlessState.currentGame}
+                allGames={games}
+                state={endlessState.state}
+                onGuess={endlessState.submitGuess}
+                onSkip={endlessState.skipGuess}
+                onNextLevel={endlessState.nextLevel}
+                onUseLifeline={endlessState.useLifeline}
+                onBuyShopItem={endlessState.buyShopItem}
+                onRequestHighScore={handleRequestHighScore}
+                isHighScoreModalOpen={showHighScoreModal}
+                onMarkShopVisited={endlessState.markShopVisited}
+                isStatsOpen={isStatsOpen}
+              />
+            </PageTransition>
+          )
+        )}
+      </AnimatePresence>
 
       {showHighScoreModal && (
         <HighScoreModal
@@ -111,6 +165,12 @@ function App() {
           onClose={handleModalClose}
         />
       )}
+
+      <TutorialModal
+        isOpen={isTutorialOpen}
+        onClose={() => setIsTutorialOpen(false)}
+        onComplete={markTutorialSeen}
+      />
     </Layout>
   );
 }

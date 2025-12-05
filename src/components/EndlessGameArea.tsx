@@ -3,6 +3,7 @@ import { useState, useEffect, useRef } from 'react';
 import { createPortal } from 'react-dom';
 import type { Game, EndlessState, LifelineType, ConsultantOption } from '../types';
 import { generateAnagram } from '../utils/endlessUtils';
+import { redactGameName } from '../utils/redaction';
 
 import { ShopModal } from './ShopModal';
 import { SearchInput } from './SearchInput';
@@ -16,6 +17,8 @@ import { AdminGameEditor } from './AdminGameEditor';
 import { clsx } from 'clsx';
 import { AlertCircle, X, ArrowRight, Flame } from 'lucide-react';
 import { useSettings } from '../hooks/useSettings';
+import synopsisData from '../assets/synopsis.json';
+import { useObfuscatedImages } from '../hooks/useObfuscatedImages';
 
 interface EndlessGameAreaProps {
     game: Game;
@@ -29,6 +32,7 @@ interface EndlessGameAreaProps {
     onRequestHighScore: () => void;
     isHighScoreModalOpen: boolean;
     onMarkShopVisited: () => void;
+    isStatsOpen: boolean;
 }
 
 // eslint-disable-next-line react-refresh/only-export-components
@@ -43,7 +47,8 @@ export function EndlessGameArea({
     onBuyShopItem,
     onRequestHighScore,
     isHighScoreModalOpen,
-    onMarkShopVisited
+    onMarkShopVisited,
+    isStatsOpen
 }: EndlessGameAreaProps) {
     const [showShop, setShowShop] = useState(false);
     const [anagramHint, setAnagramHint] = useState<string | null>(null);
@@ -62,10 +67,17 @@ export function EndlessGameArea({
     const [showCoverPeek, setShowCoverPeek] = useState(false);
     const [coverPeekTimeLeft, setCoverPeekTimeLeft] = useState(5);
 
+    // Synopsis State
+    const [showSynopsis, setShowSynopsis] = useState(false);
+    const [synopsisText, setSynopsisText] = useState<string | null>(null);
+
     // Admin Mode State
     const [adminModalOpen, setAdminModalOpen] = useState(false);
     const [, setBackspaceCount] = useState(0);
     const [displayGameName, setDisplayGameName] = useState(game.name);
+
+    // Obfuscate cover image for Cover Peek
+    const [obfuscatedCover] = useObfuscatedImages(game.cover ? [game.cover] : undefined);
 
     useEffect(() => {
         setDisplayGameName(game.name);
@@ -201,6 +213,20 @@ export function EndlessGameArea({
             const otherGames = allGames.filter(g => g.id !== game.id);
             const randomGame = otherGames[Math.floor(Math.random() * otherGames.length)];
             setDoubleTroubleGame(randomGame);
+        } else if (type === 'synopsis') {
+            // Look up synopsis from separate data file
+            const synopsis = synopsisData[game.id.toString() as keyof typeof synopsisData];
+
+            // Check if synopsis is available - if not, don't consume the lifeline
+            if (!synopsis) {
+                setErrorMessage('No synopsis available for this game');
+                setTimeout(() => setErrorMessage(null), 3000);
+                return; // Don't call onUseLifeline - refund
+            }
+            // Redact the game name from the synopsis
+            const redacted = redactGameName(synopsis, game.name);
+            setSynopsisText(redacted);
+            setShowSynopsis(true);
         }
         onUseLifeline(type);
     };
@@ -250,6 +276,8 @@ export function EndlessGameArea({
         setDoubleTroubleGame(null);
         setShowCoverPeek(false);
         setCoverPeekTimeLeft(5);
+        setShowSynopsis(false);
+        setSynopsisText(null);
     }, [game.id]);
 
     const { settings, isSettingsOpen } = useSettings();
@@ -257,10 +285,10 @@ export function EndlessGameArea({
     // Handle Enter key for Next Level / Try Again
     useEffect(() => {
         const handleKeyDown = (e: KeyboardEvent) => {
-            // Disable all keyboard shortcuts when Cover Peek is active
-            if (showCoverPeek) return;
+            // Disable all keyboard shortcuts when Cover Peek or Synopsis is active
+            if (showCoverPeek || showSynopsis) return;
 
-            if (adminModalOpen || isSettingsOpen) return;
+            if (adminModalOpen || isSettingsOpen || isStatsOpen) return;
 
             // Next Level on Enter
             if (state.status !== 'playing' && e.key === 'Enter') {
@@ -289,7 +317,7 @@ export function EndlessGameArea({
 
         window.addEventListener('keydown', handleKeyDown);
         return () => window.removeEventListener('keydown', handleKeyDown);
-    }, [state.status, state.isGameOver, onNextLevel, onRequestHighScore, onSkip, settings, isHighScoreModalOpen, showCoverPeek, adminModalOpen, isSettingsOpen]);
+    }, [state.status, state.isGameOver, onNextLevel, onRequestHighScore, onSkip, settings, isHighScoreModalOpen, showCoverPeek, showSynopsis, adminModalOpen, isSettingsOpen, isStatsOpen]);
 
     const [mounted, setMounted] = useState(false);
     useEffect(() => {
@@ -380,7 +408,7 @@ export function EndlessGameArea({
                             <div className="absolute inset-0 z-30 bg-black/90 backdrop-blur-sm rounded-xl overflow-hidden animate-in fade-in duration-300 flex items-center justify-center">
                                 {/* Blurred Cover Art */}
                                 <img
-                                    src={game.cover}
+                                    src={obfuscatedCover || game.cover}
                                     alt="Cover art"
                                     className="h-full w-auto object-contain"
                                     style={{
@@ -388,6 +416,26 @@ export function EndlessGameArea({
                                         transform: 'scale(1.1)'
                                     }}
                                 />
+                            </div>
+                        )}
+
+                        {/* Synopsis Overlay */}
+                        {showSynopsis && synopsisText && state.status === 'playing' && (
+                            <div className="absolute inset-0 z-30 bg-black/95 backdrop-blur-sm rounded-xl overflow-hidden animate-in fade-in duration-300 flex items-center justify-center p-6">
+                                <div className="max-w-lg text-center">
+                                    <h3 className="text-green-400 font-bold text-lg mb-4 uppercase tracking-wider flex items-center justify-center gap-2">
+                                        <span>📖</span> Synopsis
+                                    </h3>
+                                    <p className="text-gray-200 text-base leading-relaxed">
+                                        {synopsisText}
+                                    </p>
+                                    <button
+                                        onClick={() => setShowSynopsis(false)}
+                                        className="mt-6 px-4 py-2 bg-green-600 hover:bg-green-500 text-white font-bold rounded-lg transition-colors"
+                                    >
+                                        Got it!
+                                    </button>
+                                </div>
                             </div>
                         )}
                     </div>
@@ -592,3 +640,4 @@ export function EndlessGameArea({
         </div >
     );
 };
+

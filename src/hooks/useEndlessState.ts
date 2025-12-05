@@ -111,7 +111,8 @@ const INITIAL_STATE: EndlessState = {
         consultant: 1,
         double_trouble: 1,
         zoom_out: 1,
-        cover_peek: 1
+        cover_peek: 1,
+        synopsis: 1
     },
     currentLevelIndex: 0,
     gameOrder: [],
@@ -321,6 +322,7 @@ export const useEndlessState = (allGames: Game[]) => {
             if (item.type === 'refill_double_trouble') newLifelines.double_trouble += 1;
             if (item.type === 'refill_zoom_out') newLifelines.zoom_out += 1;
             if (item.type === 'refill_cover_peek') newLifelines.cover_peek += 1;
+            if (item.type === 'refill_synopsis') newLifelines.synopsis += 1;
 
             return {
                 ...prev,

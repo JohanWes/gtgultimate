@@ -1,6 +1,7 @@
 import React, { useState, useEffect, createContext, useContext } from 'react';
 
 const STORAGE_KEY = 'guessthegame_settings';
+const TUTORIAL_KEY = 'guessthegame_tutorial_seen';
 
 export interface Settings {
     nextLevelOnEnter: boolean;
@@ -19,6 +20,11 @@ interface SettingsContextType {
     updateSetting: (key: keyof Settings, value: boolean | string) => void;
     isSettingsOpen: boolean;
     setIsSettingsOpen: (isOpen: boolean) => void;
+    // Tutorial state
+    hasSeenTutorial: boolean;
+    isTutorialOpen: boolean;
+    setIsTutorialOpen: (isOpen: boolean) => void;
+    markTutorialSeen: () => void;
 }
 
 const SettingsContext = createContext<SettingsContextType | undefined>(undefined);
@@ -36,6 +42,35 @@ export function SettingsProvider({ children }: { children: React.ReactNode }) {
         return DEFAULT_SETTINGS;
     });
 
+    // Tutorial state
+    const [hasSeenTutorial, setHasSeenTutorial] = useState<boolean>(() => {
+        try {
+            return localStorage.getItem(TUTORIAL_KEY) === 'true';
+        } catch {
+            return false;
+        }
+    });
+    const [isTutorialOpen, setIsTutorialOpen] = useState(false);
+
+    // Auto-open tutorial for first-time users (after a brief delay for smooth UX)
+    useEffect(() => {
+        if (!hasSeenTutorial) {
+            const timer = setTimeout(() => {
+                setIsTutorialOpen(true);
+            }, 500);
+            return () => clearTimeout(timer);
+        }
+    }, [hasSeenTutorial]);
+
+    const markTutorialSeen = () => {
+        setHasSeenTutorial(true);
+        try {
+            localStorage.setItem(TUTORIAL_KEY, 'true');
+        } catch (e) {
+            console.error('Failed to save tutorial state:', e);
+        }
+    };
+
     useEffect(() => {
         localStorage.setItem(STORAGE_KEY, JSON.stringify(settings));
     }, [settings]);
@@ -47,7 +82,16 @@ export function SettingsProvider({ children }: { children: React.ReactNode }) {
     const [isSettingsOpen, setIsSettingsOpen] = useState(false);
 
     return (
-        <SettingsContext.Provider value={{ settings, updateSetting, isSettingsOpen, setIsSettingsOpen }}>
+        <SettingsContext.Provider value={{
+            settings,
+            updateSetting,
+            isSettingsOpen,
+            setIsSettingsOpen,
+            hasSeenTutorial,
+            isTutorialOpen,
+            setIsTutorialOpen,
+            markTutorialSeen
+        }}>
             {children}
         </SettingsContext.Provider>
     );

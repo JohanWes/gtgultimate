@@ -37,8 +37,8 @@ export const getDifficultyZoomBonus = (levelIndex: number): number => {
 export const getShopItems = (): ShopItem[] => [
     {
         id: 'safety_first',
-        name: 'Safety First',
-        description: 'Refill "Skip" Lifeline',
+        name: 'Skip level',
+        description: 'Refill "Skip" Lifeline - safety first',
         cost: 5,
         type: 'refill_skip'
     },
@@ -76,6 +76,13 @@ export const getShopItems = (): ShopItem[] => [
         description: 'Refill "Cover Peek" Lifeline',
         cost: 5,
         type: 'refill_cover_peek'
+    },
+    {
+        id: 'utility_synopsis',
+        name: 'Synopsis',
+        description: 'Refill "Synopsis" Lifeline',
+        cost: 3,
+        type: 'refill_synopsis'
     },
     {
         id: 'greed',

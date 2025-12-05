@@ -4,6 +4,7 @@ import { clsx } from 'clsx';
 import { Lock, Maximize2, Minimize2 } from 'lucide-react';
 import type { Game } from '../types';
 import { getDifficultyZoomBonus } from '../utils/endlessUtils';
+import { useObfuscatedImages } from '../hooks/useObfuscatedImages';
 
 interface ScreenshotViewerProps {
     screenshots: string[];
@@ -19,6 +20,10 @@ export function ScreenshotViewer({ screenshots, revealedCount, status, cropPosit
     const [selectedIndex, setSelectedIndex] = useState(0);
     const [showCropped, setShowCropped] = useState(false);
 
+    // Obfuscate images to prevent inspecting source
+    const obfuscatedScreenshots = useObfuscatedImages(screenshots);
+    const obfuscatedDoubleTrouble = useObfuscatedImages(doubleTroubleGame?.screenshots);
+
     // Auto-select the newly revealed screenshot
     useEffect(() => {
         setSelectedIndex(revealedCount - 1);
@@ -30,20 +35,6 @@ export function ScreenshotViewer({ screenshots, revealedCount, status, cropPosit
             setShowCropped(false);
         }
     }, [status]);
-
-    // Preload images
-    useEffect(() => {
-        screenshots.forEach(src => {
-            const img = new Image();
-            img.src = src;
-        });
-        if (doubleTroubleGame) {
-            doubleTroubleGame.screenshots.forEach(src => {
-                const img = new Image();
-                img.src = src;
-            });
-        }
-    }, [screenshots, doubleTroubleGame]);
 
     const getZoomScale = (index: number) => {
         // If Zoom Out lifeline is active, return 100% for all images
@@ -90,21 +81,21 @@ export function ScreenshotViewer({ screenshots, revealedCount, status, cropPosit
                     role="img"
                     aria-label={`Screenshot ${selectedIndex + 1}`}
                     style={{
-                        backgroundImage: `url(${screenshots[selectedIndex]})`,
+                        backgroundImage: obfuscatedScreenshots[selectedIndex] ? `url(${obfuscatedScreenshots[selectedIndex]})` : undefined,
                         backgroundPosition: `${cropPositions[selectedIndex]?.x || 50}% ${cropPositions[selectedIndex]?.y || 50}%`,
                         backgroundSize: `${getZoomScale(selectedIndex)}%`,
                         backgroundRepeat: 'no-repeat'
                     }}
-                    className="absolute inset-0 w-full h-full"
+                    className="absolute inset-0 w-full h-full transition-opacity duration-300"
                 />
 
                 {/* Double Trouble Overlay */}
-                {doubleTroubleGame && (
+                {doubleTroubleGame && obfuscatedDoubleTrouble[selectedIndex] && (
                     <div
                         role="img"
                         aria-label={`Double Trouble Screenshot ${selectedIndex + 1}`}
                         style={{
-                            backgroundImage: `url(${doubleTroubleGame.screenshots[selectedIndex]})`,
+                            backgroundImage: `url(${obfuscatedDoubleTrouble[selectedIndex]})`,
                             backgroundPosition: `${doubleTroubleGame.cropPositions[selectedIndex]?.x || 50}% ${doubleTroubleGame.cropPositions[selectedIndex]?.y || 50}%`,
                             backgroundSize: `${getZoomScale(selectedIndex)}%`,
                             backgroundRepeat: 'no-repeat'
@@ -141,9 +132,10 @@ export function ScreenshotViewer({ screenshots, revealedCount, status, cropPosit
 
             {/* Thumbnails */}
             <div className="grid grid-cols-5 gap-1.5">
-                {screenshots.map((src, idx) => {
+                {screenshots.map((_, idx) => {
                     const isRevealed = idx < revealedCount;
                     const isSelected = idx === selectedIndex;
+                    const blobSrc = obfuscatedScreenshots[idx];
 
                     return (
                         <button
@@ -161,7 +153,7 @@ export function ScreenshotViewer({ screenshots, revealedCount, status, cropPosit
                                     {/* Thumbnail Image */}
                                     <div
                                         style={{
-                                            backgroundImage: `url(${src})`,
+                                            backgroundImage: blobSrc ? `url(${blobSrc})` : undefined,
                                             backgroundPosition: `${cropPositions[idx]?.x || 50}% ${cropPositions[idx]?.y || 50}%`,
                                             backgroundSize: `${getZoomScale(idx)}%`,
                                             backgroundRepeat: 'no-repeat'
@@ -170,10 +162,10 @@ export function ScreenshotViewer({ screenshots, revealedCount, status, cropPosit
                                     />
 
                                     {/* Double Trouble Thumbnail Overlay */}
-                                    {doubleTroubleGame && (
+                                    {doubleTroubleGame && obfuscatedDoubleTrouble[idx] && (
                                         <div
                                             style={{
-                                                backgroundImage: `url(${doubleTroubleGame.screenshots[idx]})`,
+                                                backgroundImage: `url(${obfuscatedDoubleTrouble[idx]})`,
                                                 backgroundPosition: `${doubleTroubleGame.cropPositions[idx]?.x || 50}% ${doubleTroubleGame.cropPositions[idx]?.y || 50}%`,
                                                 backgroundSize: `${getZoomScale(idx)}%`,
                                                 backgroundRepeat: 'no-repeat'
@@ -194,3 +186,4 @@ export function ScreenshotViewer({ screenshots, revealedCount, status, cropPosit
         </div>
     );
 }
+
