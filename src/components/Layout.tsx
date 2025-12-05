@@ -7,6 +7,7 @@ import { useSettings } from '../hooks/useSettings';
 import { SettingsModal } from './SettingsModal';
 import type { GameMode } from '../types';
 import type { EndlessStats } from '../hooks/useEndlessStats';
+import { FullScreenToggle } from './FullScreenToggle';
 
 interface LayoutProps {
     children: React.ReactNode;
@@ -111,6 +112,8 @@ export function Layout({ children, gameState, currentMode, onModeSwitch, endless
                     onClose={() => onStatsOpenChange?.(false)}
                 />
             )}
+
+            <FullScreenToggle className="fixed bottom-4 right-4 z-50" />
         </div>
     );
 }

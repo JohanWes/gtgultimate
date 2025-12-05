@@ -124,4 +124,19 @@
       border-color: rgba(249, 115, 22, 1);
     }
   }
+
+  /* Full Screen Scaling */
+  :fullscreen .game-container.standard-game {
+    max-width: 80rem;
+    /* approx 15% larger than 5xl (64rem) -> ~74rem, let's go with 80rem for good measure or 72rem (6xl) */
+    /* 5xl is 64rem. 15% more is ~74rem. 6xl is 72rem. 7xl is 80rem. */
+    max-width: 75rem;
+  }
+
+  :fullscreen .game-container.endless-game {
+    max-width: 90rem;
+    /* approx 15% larger than 6xl (72rem) -> ~83rem */
+    /* 6xl is 72rem. 15% more is ~83rem. 7xl is 80rem. */
+    max-width: 85rem;
+  }
 }

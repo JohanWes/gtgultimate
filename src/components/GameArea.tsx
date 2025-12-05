@@ -143,7 +143,7 @@ export function GameArea({ game, allGames, guesses, status, allProgress, onGuess
     }, [status, onNextLevel, onSkip, settings, adminModalOpen, isSettingsOpen]);
 
     return (
-        <div className="max-w-5xl mx-auto space-y-2 pb-8">
+        <div className="max-w-5xl mx-auto space-y-2 pb-8 game-container standard-game">
             <AdminGameEditor
                 isOpen={adminModalOpen}
                 onClose={() => setAdminModalOpen(false)}

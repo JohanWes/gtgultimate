@@ -331,7 +331,7 @@ export function EndlessGameArea({
     const revealedCount = state.status === 'playing' ? state.guesses.length + 1 : 5;
 
     return (
-        <div className="max-w-6xl mx-auto pb-8 px-4">
+        <div className="max-w-6xl mx-auto pb-8 px-4 game-container endless-game">
             <AdminGameEditor
                 isOpen={adminModalOpen}
                 onClose={() => setAdminModalOpen(false)}
