@@ -1,15 +1,15 @@
 # Guess the Game Ultimate
 
-A screenshot-based video game trivia application. Players identify games from progressively revealing screenshots across two game modes: Standard (casual progression through all levels) and Endless (high-stakes roguelike with permadeath and scoring).
+A screenshot-based video game trivia application. Players identify games from progressively revealing screenshots across two game modes: Standard (casual progression through all levels) and Endless (roguelike with permadeath and scoring).
 
-![Game Modes](https://img.shields.io/badge/Game%20Modes-Standard%20%7C%20Endless-blue) ![Games](https://img.shields.io/badge/Games-1662-green) ![Built With](https://img.shields.io/badge/Built%20With-React%20%2B%20TypeScript-61dafb)
+![Game Modes](https://img.shields.io/badge/Game%20Modes-Standard%20%7C%20Endless-blue) ![Games](https://img.shields.io/badge/Games-2615-green) ![Built With](https://img.shields.io/badge/Built%20With-React%20%2B%20TypeScript-61dafb)
 
 ---
 
 ## Game Modes
 
 ### Standard Mode
-Casual progression through all 1662 levels at your own pace.
+Casual progression through all 2615 levels at your own pace.
 
 - 5 guesses per game with progressive clues (screenshots, release year, platform, genre, rating)
 - Progress tracking with persistent state (won, lost, or unplayed)
@@ -23,14 +23,16 @@ Roguelike challenge with scoring, permadeath, and strategic lifeline usage.
 - **Scoring**: 5/4/3/2/1 points per correct guess (based on attempt number)
 - **Lifelines** (single-use, refillable in shop):
   - Skip Level: Proceed to next game for 0 points
-  - Anagram: Scrambled game title with one extra character
+  - Anagram: Scrambled game title with one revealed character
   - Consultant: Multiple choice (1 correct + 3 wrong options)
   - Double Trouble: Overlays two games at 50% opacity; either answer wins
   - Zoom Out: Reduces current zoom level
-  - Cover Art Peek: Shows the game's cover art
+  - Cover Peek: Shows the game's cover art
+  - Synopsis: Shows a redacted game description
   - Greed: +10 points instantly (costs -10 points, cannot be refilled)
-- **Shop**: Appears every 10 levels for lifeline refills and point purchases
-- **Difficulty scaling**: Screenshots zoom in by +10% every 10 levels
+- **Shop**: Appears every 5 levels for lifeline refills and point purchases
+- **Difficulty scaling**: Screenshots zoom in by +10% every 5 levels
+- **Stats Dashboard**: Tracks win rate, guess distribution, and genre/decade breakdowns
 - **Highscore tracking**: Local and global leaderboard
 
 ---
@@ -112,7 +114,7 @@ Suitable for servers (Unraid, etc.) or Docker environments.
 
 ## Key Features
 
-- **1662 curated games** from IGDB (Internet Game Database)
+- **2615 curated games** from IGDB (Internet Game Database)
 - **Fuzzy search** via Fuse.js (handles typos and abbreviations)
 - **Series detection**: Warns when guessing a game from the same series (e.g., "Portal" vs "Portal 2")
 - **Progressive reveal**: 5 screenshots per game with metadata unlocking
@@ -125,19 +127,19 @@ Suitable for servers (Unraid, etc.) or Docker environments.
 
 ## Tech Stack
 
-- **Frontend**: React 19, TypeScript, Vite
+- **Frontend**: React 19, TypeScript, Vite 7
 - **Styling**: Tailwind CSS v3
 - **Search**: Fuse.js
 - **State**: React hooks + localStorage
 - **Backend**: Express (production server for highscores and admin API)
-- **Database**: Static JSON (`src/data/games_db.json`)
+- **Database**: Static JSON (`data/games_db.json`)
 - **Container**: Docker (multi-stage build) + nginx
 
 ---
 
 ## Game Database
 
-The game database (`games_db.json`) contains 1662 titles curated from IGDB with the following filters:
+The game database (`data/games_db.json`) contains 2615 titles curated from IGDB with the following filters:
 
 - `rating_count > 100` (popularity threshold)
 - `aggregated_rating > 70` (quality threshold)
@@ -149,7 +151,7 @@ The database is bundled with the application. No external API calls are made at 
 
 **Regenerating the database** (requires IGDB API credentials):
 ```bash
-node scripts/fetch_igdb.js
+npx tsx scripts/fetch_games.ts
 ```
 
 ---
