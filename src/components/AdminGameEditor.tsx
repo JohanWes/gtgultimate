@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import { X, AlertTriangle, Database } from 'lucide-react';
 import type { Game } from '../types';
 import { useSettings } from '../hooks/useSettings';
@@ -102,7 +103,7 @@ export function AdminGameEditor({ isOpen, onClose, game, onUpdate, onDelete }: A
         }
     };
 
-    return (
+    return createPortal(
         <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm animate-in fade-in duration-200">
             <div className="bg-surface border border-white/10 rounded-xl p-6 max-w-md w-full shadow-2xl animate-in zoom-in-95 duration-200 relative">
                 {/* Header */}
@@ -223,6 +224,7 @@ export function AdminGameEditor({ isOpen, onClose, game, onUpdate, onDelete }: A
                 isOpen={showMigrationDialog}
                 onClose={() => setShowMigrationDialog(false)}
             />
-        </div>
+        </div>,
+        document.body
     );
 }
