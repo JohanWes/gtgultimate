@@ -192,6 +192,14 @@ export const useEndlessState = (allGames: Game[]) => {
             const isHotStreakActive = newHotStreakCount >= 3;
 
             let points = calculateScore(newGuesses.length);
+
+            // Balance Change: Progressive difficulty bonus
+            // Every time the shop appears (every 5 levels), increase flat score by 1
+            // e.g. Levels 1-5 (streak 0-4): +0
+            // Levels 6-10 (streak 5-9): +1
+            const difficultyBonus = Math.floor(state.streak / 5);
+            points += difficultyBonus;
+
             if (isHotStreakActive) {
                 points *= 2;
             }
