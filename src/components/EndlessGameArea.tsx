@@ -331,7 +331,10 @@ export function EndlessGameArea({
     const revealedCount = state.status === 'playing' ? state.guesses.length + 1 : 5;
 
     return (
-        <div className="max-w-6xl mx-auto pb-8 px-4 game-container endless-game">
+        <div className={clsx(
+            "mx-auto pb-8 px-4 game-container endless-game transition-all duration-500",
+            settings.miniaturesInPicture ? "max-w-[85rem]" : "max-w-6xl"
+        )}>
             <AdminGameEditor
                 isOpen={adminModalOpen}
                 onClose={() => setAdminModalOpen(false)}
@@ -362,6 +365,7 @@ export function EndlessGameArea({
                             doubleTroubleGame={doubleTroubleGame || undefined}
                             currentLevelIndex={state.currentLevelIndex}
                             zoomOutActive={state.zoomOutActive}
+                            miniaturesInPicture={settings.miniaturesInPicture}
                         />
 
                         {state.status === 'playing' && (
@@ -566,7 +570,10 @@ export function EndlessGameArea({
                 </div>
 
                 {/* Right Column: Sidebar (HUD + Info + Lifelines) */}
-                <div className="lg:w-72 w-full flex-shrink-0 flex flex-col gap-3">
+                <div className={clsx(
+                    "w-full flex-shrink-0 flex flex-col gap-3 transition-all duration-500",
+                    settings.miniaturesInPicture ? "lg:w-48" : "lg:w-72"
+                )}>
                     {/* Top Scores Ticker */}
                     <TopScoresTicker />
 

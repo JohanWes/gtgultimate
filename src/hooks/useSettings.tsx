@@ -2,19 +2,24 @@ import React, { useState, useEffect, createContext, useContext } from 'react';
 
 const STORAGE_KEY = 'guessthegame_settings';
 const TUTORIAL_KEY = 'guessthegame_tutorial_seen';
+const LOCK_TIP_KEY = 'guessthegame_lock_tip_seen';
 
 export interface Settings {
     nextLevelOnEnter: boolean;
     skipOnEsc: boolean;
     adminKey: string;
     theme: 'default' | 'retro';
+    miniaturesInPicture: boolean;
+    miniaturesLocked: boolean;
 }
 
 const DEFAULT_SETTINGS: Settings = {
     nextLevelOnEnter: false,
     skipOnEsc: false,
     adminKey: '',
-    theme: 'default'
+    theme: 'default',
+    miniaturesInPicture: false,
+    miniaturesLocked: false
 };
 
 interface SettingsContextType {
@@ -27,6 +32,9 @@ interface SettingsContextType {
     isTutorialOpen: boolean;
     setIsTutorialOpen: (isOpen: boolean) => void;
     markTutorialSeen: () => void;
+    // Lock tip state
+    hasSeenLockTip: boolean;
+    markLockTipSeen: () => void;
 }
 
 const SettingsContext = createContext<SettingsContextType | undefined>(undefined);
@@ -53,6 +61,24 @@ export function SettingsProvider({ children }: { children: React.ReactNode }) {
         }
     });
     const [isTutorialOpen, setIsTutorialOpen] = useState(false);
+
+    // Lock tip state
+    const [hasSeenLockTip, setHasSeenLockTip] = useState<boolean>(() => {
+        try {
+            return localStorage.getItem(LOCK_TIP_KEY) === 'true';
+        } catch {
+            return false;
+        }
+    });
+
+    const markLockTipSeen = () => {
+        setHasSeenLockTip(true);
+        try {
+            localStorage.setItem(LOCK_TIP_KEY, 'true');
+        } catch (e) {
+            console.error('Failed to save lock tip state:', e);
+        }
+    };
 
     // Auto-open tutorial for first-time users (after a brief delay for smooth UX)
     useEffect(() => {
@@ -92,7 +118,9 @@ export function SettingsProvider({ children }: { children: React.ReactNode }) {
             hasSeenTutorial,
             isTutorialOpen,
             setIsTutorialOpen,
-            markTutorialSeen
+            markTutorialSeen,
+            hasSeenLockTip,
+            markLockTipSeen
         }}>
             {children}
         </SettingsContext.Provider>

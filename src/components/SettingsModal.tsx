@@ -70,6 +70,22 @@ export function SettingsModal({ onClose }: SettingsModalProps) {
 
                     <div className="flex items-center justify-between pt-4 border-t border-white/10">
                         <div className="space-y-1">
+                            <h3 className="font-medium text-white">Miniatures in Picture</h3>
+                            <p className="text-sm text-gray-400">Show preview pictures inside the main image</p>
+                        </div>
+                        <label className="relative inline-flex items-center cursor-pointer">
+                            <input
+                                type="checkbox"
+                                className="sr-only peer"
+                                checked={settings.miniaturesInPicture}
+                                onChange={(e) => updateSetting('miniaturesInPicture', e.target.checked)}
+                            />
+                            <div className="w-11 h-6 bg-gray-700 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-800 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
+                        </label>
+                    </div>
+
+                    <div className="flex items-center justify-between pt-4 border-t border-white/10">
+                        <div className="space-y-1">
                             <h3 className="font-medium text-white">Game Tutorial</h3>
                             <p className="text-sm text-gray-400">Learn how to play the game</p>
                         </div>

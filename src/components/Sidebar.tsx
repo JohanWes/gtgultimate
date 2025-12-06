@@ -39,7 +39,7 @@ export function Sidebar({ totalLevels, currentLevel, progress, onSelectLevel, is
             <div className={clsx(
                 "fixed md:sticky md:top-0 md:h-screen inset-y-0 left-0 z-50 bg-surface border-r border-white/10 transform transition-all duration-300 ease-in-out md:transform-none flex flex-col",
                 isOpen ? "translate-x-0" : "-translate-x-full",
-                currentMode === 'endless' ? "w-80" : "w-64"
+                currentMode === 'endless' && !settings.miniaturesInPicture ? "w-80" : "w-64"
             )}>
                 <div className="px-4 py-3 border-b border-white/10 flex-shrink-0 flex flex-col gap-3">
                     <img src={logoSrc} alt="GuessTheGame" className="w-full h-auto rounded-md" />

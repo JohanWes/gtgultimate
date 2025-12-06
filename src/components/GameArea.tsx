@@ -143,7 +143,10 @@ export function GameArea({ game, allGames, guesses, status, allProgress, onGuess
     }, [status, onNextLevel, onSkip, settings, adminModalOpen, isSettingsOpen]);
 
     return (
-        <div className="max-w-5xl mx-auto space-y-2 pb-8 game-container standard-game">
+        <div className={clsx(
+            "mx-auto space-y-2 pb-8 game-container standard-game transition-all duration-500",
+            settings.miniaturesInPicture ? "max-w-7xl" : "max-w-5xl"
+        )}>
             <AdminGameEditor
                 isOpen={adminModalOpen}
                 onClose={() => setAdminModalOpen(false)}
@@ -167,6 +170,7 @@ export function GameArea({ game, allGames, guesses, status, allProgress, onGuess
                             revealedCount={revealedCount}
                             status={status}
                             cropPositions={game.cropPositions}
+                            miniaturesInPicture={settings.miniaturesInPicture}
                         />
                         {status === 'playing' && (
                             <button
@@ -188,7 +192,10 @@ export function GameArea({ game, allGames, guesses, status, allProgress, onGuess
                 </div>
 
                 {/* Right: Metadata Cards */}
-                <div className="lg:w-40 flex-shrink-0">
+                <div className={clsx(
+                    "flex-shrink-0 transition-all duration-500",
+                    settings.miniaturesInPicture ? "lg:w-32" : "lg:w-40"
+                )}>
                     <InfoPanel game={{ ...game, name: displayGameName }} guessesMade={guesses.length} status={status} />
                 </div>
             </div>
