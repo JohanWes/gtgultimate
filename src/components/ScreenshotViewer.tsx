@@ -163,8 +163,8 @@ export function ScreenshotViewer({ screenshots, revealedCount, status, cropPosit
                 {/* Overlay Thumbnails (Miniatures in Picture Mode) */}
                 {miniaturesInPicture && (
                     <div className={clsx(
-                        "absolute bottom-0 left-0 right-0 p-4 flex justify-center gap-2 transition-transform duration-300 transform z-30 bg-gradient-to-t from-black/80 to-transparent pt-12",
-                        isOverlayLocked ? "translate-y-0" : "translate-y-[80%] group-hover:translate-y-0"
+                        "absolute bottom-0 left-0 right-0 p-4 flex justify-center gap-2 transition-transform duration-300 transform z-30",
+                        isOverlayLocked ? "translate-y-0" : "translate-y-full group-hover:translate-y-0"
                     )}>
                         {screenshots.map((_, idx) => {
                             const isRevealed = idx < revealedCount;
@@ -180,7 +180,7 @@ export function ScreenshotViewer({ screenshots, revealedCount, status, cropPosit
                                         setSelectedIndex(idx);
                                     }}
                                     className={clsx(
-                                        "relative w-40 aspect-video rounded-md overflow-hidden border transition-all duration-300 shadow-lg",
+                                        "relative w-40 aspect-video rounded-md overflow-hidden border transition-all duration-300",
                                         isSelected ? "border-primary ring-2 ring-primary/50 scale-110 z-10" : "border-white/20 hover:border-white/50 hover:scale-105",
                                         !isRevealed && "cursor-not-allowed opacity-50 grayscale"
                                     )}
@@ -191,7 +191,7 @@ export function ScreenshotViewer({ screenshots, revealedCount, status, cropPosit
                                                 style={{
                                                     backgroundImage: blobSrc ? `url(${blobSrc})` : undefined,
                                                     backgroundPosition: `${cropPositions[idx]?.x || 50}% ${cropPositions[idx]?.y || 50}%`,
-                                                    backgroundSize: '150%', // Fixed zoom for thumbnails
+                                                    backgroundSize: `${getZoomScale(idx)}%`, // Dynamic zoom
                                                     backgroundRepeat: 'no-repeat'
                                                 }}
                                                 className="absolute inset-0 w-full h-full"
@@ -201,7 +201,7 @@ export function ScreenshotViewer({ screenshots, revealedCount, status, cropPosit
                                                     style={{
                                                         backgroundImage: `url(${obfuscatedDoubleTrouble[idx]})`,
                                                         backgroundPosition: `${doubleTroubleGame.cropPositions[idx]?.x || 50}% ${doubleTroubleGame.cropPositions[idx]?.y || 50}%`,
-                                                        backgroundSize: '150%',
+                                                        backgroundSize: `${getZoomScale(idx)}%`,
                                                         backgroundRepeat: 'no-repeat'
                                                     }}
                                                     className="absolute inset-0 w-full h-full opacity-50"
