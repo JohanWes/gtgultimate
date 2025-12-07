@@ -37,41 +37,45 @@ Roguelike challenge with scoring, permadeath, and strategic lifeline usage.
 
 ---
 
-## Setup
+### Deployment Options
 
-### Docker Deployment (Recommended)
+The application supports **"Dual Mode"** deployment:
 
-Suitable for servers (Unraid, etc.) or Docker environments.
+#### 1. Vercel + MongoDB (Recommended for Public Hosting)
+Serverless architecture with cloud persistence.
+- **Frontend/API:** Hosted on Vercel
+- **Database:** MongoDB Atlas (Required for highscores/admin)
 
-**Prerequisites:**
-- Docker and Docker Compose
-- Admin key for protected features (optional)
+**Setup:**
+1. Fork repo to GitHub.
+2. Import project in Vercel.
+3. Set Environment Variables in Vercel:
+   - `MONGODB_URI`: Your MongoDB Atlas SRV connection string
+   - `ADMIN_KEY`: Password for admin panel
+   - `VITE_IGDB_...`: IGDB credentials
+4. Deploy!
+
+#### 2. Docker / Local
+Self-contained setup using local filesystem for storage.
+- **Persistence:** Local JSON files (`storage/highscores.json`, `data/games_db.json`)
+- **No external DB required.**
 
 **Steps:**
-
 1. Clone the repository:
    ```bash
    git clone <repository-url>
    cd guessthegame
    ```
-
 2. Configure environment:
    ```bash
    cp .env.example .env
    ```
-   
-   Edit `.env` as needed:
-   ```env
-   VITE_PORT=5173
-   ADMIN_KEY=your_admin_key_here
-   ```
-
+   Edit `.env` as needed (`ADMIN_KEY`, `PORT`).
 3. Build and run:
    ```bash
    docker-compose up -d
    ```
-
-4. Access at `http://localhost:5173` (or `http://SERVER_IP:5173`)
+4. Access at `http://localhost:5173`
 
 **Docker Commands:**
 - Update: `git pull && docker-compose up -d --build`
@@ -126,19 +130,6 @@ Suitable for servers (Unraid, etc.) or Docker environments.
 ---
 
 ## Tech Stack
-
-- **Frontend**: React 19, TypeScript, Vite 7
-- **Styling**: Tailwind CSS v3
-- **Search**: Fuse.js
-- **State**: React hooks + localStorage
-- **Backend**: Express (production server for highscores and admin API)
-- **Database**: Static JSON (`data/games_db.json`)
-- **Container**: Docker (multi-stage build) + nginx
-
----
-
-## Game Database
-
 The game database (`data/games_db.json`) contains 2615 titles curated from IGDB with the following filters:
 
 - `rating_count > 100` (popularity threshold)
