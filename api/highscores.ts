@@ -1,40 +1,44 @@
 
-// Vercel Serverless Function for Highscores
-// NOTE: On Vercel, the filesystem is read-only/ephemeral. 
-// Writing to a local file will NOT persist across deployments or restarts.
-// To save highscores permanently, you must connect a database (e.g., MongoDB, Vercel KV, Supabase).
+import clientPromise from '../../lib/mongodb';
 
-// Simple in-memory cache (will be wiped frequently on serverless)
-let memoryScores = [];
+export default async function handler(req, res) {
+    try {
+        const client = await clientPromise;
+        const db = client.db('guessthegame');
+        const collection = db.collection('highscores');
 
-export default function handler(req, res) {
-    if (req.method === 'GET') {
-        // Return top 50
-        // In a real app, fetch from DB here
-        return res.status(200).json(memoryScores.slice(0, 50));
-    }
+        if (req.method === 'GET') {
+            // Return top 50 scores - sorted by score descending
+            const scores = await collection
+                .find({}, { projection: { _id: 0 } }) // Exclude _id
+                .sort({ score: -1 })
+                .limit(50)
+                .toArray();
 
-    if (req.method === 'POST') {
-        const { name, score } = req.body;
-
-        if (!name || typeof score !== 'number') {
-            return res.status(400).json({ error: 'Invalid input' });
+            return res.status(200).json(scores);
         }
 
-        const newScore = {
-            name: name.trim().substring(0, 20),
-            score,
-            date: new Date().toISOString()
-        };
+        if (req.method === 'POST') {
+            const { name, score } = req.body;
 
-        memoryScores.push(newScore);
-        memoryScores.sort((a, b) => b.score - a.score);
-        memoryScores = memoryScores.slice(0, 100);
+            if (!name || typeof score !== 'number') {
+                return res.status(400).json({ error: 'Invalid input' });
+            }
 
-        // In a real app, INSERT into DB here
+            const newScore = {
+                name: name.trim().substring(0, 20),
+                score,
+                date: new Date().toISOString()
+            };
 
-        return res.status(201).json(newScore);
+            await collection.insertOne(newScore);
+
+            return res.status(201).json(newScore);
+        }
+
+        return res.status(405).json({ error: 'Method not allowed' });
+    } catch (error) {
+        console.error('Highscore API Error:', error);
+        res.status(500).json({ error: 'Internal Server Error' });
     }
-
-    return res.status(405).json({ error: 'Method not allowed' });
 }

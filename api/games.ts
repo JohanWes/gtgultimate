@@ -1,24 +1,24 @@
-import path from 'path';
-import fs from 'fs';
-import { fileURLToPath } from 'url';
 
-export default function handler(req, res) {
+import clientPromise from '../../lib/mongodb';
+
+export default async function handler(req, res) {
     if (req.method !== 'GET') {
         return res.status(405).json({ error: 'Method not allowed' });
     }
 
     try {
-        // Vercel/Node: Resolve path relative to process.cwd()
-        const dbPath = path.join(process.cwd(), 'data', 'games_db.json');
+        const client = await clientPromise;
+        const db = client.db('guessthegame');
 
-        if (!fs.existsSync(dbPath)) {
-            return res.status(404).json({ error: 'Database not found' });
-        }
+        const games = await db.collection('games').find({}).toArray();
 
-        const fileContents = fs.readFileSync(dbPath, 'utf8');
-        const data = JSON.parse(fileContents);
+        // Remove MongoDB internal _id field to keep client cleaner
+        const cleanGames = games.map(game => {
+            const { _id, ...rest } = game;
+            return rest;
+        });
 
-        res.status(200).json(data);
+        res.status(200).json(cleanGames);
     } catch (error) {
         console.error('API Error:', error);
         res.status(500).json({ error: 'Internal Server Error' });
