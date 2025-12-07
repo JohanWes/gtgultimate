@@ -1,0 +1,17 @@
+{
+    "functions": {
+        "api/games.ts": {
+            "includeFiles": "data/games_db.json"
+        }
+    },
+    "rewrites": [
+        {
+            "source": "/api/(.*)",
+            "destination": "/api/$1"
+        },
+        {
+            "source": "/(.*)",
+            "destination": "/index.html"
+        }
+    ]
+}
