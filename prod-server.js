@@ -104,6 +104,70 @@ app.post('/api/highscores', highscoreLimiter, (req, res) => {
     res.status(201).json(newScore);
 });
 
+// Runs Persistence for Local Dev
+const RUNS_FILE = path.join(DATA_DIR, 'runs.json');
+
+// Initialize runs file if it doesn't exist
+if (!fs.existsSync(RUNS_FILE)) {
+    fs.writeFileSync(RUNS_FILE, JSON.stringify([], null, 2));
+}
+
+const readRuns = () => {
+    try {
+        const data = fs.readFileSync(RUNS_FILE, 'utf8');
+        return JSON.parse(data);
+    } catch (err) {
+        console.error('Error reading runs:', err);
+        return [];
+    }
+};
+
+const writeRuns = (runs) => {
+    try {
+        fs.writeFileSync(RUNS_FILE, JSON.stringify(runs, null, 2));
+    } catch (err) {
+        console.error('Error writing runs:', err);
+    }
+};
+
+// POST /api/run/save
+app.post('/api/run/save', (req, res) => {
+    const { history, totalScore, totalGames } = req.body;
+
+    if (!history || !Array.isArray(history)) {
+        return res.status(400).json({ error: 'Invalid data' });
+    }
+
+    const runs = readRuns();
+    const runId = crypto.randomUUID().substring(0, 8);
+
+    const newRun = {
+        _id: runId,
+        history,
+        totalScore,
+        totalGames,
+        createdAt: new Date().toISOString()
+    };
+
+    runs.push(newRun);
+    writeRuns(runs);
+
+    res.status(201).json({ id: runId });
+});
+
+// GET /api/run/:id
+app.get('/api/run/:id', (req, res) => {
+    const { id } = req.params;
+    const runs = readRuns();
+    const run = runs.find(r => r._id === id);
+
+    if (!run) {
+        return res.status(404).json({ error: 'Run not found' });
+    }
+
+    res.json(run);
+});
+
 // GET /api/image-proxy
 app.get('/api/image-proxy', async (req, res) => {
     const { url, x, y, zoom } = req.query;

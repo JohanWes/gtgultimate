@@ -37,3 +37,7 @@ export const submitHighScore = async (name: string, score: number): Promise<High
         return null;
     }
 };
+
+export const getProxyImageUrl = (url: string): string => {
+    return `/api/image-proxy?url=${encodeURIComponent(url)}`;
+};

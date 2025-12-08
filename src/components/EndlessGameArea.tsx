@@ -360,6 +360,44 @@ export function EndlessGameArea({
 
     const revealedCount = state.status === 'playing' ? state.guesses.length + 1 : 5;
 
+    // Share Run Logic
+    const [isSharing, setIsSharing] = useState(false);
+    const [shareCopied, setShareCopied] = useState(false);
+
+    const handleShareRun = async () => {
+        if (isSharing || !state.history.length) return;
+        setIsSharing(true);
+
+        try {
+            const runData = {
+                history: state.history,
+                totalScore: state.score,
+                totalGames: state.history.length
+            };
+
+            const response = await fetch('/api/run/save', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(runData)
+            });
+
+            if (!response.ok) throw new Error('Failed to save run');
+
+            const { id } = await response.json();
+            const url = `${window.location.origin}/share/${id}`;
+
+            await navigator.clipboard.writeText(url);
+            setShareCopied(true);
+            setTimeout(() => setShareCopied(false), 3000);
+        } catch (error) {
+            console.error('Share failed:', error);
+            setErrorMessage('Failed to share run');
+        } finally {
+            setIsSharing(false);
+        }
+    };
+
+    // Input Area
     return (
         <div className={clsx(
             "mx-auto pb-8 px-0 sm:px-4 game-container endless-game transition-all duration-500",
@@ -501,19 +539,36 @@ export function EndlessGameArea({
                                     <>The game was <span className="font-bold">{displayGameName}</span></>
                                 )}
                             </p>
-                            <button
-                                onClick={() => {
-                                    consultantRef.current?.stopSounds();
-                                    if (state.isGameOver) {
-                                        onRequestHighScore();
-                                    } else {
-                                        onNextLevel();
-                                    }
-                                }}
-                                className="inline-flex items-center gap-2 px-5 py-2 bg-white text-black font-bold rounded-full hover:scale-105 transition-transform text-sm"
-                            >
-                                {state.isGameOver ? 'Try Again' : 'Next Level'} <ArrowRight size={20} />
-                            </button>
+
+                            <div className="flex flex-wrap justify-center gap-3">
+                                <button
+                                    onClick={() => {
+                                        consultantRef.current?.stopSounds();
+                                        if (state.isGameOver) {
+                                            onRequestHighScore();
+                                        } else {
+                                            onNextLevel();
+                                        }
+                                    }}
+                                    className="inline-flex items-center gap-2 px-5 py-2 bg-white text-black font-bold rounded-full hover:scale-105 transition-transform text-sm"
+                                >
+                                    {state.isGameOver ? 'Try Again' : 'Next Level'} <ArrowRight size={20} />
+                                </button>
+
+                                {state.isGameOver && (
+                                    <button
+                                        onClick={handleShareRun}
+                                        disabled={isSharing}
+                                        className={clsx(
+                                            "inline-flex items-center gap-2 px-5 py-2 font-bold rounded-full transition-all text-sm",
+                                            shareCopied ? "bg-green-500 text-white" : "bg-blue-600 text-white hover:bg-blue-500 hover:scale-105"
+                                        )}
+                                    >
+                                        {isSharing ? 'Saving...' : shareCopied ? 'Link Copied!' : 'Share Run'}
+                                        {!isSharing && !shareCopied && <span className="text-lg">🔗</span>}
+                                    </button>
+                                )}
+                            </div>
                         </div>
                     )}
 

@@ -13,6 +13,7 @@ import { useSettings } from './hooks/useSettings';
 import type { GameMode } from './types';
 import { MobileTutorialModal } from './components/MobileTutorialModal';
 import { useIsMobile } from './hooks/useIsMobile';
+import { RunSummary } from './components/RunSummary';
 
 function App() {
   const [mode, setMode] = useState<GameMode>('standard');
@@ -86,6 +87,39 @@ function App() {
       endlessState.nextLevel();
     }
   };
+
+  // URL Routing for Share Page
+  // Simple check for path: /share/[id]
+  const [shareId, setShareId] = useState<string | null>(null);
+
+  useEffect(() => {
+    const path = window.location.pathname;
+    if (path.startsWith('/share/')) {
+      // Extract ID
+      const id = path.split('/share/')[1];
+      if (id) {
+        setShareId(id);
+      }
+    }
+  }, []);
+
+  const handleExitShareMode = () => {
+    // Clear URL and return to standard mode
+    window.history.pushState({}, '', '/');
+    setShareId(null);
+    setMode('standard'); // Or endless if preferred, but standard is default landing
+  };
+
+  if (shareId) {
+    if (isLoading) {
+      return (
+        <div className="min-h-screen flex items-center justify-center bg-background text-white">
+          <div className="animate-pulse text-xl">Loading...</div>
+        </div>
+      );
+    }
+    return <RunSummary runId={shareId} allGames={games} onPlay={handleExitShareMode} />;
+  }
 
   if (isLoading) {
     return (

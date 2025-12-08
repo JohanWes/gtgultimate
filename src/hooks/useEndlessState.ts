@@ -121,6 +121,7 @@ const INITIAL_STATE: EndlessState = {
     status: 'playing',
     guesses: [],
     history: [],
+    currentLevelLifelinesUsed: [],
     doubleTroubleGameId: null,
     zoomOutActive: false,
     cropPositions: [],
@@ -148,6 +149,11 @@ export const useEndlessState = (allGames: Game[]) => {
         // Ensure lastShopStreak exists (for legacy state)
         if (parsedState.lastShopStreak === undefined) {
             parsedState.lastShopStreak = 0;
+        }
+
+        // Ensure currentLevelLifelinesUsed exists
+        if (!parsedState.currentLevelLifelinesUsed) {
+            parsedState.currentLevelLifelinesUsed = [];
         }
 
         return parsedState;
@@ -211,7 +217,15 @@ export const useEndlessState = (allGames: Game[]) => {
                 status: 'won',
                 guesses: newGuesses,
                 highScore: Math.max(prev.highScore, prev.score + points),
-                history: [...prev.history, { gameId: currentGame.id, score: points, status: 'won' }],
+                history: [...prev.history, {
+                    gameId: currentGame.id,
+                    score: points,
+                    status: 'won',
+                    guesses: newGuesses,
+                    lifelinesUsed: prev.currentLevelLifelinesUsed,
+                    correctAnswer: currentGame.name,
+                    cropPositions: prev.cropPositions
+                }],
                 hotStreakCount: newHotStreakCount,
                 isHotStreakActive: isHotStreakActive
             }));
@@ -223,7 +237,15 @@ export const useEndlessState = (allGames: Game[]) => {
                 highScoreModalShown: false, // Reset when game over happens
                 status: 'lost',
                 guesses: newGuesses,
-                history: [...prev.history, { gameId: currentGame.id, score: 0, status: 'lost' }],
+                history: [...prev.history, {
+                    gameId: currentGame.id,
+                    score: 0,
+                    status: 'lost',
+                    guesses: newGuesses,
+                    lifelinesUsed: prev.currentLevelLifelinesUsed,
+                    correctAnswer: currentGame.name,
+                    cropPositions: prev.cropPositions
+                }],
                 hotStreakCount: 0,
                 isHotStreakActive: false
             }));
@@ -248,7 +270,15 @@ export const useEndlessState = (allGames: Game[]) => {
                 highScoreModalShown: false, // Reset when game over happens
                 status: 'lost',
                 guesses: newGuesses,
-                history: [...prev.history, { gameId: currentGame.id, score: 0, status: 'lost' }],
+                history: [...prev.history, {
+                    gameId: currentGame.id,
+                    score: 0,
+                    status: 'lost',
+                    guesses: newGuesses,
+                    lifelinesUsed: prev.currentLevelLifelinesUsed,
+                    correctAnswer: currentGame.name,
+                    cropPositions: prev.cropPositions
+                }],
                 hotStreakCount: 0,
                 isHotStreakActive: false
             }));
@@ -277,6 +307,7 @@ export const useEndlessState = (allGames: Game[]) => {
                 currentLevelIndex: prev.currentLevelIndex + 1,
                 status: 'playing',
                 guesses: [],
+                currentLevelLifelinesUsed: [], // Reset for new level
                 doubleTroubleGameId: null,
                 zoomOutActive: false,
                 cropPositions: Array(5).fill(0).map(() => generateRandomCrop())
@@ -289,13 +320,23 @@ export const useEndlessState = (allGames: Game[]) => {
 
         setState(prev => {
             const newLifelines = { ...prev.lifelines, [type]: prev.lifelines[type] - 1 };
+            const newLifelinesUsed = [...prev.currentLevelLifelinesUsed, type];
 
             if (type === 'skip') {
                 return {
                     ...prev,
                     lifelines: newLifelines,
                     status: 'won', // Treat as won but 0 points
-                    history: [...prev.history, { gameId: currentGameId, score: 0, status: 'skipped' }],
+                    history: [...prev.history, {
+                        gameId: currentGameId,
+                        score: 0,
+                        status: 'skipped',
+                        guesses: [...prev.guesses], // Current guesses at time of skip
+                        lifelinesUsed: newLifelinesUsed,
+                        correctAnswer: currentGame?.name || 'Unknown',
+                        cropPositions: prev.cropPositions
+                    }],
+                    currentLevelLifelinesUsed: newLifelinesUsed,
                     hotStreakCount: 0,
                     isHotStreakActive: false
                 };
@@ -305,16 +346,18 @@ export const useEndlessState = (allGames: Game[]) => {
                 return {
                     ...prev,
                     lifelines: newLifelines,
+                    currentLevelLifelinesUsed: newLifelinesUsed,
                     zoomOutActive: true
                 };
             }
 
             return {
                 ...prev,
-                lifelines: newLifelines
+                lifelines: newLifelines,
+                currentLevelLifelinesUsed: newLifelinesUsed
             };
         });
-    }, [state.lifelines, state.status, currentGameId]);
+    }, [state.lifelines, state.status, currentGameId, currentGame]);
 
     const buyShopItem = useCallback((itemId: string, cost?: number) => {
         const item = getShopItems().find(i => i.id === itemId);

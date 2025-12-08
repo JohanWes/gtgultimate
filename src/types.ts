@@ -65,7 +65,16 @@ export interface EndlessState {
     highScoreModalShown: boolean; // Track if the high score modal has been shown for this game over
     status: GameStatus;
     guesses: GuessWithResult[];
-    history: Array<{ gameId: number; score: number; status: 'won' | 'skipped' | 'lost' }>;
+    history: Array<{
+        gameId: number;
+        score: number;
+        status: 'won' | 'skipped' | 'lost';
+        guesses: GuessWithResult[];
+        lifelinesUsed: LifelineType[];
+        correctAnswer: string;
+        cropPositions: Array<{ x: number; y: number }>;
+    }>;
+    currentLevelLifelinesUsed: LifelineType[];
     doubleTroubleGameId: number | null;
     zoomOutActive: boolean; // Whether Zoom Out lifeline is active for current round
     cropPositions: Array<{ x: number; y: number }>; // Persisted crop positions for the current level
