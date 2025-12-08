@@ -5,6 +5,8 @@ import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import 'dotenv/config';
+import sharp from 'sharp';
+import axios from 'axios';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -85,6 +87,96 @@ app.post('/api/highscores', (req, res) => {
     writeScores(scores);
 
     res.status(201).json(newScore);
+});
+
+// GET /api/image-proxy
+app.get('/api/image-proxy', async (req, res) => {
+    const { url, x, y, zoom } = req.query;
+
+    if (!url) {
+        return res.status(400).json({ error: 'Missing url parameter' });
+    }
+
+    try {
+        const response = await axios({
+            url: decodeURIComponent(url),
+            responseType: 'arraybuffer'
+        });
+
+        const buffer = Buffer.from(response.data);
+
+        // If no crop parameters, return original image
+        if (!x || !y || !zoom || parseFloat(zoom) <= 100) {
+            res.set('Content-Type', response.headers['content-type']);
+            res.set('Cache-Control', 'public, max-age=31536000'); // Cache for 1 year
+            return res.send(buffer);
+        }
+
+        // Apply cropping
+        const image = sharp(buffer);
+        const metadata = await image.metadata();
+        const width = metadata.width;
+        const height = metadata.height;
+
+        const zoomVal = parseFloat(zoom);
+        const xPos = parseFloat(x);
+        const yPos = parseFloat(y);
+
+        // Calculate crop view
+        // The frontend shows a window of 100% width/height of the container.
+        // The background-size is "zoom%".
+        // The background-position is "x% y%".
+
+        // Logical logic for crop:
+        // Visible portion width = Total Width / (Zoom / 100)
+        // Visible portion height = Total Height / (Zoom / 100)
+        const scale = zoomVal / 100;
+        const cropWidth = Math.round(width / scale);
+        const cropHeight = Math.round(height / scale);
+
+        // Calculate top-left based on background-position percentages
+        // bg-pos x% means: align the point x% of the image with the point x% of the container.
+        // Formula for top/left in CSS background-position:
+        // left = (containerWidth - imageWidth) * (x / 100) <--- this is relative to container, not what we want.
+
+        // Let's reverse engineer from what the user sees.
+        // The user sees a "portal" into the image.
+        // We need to extract exactly that portal.
+
+        // Actually, CSS background-position percentages are tricky.
+        // "50% 50%" means center of image is at center of container.
+        // "0% 0%" means top-left of image is at top-left of container.
+        // "100% 100%" means bottom-right of image is at bottom-right of container.
+
+        // The "visible window" size is (1/scale) * imageDimensions.
+        // The "available traverse space" for the top-left corner of the crop is (ImageWidth - CropWidth).
+        // cropX = (ImageWidth - CropWidth) * (x / 100)
+
+        const maxScrollX = width - cropWidth;
+        const maxScrollY = height - cropHeight;
+
+        let cropX = Math.round(maxScrollX * (xPos / 100));
+        let cropY = Math.round(maxScrollY * (yPos / 100));
+
+        // Clamp values
+        cropX = Math.max(0, Math.min(cropX, maxScrollX));
+        cropY = Math.max(0, Math.min(cropY, maxScrollY));
+
+        const croppedImage = await image
+            .extract({ left: cropX, top: cropY, width: cropWidth, height: cropHeight })
+            .toBuffer();
+
+        res.set('Content-Type', response.headers['content-type']);
+        // Don't cache aggressively for dynamic crops, or do? 
+        // Use a shorter cache for crops or vary header? 
+        // Let's cache it, the URL params make it unique enough.
+        res.set('Cache-Control', 'public, max-age=86400'); // 1 day
+        res.send(croppedImage);
+
+    } catch (err) {
+        console.error('Error proxying image:', err);
+        res.status(500).json({ error: 'Failed to proxy image' });
+    }
 });
 
 // Define path to games_db.json

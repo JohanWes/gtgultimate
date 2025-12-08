@@ -25,37 +25,6 @@ export function ScreenshotViewer({ screenshots, revealedCount, status, cropPosit
     const isOverlayLocked = settings.miniaturesLocked;
     const [showTip, setShowTip] = useState(false);
 
-    // Obfuscate images to prevent inspecting source
-    const obfuscatedScreenshots = useObfuscatedImages(screenshots);
-    const obfuscatedDoubleTrouble = useObfuscatedImages(doubleTroubleGame?.screenshots);
-
-    // Auto-select the newly revealed screenshot
-    useEffect(() => {
-        setSelectedIndex(revealedCount - 1);
-    }, [revealedCount]);
-
-    // Reset toggle when new game starts
-    // Reset toggle when new game starts
-    useEffect(() => {
-        if (status === 'playing') {
-            setShowCropped(false);
-        }
-    }, [status]);
-
-    // Delay tip appearance
-    useEffect(() => {
-        if (!miniaturesInPicture || hasSeenLockTip || isOverlayLocked) {
-            setShowTip(false);
-            return;
-        }
-
-        const timer = setTimeout(() => {
-            setShowTip(true);
-        }, 10000);
-
-        return () => clearTimeout(timer);
-    }, [miniaturesInPicture, hasSeenLockTip, isOverlayLocked]);
-
     const getZoomScale = (index: number) => {
         // If Zoom Out lifeline is active, return 100% for all images
         if (zoomOutActive && status === 'playing') {
@@ -91,6 +60,66 @@ export function ScreenshotViewer({ screenshots, revealedCount, status, cropPosit
             default: return 100 + difficultyBonus; // 100% -> 110% -> 120% etc.
         }
     };
+
+    // Helper to construct proxy URL
+    const getProxyUrl = (url: string, index: number, positions: Array<{ x: number; y: number }>) => {
+        const zoom = getZoomScale(index);
+
+        // Host relative URL for the proxy
+        const baseUrl = '/api/image-proxy';
+
+        // If we want the full image (zoom <= 100 or specific conditions)
+        // Note: getZoomScale returns 100 when zoomOutActive or game over (unless showCropped).
+        // If zoom is 100, the server will return the full image anyway.
+
+        const params = new URLSearchParams({
+            url: url,
+            x: (positions[index]?.x || 50).toString(),
+            y: (positions[index]?.y || 50).toString(),
+            zoom: zoom.toString()
+        });
+
+        return `${baseUrl}?${params.toString()}`;
+    };
+
+    // Generate effective URLs using the proxy
+    const effectiveScreenshots = screenshots.map((url, idx) => getProxyUrl(url, idx, cropPositions));
+    const effectiveDoubleTrouble = doubleTroubleGame
+        ? doubleTroubleGame.screenshots.map((url, idx) => getProxyUrl(url, idx, doubleTroubleGame.cropPositions))
+        : undefined;
+
+    // Obfuscate images to prevent inspecting source
+    const obfuscatedScreenshots = useObfuscatedImages(effectiveScreenshots);
+    const obfuscatedDoubleTrouble = useObfuscatedImages(effectiveDoubleTrouble);
+
+    // Auto-select the newly revealed screenshot
+    useEffect(() => {
+        setSelectedIndex(revealedCount - 1);
+    }, [revealedCount]);
+
+    // Reset toggle when new game starts
+    // Reset toggle when new game starts
+    useEffect(() => {
+        if (status === 'playing') {
+            setShowCropped(false);
+        }
+    }, [status]);
+
+    // Delay tip appearance
+    useEffect(() => {
+        if (!miniaturesInPicture || hasSeenLockTip || isOverlayLocked) {
+            setShowTip(false);
+            return;
+        }
+
+        const timer = setTimeout(() => {
+            setShowTip(true);
+        }, 10000);
+
+        return () => clearTimeout(timer);
+    }, [miniaturesInPicture, hasSeenLockTip, isOverlayLocked]);
+
+
 
     return (
         <div className="space-y-3">
