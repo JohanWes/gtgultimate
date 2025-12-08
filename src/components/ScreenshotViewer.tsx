@@ -42,7 +42,7 @@ export function ScreenshotViewer({ screenshots, revealedCount, status, cropPosit
                 case 1: return 400 + difficultyBonus;
                 case 2: return 300 + difficultyBonus;
                 case 3: return 200 + difficultyBonus;
-                default: return 100 + difficultyBonus;
+                default: return 100; // 5th image always shows full uncropped view
             }
         }
 
