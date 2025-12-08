@@ -18,7 +18,7 @@ import { clsx } from 'clsx';
 import { AlertCircle, X, ArrowRight, Flame } from 'lucide-react';
 import { useSettings } from '../hooks/useSettings';
 import synopsisData from '../assets/synopsis.json';
-import { useObfuscatedImages } from '../hooks/useObfuscatedImages';
+
 
 interface EndlessGameAreaProps {
     game: Game;
@@ -77,7 +77,9 @@ export function EndlessGameArea({
     const [displayGameName, setDisplayGameName] = useState(game.name);
 
     // Obfuscate cover image for Cover Peek
-    const [obfuscatedCover] = useObfuscatedImages(game.cover ? [game.cover] : undefined);
+    // REMOVED: const [obfuscatedCover] = useObfuscatedImages(game.cover ? [game.cover] : undefined);
+    const [coverImageSrc, setCoverImageSrc] = useState<string | null>(null);
+    const [isLoadingCover, setIsLoadingCover] = useState(false);
 
     useEffect(() => {
         setDisplayGameName(game.name);
@@ -187,6 +189,27 @@ export function EndlessGameArea({
         if (type === 'cover_peek') {
             setShowCoverPeek(true);
             setCoverPeekTimeLeft(5);
+
+            // Lazy load the cover image if not already loaded
+            if (!coverImageSrc && game.cover) {
+                setIsLoadingCover(true);
+                // Use the proxy endpoint directly
+                // We default to a decent quality/size if needed, but standard proxy without params returns full image
+                const proxyUrl = `/api/image-proxy?url=${encodeURIComponent(game.cover)}`;
+
+                fetch(proxyUrl)
+                    .then(res => res.blob())
+                    .then(blob => {
+                        const objectUrl = URL.createObjectURL(blob);
+                        setCoverImageSrc(objectUrl);
+                        setIsLoadingCover(false);
+                    })
+                    .catch(err => {
+                        console.error("Failed to load cover:", err);
+                        setIsLoadingCover(false);
+                        setErrorMessage("Failed to load cover image");
+                    });
+            }
         } else if (type === 'anagram') {
             setAnagramHint(generateAnagram(game.name));
         } else if (type === 'consultant') {
@@ -278,6 +301,13 @@ export function EndlessGameArea({
         setCoverPeekTimeLeft(5);
         setShowSynopsis(false);
         setSynopsisText(null);
+
+        // Cleanup previous cover image
+        if (coverImageSrc) {
+            URL.revokeObjectURL(coverImageSrc);
+            setCoverImageSrc(null);
+        }
+        setIsLoadingCover(false);
     }, [game.id]);
 
     const { settings, isSettingsOpen } = useSettings();
@@ -400,15 +430,19 @@ export function EndlessGameArea({
                         {showCoverPeek && game.cover && state.status === 'playing' && (
                             <div className="absolute inset-0 z-30 bg-black/90 backdrop-blur-sm rounded-xl overflow-hidden animate-in fade-in duration-300 flex items-center justify-center">
                                 {/* Blurred Cover Art */}
-                                <img
-                                    src={obfuscatedCover || game.cover}
-                                    alt="Cover art"
-                                    className="h-full w-auto object-contain"
-                                    style={{
-                                        filter: 'blur(9px)',
-                                        transform: 'scale(1.1)'
-                                    }}
-                                />
+                                {isLoadingCover ? (
+                                    <div className="text-white font-bold animate-pulse">Loading Cover...</div>
+                                ) : (
+                                    <img
+                                        src={coverImageSrc || ''}
+                                        alt="Cover art"
+                                        className="h-full w-auto object-contain"
+                                        style={{
+                                            filter: 'blur(9px)',
+                                            transform: 'scale(1.1)'
+                                        }}
+                                    />
+                                )}
                             </div>
                         )}
 
