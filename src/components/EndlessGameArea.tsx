@@ -77,7 +77,11 @@ export function EndlessGameArea({
     const [displayGameName, setDisplayGameName] = useState(game.name);
 
     // Obfuscate cover image for Cover Peek
-    const [obfuscatedCover] = useObfuscatedImages(game.cover ? [game.cover] : undefined);
+    // Pass 1 if showCoverPeek is true, otherwise 0 to prevent fetching
+    const [obfuscatedCover] = useObfuscatedImages(
+        game.cover ? [game.cover] : undefined,
+        showCoverPeek ? 1 : 0
+    );
 
     useEffect(() => {
         setDisplayGameName(game.name);

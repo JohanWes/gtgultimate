@@ -1,82 +1,92 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
+import { getProxyImageUrl } from '../utils/api';
 
 /**
  * A hook that takes an array of image URLs and returns an array of Blob URLs.
- * This obfuscates the original source URL from the DOM.
+ * It lazy loads images as they are revealed and uses the proxy to hide original URLs.
  */
-export function useObfuscatedImages(imageUrls: string[] | undefined): string[] {
-    // secure-key based on content to detect changes immediately
-    const currentKey = JSON.stringify(imageUrls || []);
+export function useObfuscatedImages(imageUrls: string[] | undefined, revealedCount: number = 5): string[] {
+    const [blobs, setBlobs] = useState<string[]>([]);
+    const blobsRef = useRef<string[]>([]);
+    const processingRef = useRef<Set<number>>(new Set());
+    const activeSourceKeyRef = useRef<string>("");
+    const isComponentMountedRef = useRef(true);
 
-    const [state, setState] = useState<{ key: string; blobs: string[] }>({
-        key: currentKey,
-        blobs: []
-    });
+    // Reset when the game changes (imageUrls change completely)
+    // We use a string key to detect changes in the source array
+    const sourceKey = JSON.stringify(imageUrls || []);
 
+    // Track component mount status
     useEffect(() => {
-        if (!imageUrls || imageUrls.length === 0) {
-            setState({ key: currentKey, blobs: [] });
-            return;
-        }
+        isComponentMountedRef.current = true;
+        return () => { isComponentMountedRef.current = false; };
+    }, []);
 
-        let isMounted = true;
+    // Reset state on new source
+    useEffect(() => {
+        activeSourceKeyRef.current = sourceKey;
 
-        const fetchImages = async () => {
-            try {
-                // If the key has already changed while we were waiting to start, abort early
-                // (Though the effect cleanup handles this usually, it's good to be explicit)
+        // Cleanup old blobs
+        blobsRef.current.forEach(url => {
+            if (url.startsWith('blob:')) URL.revokeObjectURL(url);
+        });
 
-                const blobs = await Promise.all(
-                    imageUrls.map(async (url) => {
-                        try {
-                            const response = await fetch(url);
-                            const blob = await response.blob();
-                            return URL.createObjectURL(blob);
-                        } catch (error) {
-                            console.error('Failed to obfuscate image:', url, error);
-                            return url; // Fallback to original URL on failure
-                        }
-                    })
-                );
-
-                if (isMounted) {
-                    setState({ key: currentKey, blobs });
-                } else {
-                    // Cleanup if unmounted before finishing
-                    blobs.forEach(url => {
-                        if (url.startsWith('blob:')) URL.revokeObjectURL(url);
-                    });
-                }
-            } catch (error) {
-                console.error('Error in useObfuscatedImages:', error);
-                if (isMounted) setState({ key: currentKey, blobs: imageUrls }); // Fallback
-            }
-        };
-
-        fetchImages();
+        // Init new state
+        blobsRef.current = new Array(imageUrls?.length || 0).fill('');
+        processingRef.current.clear();
+        setBlobs([...blobsRef.current]);
 
         return () => {
-            isMounted = false;
-        };
-    }, [currentKey]); // Depend on the stringified key to re-run when content changes
-
-    // Cleanup effect when the specific blob URLs in state change
-    useEffect(() => {
-        return () => {
-            state.blobs.forEach((url) => {
-                if (url.startsWith('blob:')) {
-                    URL.revokeObjectURL(url);
-                }
+            blobsRef.current.forEach(url => {
+                if (url.startsWith('blob:')) URL.revokeObjectURL(url);
             });
         };
-    }, [state.blobs]);
+    }, [sourceKey]);
 
-    // Derived return value:
-    // If the state key doesn't match the current prop key, it means we are in a "stale" render
-    // and the effect hasn't updated the state yet. Return empty to prevent flash of old images.
-    if (state.key !== currentKey) {
-        return [];
-    }
+    useEffect(() => {
+        if (!imageUrls || imageUrls.length === 0) return;
 
-    return state.blobs;
+        const endIdx = Math.min(revealedCount, imageUrls.length);
+        const currentSourceKey = sourceKey;
+
+        const fetchImage = async (index: number) => {
+            processingRef.current.add(index);
+
+            const originalUrl = imageUrls[index];
+            const proxyUrl = getProxyImageUrl(originalUrl);
+            let resultUrl = originalUrl;
+
+            try {
+                const response = await fetch(proxyUrl);
+                if (!response.ok) {
+                    throw new Error(`Proxy returned status: ${response.status}`);
+                }
+                const blob = await response.blob();
+                resultUrl = URL.createObjectURL(blob);
+            } catch (err) {
+                console.error('Failed to load image via proxy:', originalUrl, err);
+                resultUrl = originalUrl; // Fallback
+            }
+
+            // Only update if component is mounted AND we are still on the same source
+            if (isComponentMountedRef.current && activeSourceKeyRef.current === currentSourceKey) {
+                blobsRef.current[index] = resultUrl;
+                setBlobs([...blobsRef.current]);
+            }
+
+            processingRef.current.delete(index);
+        };
+
+        for (let i = 0; i < endIdx; i++) {
+            // Fetch if empty (not loaded) and not currently processing
+            if (blobsRef.current[i] === '' && !processingRef.current.has(i)) {
+                fetchImage(i);
+            }
+        }
+
+    }, [sourceKey, revealedCount, imageUrls]);
+
+    return blobs;
 }
+
+

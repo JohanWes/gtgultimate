@@ -1,6 +1,8 @@
 
 import clientPromise from './_lib/mongodb.js';
 
+import crypto from 'crypto';
+
 export default async function handler(req, res) {
     try {
         const client = await clientPromise;
@@ -19,10 +21,21 @@ export default async function handler(req, res) {
         }
 
         if (req.method === 'POST') {
-            const { name, score } = req.body;
+            const { name, score, signature } = req.body;
 
             if (!name || typeof score !== 'number') {
                 return res.status(400).json({ error: 'Invalid input' });
+            }
+
+            const secret = process.env.HIGHSCORE_SECRET;
+            if (secret) {
+                if (!signature) {
+                    return res.status(400).json({ error: 'Missing signature' });
+                }
+                const expectedSignature = crypto.createHash('sha256').update(`${score}-${secret}`).digest('hex');
+                if (signature !== expectedSignature) {
+                    return res.status(403).json({ error: 'Invalid signature' });
+                }
             }
 
             const newScore = {

@@ -26,8 +26,10 @@ export function ScreenshotViewer({ screenshots, revealedCount, status, cropPosit
     const [showTip, setShowTip] = useState(false);
 
     // Obfuscate images to prevent inspecting source
-    const obfuscatedScreenshots = useObfuscatedImages(screenshots);
-    const obfuscatedDoubleTrouble = useObfuscatedImages(doubleTroubleGame?.screenshots);
+    const obfuscatedScreenshots = useObfuscatedImages(screenshots, revealedCount);
+    // For Double Trouble, we also lazily load, or maybe we should just load them all if revealedCount matches?
+    // Double trouble revealed count logic might differ, but for now assuming it syncs with main revealedCount
+    const obfuscatedDoubleTrouble = useObfuscatedImages(doubleTroubleGame?.screenshots, revealedCount);
 
     // Auto-select the newly revealed screenshot
     useEffect(() => {

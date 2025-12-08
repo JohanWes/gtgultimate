@@ -6,6 +6,8 @@ import path from 'path';
 import { fileURLToPath } from 'url';
 import 'dotenv/config';
 
+import crypto from 'crypto';
+
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
@@ -59,12 +61,53 @@ app.get('/api/highscores', (req, res) => {
     res.json(scores.slice(0, 50));
 });
 
+// GET /api/image-proxy
+app.get('/api/image-proxy', async (req, res) => {
+    const { path: imagePath } = req.query;
+
+    if (!imagePath || typeof imagePath !== 'string') {
+        return res.status(400).json({ error: 'Missing path parameter' });
+    }
+
+    const targetUrl = `https://images.igdb.com/igdb/image/upload/${imagePath}`;
+
+    try {
+        const imageRes = await fetch(targetUrl);
+
+        if (!imageRes.ok) {
+            return res.status(imageRes.status).send('Failed to fetch image');
+        }
+
+        const buffer = await imageRes.arrayBuffer();
+        const bufferObj = Buffer.from(buffer);
+
+        res.setHeader('Content-Type', imageRes.headers.get('content-type') || 'image/jpeg');
+        res.setHeader('Cache-Control', 'public, max-age=31536000, immutable');
+        res.send(bufferObj);
+
+    } catch (error) {
+        console.error('Image proxy error:', error);
+        res.status(500).json({ error: 'Internal Server Error' });
+    }
+});
+
 // POST /api/highscores
 app.post('/api/highscores', (req, res) => {
-    const { name, score } = req.body;
+    const { name, score, signature } = req.body;
 
     if (!name || typeof score !== 'number') {
         return res.status(400).json({ error: 'Invalid input' });
+    }
+
+    const secret = process.env.HIGHSCORE_SECRET;
+    if (secret) {
+        if (!signature) {
+            return res.status(400).json({ error: 'Missing signature' });
+        }
+        const expectedSignature = crypto.createHash('sha256').update(`${score}-${secret}`).digest('hex');
+        if (signature !== expectedSignature) {
+            return res.status(403).json({ error: 'Invalid signature' });
+        }
     }
 
     const newScore = {
@@ -233,7 +276,12 @@ app.post('/api/admin/migrate-screenshots', async (req, res) => {
 
 // Handle SPA routing - return index.html for all other routes
 app.get(/(.*)/, (req, res) => {
-    res.sendFile(path.join(__dirname, 'dist', 'index.html'));
+    const indexPath = path.join(__dirname, 'dist', 'index.html');
+    if (fs.existsSync(indexPath)) {
+        res.sendFile(indexPath);
+    } else {
+        res.status(404).json({ error: 'Resource not found and SPA index.html missing' });
+    }
 });
 
 app.listen(PORT, HOST, () => {
