@@ -7,11 +7,24 @@ import { fileURLToPath } from 'url';
 import 'dotenv/config';
 import sharp from 'sharp';
 import axios from 'axios';
+import crypto from 'crypto';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 const app = express();
+
+
+// Security Configuration
+const ALLOWED_IMAGE_HOSTS = ['images.igdb.com'];
+
+// Rate Limiting
+import rateLimit from 'express-rate-limit';
+const highscoreLimiter = rateLimit({
+    windowMs: 60 * 1000, // 1 minute
+    max: 10, // limit each IP to 10 requests per windowMs
+    message: { error: 'Too many highscore submissions, please try again later' }
+});
 const PORT = process.env.PORT || 3000;
 const HOST = process.env.HOST || '0.0.0.0';
 // Use a data directory for persistence, compatible with docker volume mounting
@@ -62,7 +75,7 @@ app.get('/api/highscores', (req, res) => {
 });
 
 // POST /api/highscores
-app.post('/api/highscores', (req, res) => {
+app.post('/api/highscores', highscoreLimiter, (req, res) => {
     const { name, score } = req.body;
 
     if (!name || typeof score !== 'number') {
@@ -98,8 +111,20 @@ app.get('/api/image-proxy', async (req, res) => {
     }
 
     try {
+        const decodedUrl = decodeURIComponent(url);
+
+        // SSRF Protection: Validate Host
+        try {
+            const parsedUrl = new URL(decodedUrl);
+            if (!ALLOWED_IMAGE_HOSTS.includes(parsedUrl.hostname)) {
+                return res.status(403).json({ error: 'Domain not allowed' });
+            }
+        } catch (e) {
+            return res.status(400).json({ error: 'Invalid URL' });
+        }
+
         const response = await axios({
-            url: decodeURIComponent(url),
+            url: decodedUrl,
             responseType: 'arraybuffer'
         });
 
@@ -206,11 +231,24 @@ app.post('/api/admin/verify', (req, res) => {
         return res.status(500).json({ error: 'Server misconfiguration' });
     }
 
-    if (adminKey === process.env.ADMIN_KEY) {
-        res.json({ success: true });
-    } else {
-        res.status(401).json({ error: 'Invalid admin key' });
+
+
+    // ... imports ...
+
+    if (adminKey && process.env.ADMIN_KEY) {
+        try {
+            const bufferA = Buffer.from(adminKey);
+            const bufferB = Buffer.from(process.env.ADMIN_KEY);
+            if (bufferA.length === bufferB.length && crypto.timingSafeEqual(bufferA, bufferB)) {
+                res.json({ success: true });
+                return;
+            }
+        } catch (e) {
+            // Buffer creation failed
+        }
     }
+
+    res.status(401).json({ error: 'Invalid admin key' });
 });
 
 // POST /api/admin/update-game

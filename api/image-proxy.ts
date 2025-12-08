@@ -3,6 +3,8 @@ import type { VercelRequest, VercelResponse } from '@vercel/node';
 import sharp from 'sharp';
 import axios from 'axios';
 
+const ALLOWED_IMAGE_HOSTS = ['images.igdb.com'];
+
 export default async function handler(req: VercelRequest, res: VercelResponse) {
     const { url, x, y, zoom } = req.query;
 
@@ -10,9 +12,21 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         return res.status(400).json({ error: 'Missing or invalid url parameter' });
     }
 
+    const decodedUrl = decodeURIComponent(url as string);
+
+    // SSRF Protection: Validate Host
+    try {
+        const parsedUrl = new URL(decodedUrl);
+        if (!ALLOWED_IMAGE_HOSTS.includes(parsedUrl.hostname)) {
+            return res.status(403).json({ error: 'Domain not allowed' });
+        }
+    } catch (e) {
+        return res.status(400).json({ error: 'Invalid URL' });
+    }
+
     try {
         const response = await axios({
-            url: decodeURIComponent(url as string),
+            url: decodedUrl,
             responseType: 'arraybuffer'
         });
 
