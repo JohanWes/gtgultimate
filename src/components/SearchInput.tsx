@@ -23,9 +23,13 @@ export function SearchInput({ games, onGuess, disabled, autoFocus, correctAnswer
     const listRef = useRef<HTMLUListElement>(null);
     const skipNextFocus = useRef(false);
 
-    // Auto-focus when enabled
+    // Auto-focus when enabled, but check for touch devices to avoid keyboard popping up
     useEffect(() => {
         if (!disabled && autoFocus && inputRef.current) {
+            // Check if device supports touch (likely mobile/tablet)
+            const isTouch = window.matchMedia('(pointer: coarse)').matches;
+            if (isTouch) return;
+
             // Small timeout to ensure DOM is ready and prevent fighting with other focus events
             const timer = setTimeout(() => {
                 inputRef.current?.focus();

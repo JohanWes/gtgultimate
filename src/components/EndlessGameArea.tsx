@@ -362,7 +362,7 @@ export function EndlessGameArea({
 
     return (
         <div className={clsx(
-            "mx-auto pb-8 px-4 game-container endless-game transition-all duration-500",
+            "mx-auto pb-8 px-0 sm:px-4 game-container endless-game transition-all duration-500",
             settings.miniaturesInPicture ? "max-w-[85rem]" : "max-w-6xl"
         )}>
             <AdminGameEditor
@@ -379,12 +379,12 @@ export function EndlessGameArea({
                     onSkip();
                 }}
             />
-            <div className="flex flex-col lg:flex-row gap-4 items-start">
+            <div className="flex flex-col-reverse lg:flex-row gap-4 items-start">
                 {/* Left Column: Game Area */}
                 <div className="flex-1 w-full space-y-4 min-w-0">
                     {/* Screenshot Viewer */}
                     <div className={clsx(
-                        "relative rounded-xl transition-all duration-500",
+                        "relative rounded-none sm:rounded-xl transition-all duration-500",
                         showFireEffect && state.guesses.length < 2 && "animate-pulse-fire border-2 border-orange-500/50"
                     )}>
                         <ScreenshotViewer
@@ -485,7 +485,7 @@ export function EndlessGameArea({
                     {/* Game Over / Win Message */}
                     {state.status !== 'playing' && (
                         <div className={clsx(
-                            "p-4 rounded-xl border text-center animate-in zoom-in duration-300",
+                            "mx-4 sm:mx-0 p-4 rounded-xl border text-center animate-in zoom-in duration-300",
                             state.status === 'won' ? "bg-green-500/10 border-green-500/20" : "bg-red-500/10 border-red-500/20"
                         )}>
                             <h2 className={clsx(
@@ -518,7 +518,7 @@ export function EndlessGameArea({
                     )}
 
                     {/* Input Area */}
-                    <div className={clsx("transition-opacity duration-500 relative z-30", state.status !== 'playing' && "opacity-50 pointer-events-none")}>
+                    <div className={clsx("px-4 sm:px-0 transition-opacity duration-500 relative z-30", state.status !== 'playing' && "opacity-50 pointer-events-none")}>
                         {errorMessage && (
                             <div className="absolute -top-12 left-0 right-0 flex justify-center pointer-events-none z-50">
                                 <div className="bg-red-500 text-white px-4 py-2 rounded-full shadow-lg font-bold animate-in fade-in slide-in-from-bottom-2 border border-red-400">
@@ -554,9 +554,10 @@ export function EndlessGameArea({
 
                     {/* Previous Guesses */}
                     {state.guesses.filter(guess => guess.result !== 'correct').length > 0 && (
-                        <div className="space-y-2">
+                        <div className="space-y-2 px-4 sm:px-0">
                             <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wider">Previous Guesses</h3>
                             <div className="space-y-2">
+                                {/* ... existing mapping ... */}
                                 {state.guesses
                                     .filter(guess => guess.result !== 'correct')
                                     .slice() // Create a copy before reversing
@@ -601,54 +602,101 @@ export function EndlessGameArea({
                             </div>
                         </div>
                     )}
+
+                    {/* Mobile Only: Bottom Stats (Ticker + HUD) */}
+                    <div className="block lg:hidden space-y-3 mt-4 px-4 sm:px-0 pb-4">
+                        <TopScoresTicker />
+
+                        {/* HUD Card */}
+                        <div className="bg-gray-800/50 p-4 rounded-xl backdrop-blur-sm border border-gray-700 shadow-lg">
+                            <div className="grid grid-cols-3 gap-2 text-center">
+                                <div className="flex flex-col">
+                                    <span className="text-[10px] text-gray-400 uppercase tracking-wider font-bold">Score</span>
+                                    <span className={clsx(
+                                        "text-xl font-bold transition-all duration-300",
+                                        state.score >= state.highScore && state.score > 0
+                                            ? "text-transparent bg-clip-text bg-gradient-to-r from-orange-500 via-yellow-400 to-orange-500 animate-flame-flicker"
+                                            : "text-yellow-400"
+                                    )}>
+                                        {state.score >= state.highScore && state.score > 0 && "🔥 "}{state.score}{state.score >= state.highScore && state.score > 0 && " "}
+                                    </span>
+                                </div>
+                                <div className="flex flex-col border-x border-white/5">
+                                    <span className="text-[10px] text-gray-400 uppercase tracking-wider font-bold">Streak</span>
+                                    <span className="text-xl font-black text-white">{state.streak}</span>
+                                </div>
+                                <div className="flex flex-col">
+                                    <span className="text-[10px] text-gray-400 uppercase tracking-wider font-bold">Best</span>
+                                    <span className="text-xl font-bold text-gray-300">{state.highScore}</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* Hot Streak Indicator */}
+                        {state.isHotStreakActive && state.guesses.length < 2 && (
+                            <div className="bg-gradient-to-r from-red-600 to-orange-500 p-0.5 rounded-xl shadow-lg animate-in slide-in-from-right fade-in duration-500">
+                                <div className="bg-gray-900/90 backdrop-blur-sm rounded-[10px] p-3 flex items-center justify-center gap-3">
+                                    <Flame className="text-orange-500 animate-pulse" size={24} fill="currentColor" />
+                                    <div className="flex flex-col">
+                                        <span className="text-orange-500 font-black text-lg tracking-wider leading-none">HOT STREAK</span>
+                                        <span className="text-orange-300/80 text-[10px] font-bold uppercase tracking-widest">2x Score Multiplier Active!</span>
+                                    </div>
+                                    <Flame className="text-orange-500 animate-pulse" size={24} fill="currentColor" />
+                                </div>
+                            </div>
+                        )}
+                    </div>
                 </div>
 
                 {/* Right Column: Sidebar (HUD + Info + Lifelines) */}
                 <div className={clsx(
-                    "w-full flex-shrink-0 flex flex-col gap-3 transition-all duration-500",
+                    "w-full flex-shrink-0 flex flex-col gap-3 transition-all duration-500 px-4 sm:px-0",
                     settings.miniaturesInPicture ? "lg:w-48" : "lg:w-72"
                 )}>
-                    {/* Top Scores Ticker */}
-                    <TopScoresTicker />
+                    {/* Desktop Only: Top Stats */}
+                    <div className="hidden lg:flex flex-col gap-3">
+                        {/* Top Scores Ticker */}
+                        <TopScoresTicker />
 
-                    {/* HUD Card */}
-                    <div className="bg-gray-800/50 p-4 rounded-xl backdrop-blur-sm border border-gray-700 shadow-lg">
-                        <div className="grid grid-cols-3 gap-2 text-center">
-                            <div className="flex flex-col">
-                                <span className="text-[10px] text-gray-400 uppercase tracking-wider font-bold">Score</span>
-                                <span className={clsx(
-                                    "text-xl font-bold transition-all duration-300",
-                                    state.score >= state.highScore && state.score > 0
-                                        ? "text-transparent bg-clip-text bg-gradient-to-r from-orange-500 via-yellow-400 to-orange-500 animate-flame-flicker"
-                                        : "text-yellow-400"
-                                )}>
-                                    {state.score >= state.highScore && state.score > 0 && "🔥 "}{state.score}{state.score >= state.highScore && state.score > 0 && " "}
-                                </span>
-                            </div>
-                            <div className="flex flex-col border-x border-white/5">
-                                <span className="text-[10px] text-gray-400 uppercase tracking-wider font-bold">Streak</span>
-                                <span className="text-xl font-black text-white">{state.streak}</span>
-                            </div>
-                            <div className="flex flex-col">
-                                <span className="text-[10px] text-gray-400 uppercase tracking-wider font-bold">Best</span>
-                                <span className="text-xl font-bold text-gray-300">{state.highScore}</span>
-                            </div>
-                        </div>
-                    </div>
-
-                    {/* Hot Streak Indicator */}
-                    {state.isHotStreakActive && state.guesses.length < 2 && (
-                        <div className="bg-gradient-to-r from-red-600 to-orange-500 p-0.5 rounded-xl shadow-lg animate-in slide-in-from-right fade-in duration-500">
-                            <div className="bg-gray-900/90 backdrop-blur-sm rounded-[10px] p-3 flex items-center justify-center gap-3">
-                                <Flame className="text-orange-500 animate-pulse" size={24} fill="currentColor" />
+                        {/* HUD Card */}
+                        <div className="bg-gray-800/50 p-4 rounded-xl backdrop-blur-sm border border-gray-700 shadow-lg">
+                            <div className="grid grid-cols-3 gap-2 text-center">
                                 <div className="flex flex-col">
-                                    <span className="text-orange-500 font-black text-lg tracking-wider leading-none">HOT STREAK</span>
-                                    <span className="text-orange-300/80 text-[10px] font-bold uppercase tracking-widest">2x Score Multiplier Active!</span>
+                                    <span className="text-[10px] text-gray-400 uppercase tracking-wider font-bold">Score</span>
+                                    <span className={clsx(
+                                        "text-xl font-bold transition-all duration-300",
+                                        state.score >= state.highScore && state.score > 0
+                                            ? "text-transparent bg-clip-text bg-gradient-to-r from-orange-500 via-yellow-400 to-orange-500 animate-flame-flicker"
+                                            : "text-yellow-400"
+                                    )}>
+                                        {state.score >= state.highScore && state.score > 0 && "🔥 "}{state.score}{state.score >= state.highScore && state.score > 0 && " "}
+                                    </span>
                                 </div>
-                                <Flame className="text-orange-500 animate-pulse" size={24} fill="currentColor" />
+                                <div className="flex flex-col border-x border-white/5">
+                                    <span className="text-[10px] text-gray-400 uppercase tracking-wider font-bold">Streak</span>
+                                    <span className="text-xl font-black text-white">{state.streak}</span>
+                                </div>
+                                <div className="flex flex-col">
+                                    <span className="text-[10px] text-gray-400 uppercase tracking-wider font-bold">Best</span>
+                                    <span className="text-xl font-bold text-gray-300">{state.highScore}</span>
+                                </div>
                             </div>
                         </div>
-                    )}
+
+                        {/* Hot Streak Indicator */}
+                        {state.isHotStreakActive && state.guesses.length < 2 && (
+                            <div className="bg-gradient-to-r from-red-600 to-orange-500 p-0.5 rounded-xl shadow-lg animate-in slide-in-from-right fade-in duration-500">
+                                <div className="bg-gray-900/90 backdrop-blur-sm rounded-[10px] p-3 flex items-center justify-center gap-3">
+                                    <Flame className="text-orange-500 animate-pulse" size={24} fill="currentColor" />
+                                    <div className="flex flex-col">
+                                        <span className="text-orange-500 font-black text-lg tracking-wider leading-none">HOT STREAK</span>
+                                        <span className="text-orange-300/80 text-[10px] font-bold uppercase tracking-widest">2x Score Multiplier Active!</span>
+                                    </div>
+                                    <Flame className="text-orange-500 animate-pulse" size={24} fill="currentColor" />
+                                </div>
+                            </div>
+                        )}
+                    </div>
 
                     {/* Info Panel */}
                     <InfoPanel game={{ ...game, name: displayGameName }} guessesMade={state.guesses.length} status={state.status} />

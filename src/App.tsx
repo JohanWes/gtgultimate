@@ -11,11 +11,14 @@ import { useEndlessState } from './hooks/useEndlessState';
 import { useEndlessStats } from './hooks/useEndlessStats';
 import { useSettings } from './hooks/useSettings';
 import type { GameMode } from './types';
+import { MobileTutorialModal } from './components/MobileTutorialModal';
+import { useIsMobile } from './hooks/useIsMobile';
 
 function App() {
   const [mode, setMode] = useState<GameMode>('standard');
   const [showHighScoreModal, setShowHighScoreModal] = useState(false);
   const [isStatsOpen, setIsStatsOpen] = useState(false);
+  const isMobile = useIsMobile();
 
   const gameState = useGameState();
   const { currentGame, currentProgress, games, submitGuess, nextLevel, isLoading, error } = gameState;
@@ -171,11 +174,25 @@ function App() {
         />
       )}
 
-      <TutorialModal
-        isOpen={isTutorialOpen}
-        onClose={() => setIsTutorialOpen(false)}
-        onComplete={markTutorialSeen}
-      />
+      {isMobile ? (
+        <MobileTutorialModal
+          isOpen={isTutorialOpen}
+          onClose={() => {
+            setIsTutorialOpen(false);
+            markTutorialSeen();
+          }}
+          onComplete={markTutorialSeen}
+        />
+      ) : (
+        <TutorialModal
+          isOpen={isTutorialOpen}
+          onClose={() => {
+            setIsTutorialOpen(false);
+            markTutorialSeen();
+          }}
+          onComplete={markTutorialSeen}
+        />
+      )}
     </Layout>
   );
 }

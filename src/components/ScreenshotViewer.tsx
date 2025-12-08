@@ -125,7 +125,7 @@ export function ScreenshotViewer({ screenshots, revealedCount, status, cropPosit
         <div className="space-y-3">
             {/* Main Image Stage */}
             <div
-                className="relative aspect-video w-full bg-black/50 rounded-xl overflow-hidden border border-white/10 shadow-2xl group cursor-pointer"
+                className="relative aspect-video w-full bg-black/50 rounded-none sm:rounded-xl overflow-hidden border border-white/10 shadow-2xl group cursor-pointer"
                 onClick={() => {
                     if (miniaturesInPicture) {
                         updateSetting('miniaturesLocked', !isOverlayLocked);
@@ -192,7 +192,7 @@ export function ScreenshotViewer({ screenshots, revealedCount, status, cropPosit
                 {/* Overlay Thumbnails (Miniatures in Picture Mode) */}
                 {miniaturesInPicture && (
                     <div className={clsx(
-                        "absolute bottom-0 left-0 right-0 p-4 flex justify-center gap-2 transition-transform duration-300 transform z-30",
+                        "absolute bottom-0 left-0 right-0 p-4 flex justify-center gap-2 transition-transform duration-300 transform z-30 overflow-x-auto no-scrollbar",
                         isOverlayLocked ? "translate-y-0" : "translate-y-full group-hover:translate-y-0"
                     )}>
                         {screenshots.map((_, idx) => {
@@ -209,7 +209,7 @@ export function ScreenshotViewer({ screenshots, revealedCount, status, cropPosit
                                         setSelectedIndex(idx);
                                     }}
                                     className={clsx(
-                                        "relative w-40 aspect-video rounded-md overflow-hidden border transition-all duration-300",
+                                        "relative w-20 sm:w-40 aspect-video rounded-md overflow-hidden border transition-all duration-300 flex-shrink-0",
                                         isSelected ? "border-primary ring-2 ring-primary/50 scale-110 z-10" : "border-white/20 hover:border-white/50 hover:scale-105",
                                         !isRevealed && "cursor-not-allowed opacity-50 grayscale"
                                     )}

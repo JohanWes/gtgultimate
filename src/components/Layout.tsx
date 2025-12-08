@@ -93,7 +93,7 @@ export function Layout({ children, gameState, currentMode, onModeSwitch, endless
                     </button>
                 </div>
 
-                <main className="flex-1 p-2 md:p-3 overflow-y-auto custom-scrollbar relative">
+                <main className="flex-1 p-0 sm:p-2 md:p-3 overflow-y-auto custom-scrollbar relative">
                     {children}
                 </main>
             </div>

@@ -307,7 +307,7 @@ export function TutorialModal({ isOpen, onClose, onComplete }: TutorialModalProp
             />
 
             {/* Modal */}
-            <div className="relative w-full max-w-lg bg-surface border border-white/10 rounded-2xl shadow-2xl overflow-hidden animate-in zoom-in-95 duration-300">
+            <div className="relative w-full max-w-lg bg-surface border border-white/10 rounded-2xl shadow-2xl overflow-hidden animate-in zoom-in-95 duration-300 max-h-[90vh] flex flex-col">
                 {/* Accent gradient bar */}
                 <div className={clsx(
                     "absolute top-0 left-0 right-0 h-1 bg-gradient-to-r transition-all duration-500",
@@ -323,7 +323,7 @@ export function TutorialModal({ isOpen, onClose, onComplete }: TutorialModalProp
                 </button>
 
                 {/* Content */}
-                <div className="p-6 pt-8">
+                <div className="p-4 sm:p-6 pt-12 sm:pt-8 overflow-y-auto custom-scrollbar">
                     {/* Icon and Title */}
                     <div className={clsx(
                         "flex flex-col items-center text-center mb-6 transition-all duration-300",

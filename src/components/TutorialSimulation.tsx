@@ -147,9 +147,9 @@ export function TutorialSimulation() {
 
 
     return (
-        <div className="w-full bg-black/40 rounded-xl overflow-hidden border border-white/10 shadow-xl flex flex-col md:flex-row h-[280px]">
-            {/* Left: Image Area */}
-            <div className="relative flex-1 bg-black/50 overflow-hidden group">
+        <div className="w-full h-full md:h-auto bg-black/40 rounded-xl overflow-hidden border border-white/10 shadow-xl flex flex-col md:flex-row md:min-h-[280px]">
+            {/* Image Area - flex-1 on mobile, fixed on desktop */}
+            <div className="relative flex-1 md:flex-1 bg-black/50 overflow-hidden group min-h-[120px] md:h-auto">
                 {/* Background Image with Zoom/Crop */}
                 <div
                     className="absolute inset-0 w-full h-full transition-all duration-700 ease-in-out"
@@ -182,8 +182,8 @@ export function TutorialSimulation() {
                 )}
             </div>
 
-            {/* Right: UI Simulation */}
-            <div className="w-full md:w-64 bg-surface flex flex-col p-4 border-l border-white/5 gap-4">
+            {/* UI Simulation - compact on mobile, larger on desktop */}
+            <div className="w-full md:w-64 bg-surface flex flex-col p-2 md:p-4 border-t md:border-t-0 md:border-l border-white/5 gap-2 md:gap-4 flex-shrink-0">
                 {/* Simulated Input */}
                 <div className="relative">
                     <div className="w-full bg-white/5 border border-white/10 rounded-lg h-9 px-9 flex items-center text-sm text-white/90 font-medium">

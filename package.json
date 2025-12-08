@@ -5,6 +5,7 @@
   "type": "module",
   "scripts": {
     "dev": "concurrently \"vite\" \"node prod-server.js\"",
+    "dev:host": "concurrently \"vite --host\" \"node prod-server.js\"",
     "start": "node prod-server.js",
     "build": "tsc -b && vite build",
     "lint": "eslint .",

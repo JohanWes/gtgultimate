@@ -44,18 +44,18 @@ export function InfoPanel({ game, guessesMade, status }: InfoPanelProps) {
     ];
 
     return (
-        <div className="flex flex-col gap-2 h-full">
+        <div className="grid grid-cols-4 gap-2 sm:flex sm:flex-col h-auto sm:h-full w-full">
             {hints.map((hint) => (
                 <div
                     key={hint.label}
                     className={clsx(
-                        "glass-panel p-2.5 rounded-lg flex flex-col items-center justify-center text-center transition-all duration-500 flex-1 min-h-[64px]",
+                        "glass-panel p-1.5 sm:p-2.5 rounded-lg flex flex-col items-center justify-center text-center transition-all duration-500 flex-1",
                         hint.revealed ? "opacity-100 transform translate-y-0" : "opacity-50 blur-sm transform translate-y-2"
                     )}
                 >
-                    <hint.icon className={clsx("mb-1.5", hint.revealed ? hint.color : "text-muted")} size={18} />
-                    <div className="text-[8px] text-muted uppercase tracking-wider font-semibold mb-0.5">{hint.label}</div>
-                    <div className={clsx("font-bold text-sm", hint.revealed ? "text-white" : "text-transparent bg-white/10 rounded px-2 py-0.5")}>
+                    <hint.icon className={clsx("mb-1 sm:mb-1.5 w-3 h-3 sm:w-[18px] sm:h-[18px]", hint.revealed ? hint.color : "text-muted")} />
+                    <div className="text-[6px] sm:text-[8px] text-muted uppercase tracking-wider font-semibold mb-0.5 whitespace-nowrap">{hint.label}</div>
+                    <div className={clsx("font-bold text-xs sm:text-sm leading-tight", hint.revealed ? "text-white" : "text-transparent bg-white/10 rounded px-1 sm:px-2 py-0.5")}>
                         {hint.revealed ? hint.value : "???"}
                     </div>
                 </div>

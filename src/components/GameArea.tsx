@@ -161,7 +161,7 @@ export function GameArea({ game, allGames, guesses, status, allProgress, onGuess
             />
 
             {/* Main Layout: Image + Metadata Side by Side */}
-            <div className="flex flex-col lg:flex-row gap-3">
+            <div className="flex flex-col-reverse lg:flex-row gap-3">
                 {/* Left: Screenshot Viewer */}
                 <div className="flex-1 space-y-2">
                     <div className="relative">
@@ -193,7 +193,7 @@ export function GameArea({ game, allGames, guesses, status, allProgress, onGuess
 
                 {/* Right: Metadata Cards */}
                 <div className={clsx(
-                    "flex-shrink-0 transition-all duration-500",
+                    "flex-shrink-0 transition-all duration-500 px-4 sm:px-0",
                     settings.miniaturesInPicture ? "lg:w-32" : "lg:w-40"
                 )}>
                     <InfoPanel game={{ ...game, name: displayGameName }} guessesMade={guesses.length} status={status} />
@@ -203,7 +203,7 @@ export function GameArea({ game, allGames, guesses, status, allProgress, onGuess
             {/* Game Over / Win Message */}
             {status !== 'playing' && (
                 <div className={clsx(
-                    "p-4 rounded-xl border text-center animate-in zoom-in duration-300",
+                    "mx-4 sm:mx-0 p-4 rounded-xl border text-center animate-in zoom-in duration-300",
                     status === 'won' ? "bg-success/10 border-success/20" : "bg-error/10 border-error/20"
                 )}>
                     <h2 className={clsx(
@@ -225,7 +225,7 @@ export function GameArea({ game, allGames, guesses, status, allProgress, onGuess
             )}
 
             {/* Search Input */}
-            <div className={clsx("transition-opacity duration-500 relative z-30", status !== 'playing' && "opacity-50 pointer-events-none")}>
+            <div className={clsx("px-4 sm:px-0 transition-opacity duration-500 relative z-30", status !== 'playing' && "opacity-50 pointer-events-none")}>
                 {errorMessage && (
                     <div className="absolute -top-12 left-0 right-0 flex justify-center pointer-events-none z-50">
                         <div className="bg-red-500 text-white px-4 py-2 rounded-full shadow-lg font-bold animate-in fade-in slide-in-from-bottom-2 border border-red-400">
@@ -244,7 +244,7 @@ export function GameArea({ game, allGames, guesses, status, allProgress, onGuess
 
             {/* Previous Guesses */}
             {guesses.filter(guess => guess.result !== 'correct').length > 0 && (
-                <div className="space-y-2">
+                <div className="space-y-2 px-4 sm:px-0">
                     <h3 className="text-sm font-semibold text-muted uppercase tracking-wider">Previous Guesses</h3>
                     <div className="space-y-2">
                         {guesses
