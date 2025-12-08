@@ -8,6 +8,7 @@ import 'dotenv/config';
 import sharp from 'sharp';
 import axios from 'axios';
 import crypto from 'crypto';
+import helmet from 'helmet';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -37,6 +38,7 @@ if (!fs.existsSync(DATA_DIR)) {
 }
 
 app.use(cors());
+app.use(helmet());
 app.use(bodyParser.json());
 
 // Serve static files from the dist directory
@@ -255,7 +257,24 @@ app.post('/api/admin/verify', (req, res) => {
 app.post('/api/admin/update-game', (req, res) => {
     const adminKey = req.headers['x-admin-key'];
 
-    if (!process.env.ADMIN_KEY || adminKey !== process.env.ADMIN_KEY) {
+    if (!process.env.ADMIN_KEY) {
+        return res.status(500).json({ error: 'Server misconfiguration' });
+    }
+
+    let authorized = false;
+    if (adminKey && process.env.ADMIN_KEY) {
+        try {
+            const bufferA = Buffer.from(adminKey);
+            const bufferB = Buffer.from(process.env.ADMIN_KEY);
+            if (bufferA.length === bufferB.length && crypto.timingSafeEqual(bufferA, bufferB)) {
+                authorized = true;
+            }
+        } catch (e) {
+            // Buffer creation failed
+        }
+    }
+
+    if (!authorized) {
         return res.status(401).json({ error: 'Unauthorized' });
     }
 
@@ -296,7 +315,24 @@ app.post('/api/admin/update-game', (req, res) => {
 app.post('/api/admin/delete-game', (req, res) => {
     const adminKey = req.headers['x-admin-key'];
 
-    if (!process.env.ADMIN_KEY || adminKey !== process.env.ADMIN_KEY) {
+    if (!process.env.ADMIN_KEY) {
+        return res.status(500).json({ error: 'Server misconfiguration' });
+    }
+
+    let authorized = false;
+    if (adminKey && process.env.ADMIN_KEY) {
+        try {
+            const bufferA = Buffer.from(adminKey);
+            const bufferB = Buffer.from(process.env.ADMIN_KEY);
+            if (bufferA.length === bufferB.length && crypto.timingSafeEqual(bufferA, bufferB)) {
+                authorized = true;
+            }
+        } catch (e) {
+            // Buffer creation failed
+        }
+    }
+
+    if (!authorized) {
         return res.status(401).json({ error: 'Unauthorized' });
     }
 
@@ -339,7 +375,24 @@ app.post('/api/admin/delete-game', (req, res) => {
 app.post('/api/admin/migrate-screenshots', async (req, res) => {
     const adminKey = req.headers['x-admin-key'];
 
-    if (!process.env.ADMIN_KEY || adminKey !== process.env.ADMIN_KEY) {
+    if (!process.env.ADMIN_KEY) {
+        return res.status(500).json({ error: 'Server misconfiguration' });
+    }
+
+    let authorized = false;
+    if (adminKey && process.env.ADMIN_KEY) {
+        try {
+            const bufferA = Buffer.from(adminKey);
+            const bufferB = Buffer.from(process.env.ADMIN_KEY);
+            if (bufferA.length === bufferB.length && crypto.timingSafeEqual(bufferA, bufferB)) {
+                authorized = true;
+            }
+        } catch (e) {
+            // Buffer creation failed
+        }
+    }
+
+    if (!authorized) {
         return res.status(401).json({ error: 'Unauthorized' });
     }
 

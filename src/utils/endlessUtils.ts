@@ -104,6 +104,5 @@ export const shuffleString = (str: string): string => {
 
 export const generateAnagram = (gameName: string): string => {
     const cleanName = gameName.replace(/[^a-zA-Z0-9]/g, '').toUpperCase();
-    const randomChar = String.fromCharCode(65 + Math.floor(Math.random() * 26)); // A-Z
-    return shuffleString(cleanName + randomChar);
+    return shuffleString(cleanName);
 };
