@@ -146,8 +146,8 @@ export function ScreenshotViewer({ screenshots, revealedCount, status, cropPosit
                         aria-label={`Screenshot ${selectedIndex + 1}`}
                         style={{
                             backgroundImage: obfuscatedScreenshots[selectedIndex] ? `url(${obfuscatedScreenshots[selectedIndex]})` : undefined,
-                            backgroundPosition: `${cropPositions[selectedIndex]?.x || 50}% ${cropPositions[selectedIndex]?.y || 50}%`,
-                            backgroundSize: `${getZoomScale(selectedIndex)}%`,
+                            backgroundPosition: getZoomScale(selectedIndex) > 100 ? 'center' : `${cropPositions[selectedIndex]?.x || 50}% ${cropPositions[selectedIndex]?.y || 50}%`,
+                            backgroundSize: getZoomScale(selectedIndex) > 100 ? 'cover' : `${getZoomScale(selectedIndex)}%`,
                             backgroundRepeat: 'no-repeat'
                         }}
                         className="absolute inset-0 w-full h-full transition-opacity duration-300"
@@ -161,8 +161,8 @@ export function ScreenshotViewer({ screenshots, revealedCount, status, cropPosit
                         aria-label={`Double Trouble Screenshot ${selectedIndex + 1}`}
                         style={{
                             backgroundImage: `url(${obfuscatedDoubleTrouble[selectedIndex]})`,
-                            backgroundPosition: `${doubleTroubleGame.cropPositions[selectedIndex]?.x || 50}% ${doubleTroubleGame.cropPositions[selectedIndex]?.y || 50}%`,
-                            backgroundSize: `${getZoomScale(selectedIndex)}%`,
+                            backgroundPosition: getZoomScale(selectedIndex) > 100 ? 'center' : `${doubleTroubleGame.cropPositions[selectedIndex]?.x || 50}% ${doubleTroubleGame.cropPositions[selectedIndex]?.y || 50}%`,
+                            backgroundSize: getZoomScale(selectedIndex) > 100 ? 'cover' : `${getZoomScale(selectedIndex)}%`,
                             backgroundRepeat: 'no-repeat'
                         }}
                         className="absolute inset-0 w-full h-full opacity-50 pointer-events-none"
@@ -229,8 +229,8 @@ export function ScreenshotViewer({ screenshots, revealedCount, status, cropPosit
                                             <div
                                                 style={{
                                                     backgroundImage: blobSrc ? `url(${blobSrc})` : undefined,
-                                                    backgroundPosition: `${cropPositions[idx]?.x || 50}% ${cropPositions[idx]?.y || 50}%`,
-                                                    backgroundSize: `${getZoomScale(idx)}%`, // Dynamic zoom
+                                                    backgroundPosition: getZoomScale(idx) > 100 ? 'center' : `${cropPositions[idx]?.x || 50}% ${cropPositions[idx]?.y || 50}%`,
+                                                    backgroundSize: getZoomScale(idx) > 100 ? 'cover' : `${getZoomScale(idx)}%`, // Dynamic zoom
                                                     backgroundRepeat: 'no-repeat'
                                                 }}
                                                 className="absolute inset-0 w-full h-full"
@@ -297,8 +297,8 @@ export function ScreenshotViewer({ screenshots, revealedCount, status, cropPosit
                                             <div
                                                 style={{
                                                     backgroundImage: blobSrc ? `url(${blobSrc})` : undefined,
-                                                    backgroundPosition: `${cropPositions[idx]?.x || 50}% ${cropPositions[idx]?.y || 50}%`,
-                                                    backgroundSize: `${getZoomScale(idx)}%`,
+                                                    backgroundPosition: getZoomScale(idx) > 100 ? 'center' : `${cropPositions[idx]?.x || 50}% ${cropPositions[idx]?.y || 50}%`,
+                                                    backgroundSize: getZoomScale(idx) > 100 ? 'cover' : `${getZoomScale(idx)}%`,
                                                     backgroundRepeat: 'no-repeat'
                                                 }}
                                                 className="absolute inset-0 w-full h-full"
