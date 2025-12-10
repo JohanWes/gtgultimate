@@ -21,7 +21,7 @@ import synopsisData from '../assets/synopsis.json';
 
 
 interface EndlessGameAreaProps {
-    game: Game;
+    game: Game | null;
     allGames: Game[];
     state: EndlessState;
     onGuess: (game: Game, isFatal?: boolean) => void;
@@ -33,6 +33,7 @@ interface EndlessGameAreaProps {
     isHighScoreModalOpen: boolean;
     onMarkShopVisited: () => void;
     isStatsOpen: boolean;
+    isLoading?: boolean;
 }
 
 // eslint-disable-next-line react-refresh/only-export-components
@@ -48,7 +49,8 @@ export function EndlessGameArea({
     onRequestHighScore,
     isHighScoreModalOpen,
     onMarkShopVisited,
-    isStatsOpen
+    isStatsOpen,
+    isLoading = false
 }: EndlessGameAreaProps) {
     const [showShop, setShowShop] = useState(false);
     const [anagramHint, setAnagramHint] = useState<string | null>(null);
@@ -74,7 +76,7 @@ export function EndlessGameArea({
     // Admin Mode State
     const [adminModalOpen, setAdminModalOpen] = useState(false);
     const [, setBackspaceCount] = useState(0);
-    const [displayGameName, setDisplayGameName] = useState(game.name);
+    const [displayGameName, setDisplayGameName] = useState(game?.name || '');
 
     // Obfuscate cover image for Cover Peek
     // REMOVED: const [obfuscatedCover] = useObfuscatedImages(game.cover ? [game.cover] : undefined);
@@ -82,8 +84,10 @@ export function EndlessGameArea({
     const [isLoadingCover, setIsLoadingCover] = useState(false);
 
     useEffect(() => {
-        setDisplayGameName(game.name);
-    }, [game.name]);
+        if (game) {
+            setDisplayGameName(game.name);
+        }
+    }, [game?.name]);
 
     // Admin Access Listener
     useEffect(() => {
@@ -173,7 +177,7 @@ export function EndlessGameArea({
     }, [state.guesses]);
 
     // Use persisted crop positions from state
-    const cropPositions = state.cropPositions;
+    // const cropPositions = state.cropPositions;
 
     // Show shop every 5 levels
     useEffect(() => {
@@ -191,7 +195,7 @@ export function EndlessGameArea({
             setCoverPeekTimeLeft(5);
 
             // Lazy load the cover image if not already loaded
-            if (!coverImageSrc && game.cover) {
+            if (!coverImageSrc && game?.cover) {
                 setIsLoadingCover(true);
                 // Use the proxy endpoint directly
                 // We default to a decent quality/size if needed, but standard proxy without params returns full image
@@ -210,9 +214,9 @@ export function EndlessGameArea({
                         setErrorMessage("Failed to load cover image");
                     });
             }
-        } else if (type === 'anagram') {
+        } else if (type === 'anagram' && game) {
             setAnagramHint(generateAnagram(game.name));
-        } else if (type === 'consultant') {
+        } else if (type === 'consultant' && game) {
             // Play sound
             const audio = new Audio('/sounds/let-s-play.mp3');
             audio.volume = 0.1;
@@ -231,12 +235,12 @@ export function EndlessGameArea({
             const wrongOptions: ConsultantOption[] = otherRealGames;
             const options = [correctOption, ...wrongOptions].sort(() => 0.5 - Math.random());
             setConsultantOptions(options);
-        } else if (type === 'double_trouble') {
+        } else if (type === 'double_trouble' && game) {
             // Pick a random game that is NOT the current game
             const otherGames = allGames.filter(g => g.id !== game.id);
             const randomGame = otherGames[Math.floor(Math.random() * otherGames.length)];
             setDoubleTroubleGame(randomGame);
-        } else if (type === 'synopsis') {
+        } else if (type === 'synopsis' && game) {
             // Look up synopsis from separate data file
             const synopsis = synopsisData[game.id.toString() as keyof typeof synopsisData];
 
@@ -269,7 +273,7 @@ export function EndlessGameArea({
             if (doubleTroubleGame && guessedGame.id === doubleTroubleGame.id) {
                 // If they guessed the double trouble game, we treat it as a win!
                 // We pass the MAIN game to onGuess so the system registers it as a win for the current level
-                onGuess(game);
+                if (game) onGuess(game);
             } else {
                 onGuess(guessedGame);
             }
@@ -308,7 +312,7 @@ export function EndlessGameArea({
             setCoverImageSrc(null);
         }
         setIsLoadingCover(false);
-    }, [game.id]);
+    }, [game?.id]);
 
     const { settings, isSettingsOpen } = useSettings();
 
@@ -426,17 +430,18 @@ export function EndlessGameArea({
                         showFireEffect && state.guesses.length < 2 && "animate-pulse-fire border-2 border-orange-500/50"
                     )}>
                         <ScreenshotViewer
-                            screenshots={game.screenshots}
+                            screenshots={game?.screenshots || []}
                             revealedCount={revealedCount}
                             status={state.status}
-                            cropPositions={cropPositions}
+                            cropPositions={game?.cropPositions || []}
                             doubleTroubleGame={doubleTroubleGame || undefined}
                             currentLevelIndex={state.currentLevelIndex}
                             zoomOutActive={state.zoomOutActive}
                             miniaturesInPicture={settings.miniaturesInPicture}
+                            isLoading={isLoading}
                         />
 
-                        {state.status === 'playing' && (
+                        {state.status === 'playing' && !isLoading && (
                             <button
                                 onClick={onSkip}
                                 className="absolute top-4 left-4 bg-red-500/80 hover:bg-red-600 text-white px-4 py-2 rounded-lg font-bold shadow-lg backdrop-blur-sm transition-all hover:scale-105 z-20 active:animate-lifeline-slide"
@@ -465,7 +470,7 @@ export function EndlessGameArea({
                         )}
 
                         {/* Cover Peek Overlay */}
-                        {showCoverPeek && game.cover && state.status === 'playing' && (
+                        {showCoverPeek && game?.cover && state.status === 'playing' && (
                             <div className="absolute inset-0 z-30 bg-black/90 backdrop-blur-sm rounded-xl overflow-hidden animate-in fade-in duration-300 flex items-center justify-center">
                                 {/* Blurred Cover Art */}
                                 {isLoadingCover ? (
@@ -581,7 +586,7 @@ export function EndlessGameArea({
                                 </div>
                             </div>
                         )}
-                        {consultantOptions ? (
+                        {consultantOptions && game ? (
                             <ConsultantOptions
                                 ref={consultantRef}
                                 options={consultantOptions}
@@ -599,9 +604,9 @@ export function EndlessGameArea({
                             <SearchInput
                                 games={allGames}
                                 onGuess={handleSearchInputGuess}
-                                disabled={state.status !== 'playing' || showShop}
+                                disabled={state.status !== 'playing' || showShop || isLoading}
                                 autoFocus={true}
-                                correctAnswers={doubleTroubleGame ? [game.name, doubleTroubleGame.name] : [game.name]}
+                                correctAnswers={game ? (doubleTroubleGame ? [game.name, doubleTroubleGame.name] : [game.name]) : []}
                                 hideResults={showCoverPeek}
                             />
                         )}
@@ -754,13 +759,13 @@ export function EndlessGameArea({
                     </div>
 
                     {/* Info Panel */}
-                    <InfoPanel game={{ ...game, name: displayGameName }} guessesMade={state.guesses.length} status={state.status} />
+                    <InfoPanel game={game ? { ...game, name: displayGameName } as Game : null} guessesMade={state.guesses.length} status={state.status} isLoading={isLoading} />
 
                     {/* Lifelines - Rendered via Portal to Sidebar */}
                     {mounted && document.getElementById('sidebar-lifelines-portal') && createPortal(
                         <Lifelines
                             state={state}
-                            game={game}
+                            game={game || undefined}
                             onUseLifeline={handleUseLifeline}
                             animatingButton={animatingButton}
                             doubleTroubleGame={doubleTroubleGame}

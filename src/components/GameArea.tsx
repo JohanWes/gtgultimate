@@ -9,7 +9,7 @@ import { X, ArrowRight, AlertCircle } from 'lucide-react';
 import { useSettings } from '../hooks/useSettings';
 
 interface GameAreaProps {
-    game: Game;
+    game: Game | null;
     allGames: Game[];
     guesses: GuessWithResult[];
     status: GameStatus;
@@ -17,9 +17,10 @@ interface GameAreaProps {
     onGuess: (name: string) => void;
     onSkip: () => void;
     onNextLevel: () => void;
+    isLoading?: boolean;
 }
 
-export function GameArea({ game, allGames, guesses, status, allProgress, onGuess, onSkip, onNextLevel }: GameAreaProps) {
+export function GameArea({ game, allGames, guesses, status, allProgress, onGuess, onSkip, onNextLevel, isLoading = false }: GameAreaProps) {
     const revealedCount = status === 'playing' ? guesses.length + 1 : 5;
     const [errorMessage, setErrorMessage] = useState<string | null>(null);
     const [similarNameMessage, setSimilarNameMessage] = useState<boolean>(false);
@@ -27,11 +28,13 @@ export function GameArea({ game, allGames, guesses, status, allProgress, onGuess
     // Admin Mode State
     const [adminModalOpen, setAdminModalOpen] = useState(false);
     const [, setBackspaceCount] = useState(0);
-    const [displayGameName, setDisplayGameName] = useState(game.name);
+    const [displayGameName, setDisplayGameName] = useState(game?.name || '');
 
     useEffect(() => {
-        setDisplayGameName(game.name);
-    }, [game.name]);
+        if (game) {
+            setDisplayGameName(game.name);
+        }
+    }, [game?.name]);
 
     // Admin Access Listener
     useEffect(() => {
@@ -147,18 +150,20 @@ export function GameArea({ game, allGames, guesses, status, allProgress, onGuess
             "mx-auto space-y-2 pb-8 game-container standard-game transition-all duration-500",
             settings.miniaturesInPicture ? "max-w-7xl" : "max-w-5xl"
         )}>
-            <AdminGameEditor
-                isOpen={adminModalOpen}
-                onClose={() => setAdminModalOpen(false)}
-                game={game}
-                onUpdate={(newName) => {
-                    setDisplayGameName(newName);
-                    // We don't mutate game.name directly here as it's a prop
-                }}
-                onDelete={() => {
-                    onSkip();
-                }}
-            />
+            {game && (
+                <AdminGameEditor
+                    isOpen={adminModalOpen}
+                    onClose={() => setAdminModalOpen(false)}
+                    game={game}
+                    onUpdate={(newName) => {
+                        setDisplayGameName(newName);
+                        // We don't mutate game.name directly here as it's a prop
+                    }}
+                    onDelete={() => {
+                        onSkip();
+                    }}
+                />
+            )}
 
             {/* Main Layout: Image + Metadata Side by Side */}
             <div className="flex flex-col-reverse lg:flex-row gap-3">
@@ -166,13 +171,14 @@ export function GameArea({ game, allGames, guesses, status, allProgress, onGuess
                 <div className="flex-1 space-y-2">
                     <div className="relative">
                         <ScreenshotViewer
-                            screenshots={game.screenshots}
+                            screenshots={game?.screenshots || []}
                             revealedCount={revealedCount}
                             status={status}
-                            cropPositions={game.cropPositions}
+                            cropPositions={game?.cropPositions || []}
                             miniaturesInPicture={settings.miniaturesInPicture}
+                            isLoading={isLoading}
                         />
-                        {status === 'playing' && (
+                        {status === 'playing' && !isLoading && (
                             <button
                                 onClick={onSkip}
                                 className="absolute top-4 left-4 z-20 bg-red-500/80 hover:bg-red-600 text-white px-4 py-2 rounded-lg font-bold shadow-lg backdrop-blur-sm transition-all hover:scale-105 text-sm active:animate-lifeline-slide"
@@ -196,7 +202,7 @@ export function GameArea({ game, allGames, guesses, status, allProgress, onGuess
                     "flex-shrink-0 transition-all duration-500 px-4 sm:px-0",
                     settings.miniaturesInPicture ? "lg:w-32" : "lg:w-40"
                 )}>
-                    <InfoPanel game={{ ...game, name: displayGameName }} guessesMade={guesses.length} status={status} />
+                    <InfoPanel game={game ? { ...game, name: displayGameName } as Game : null} guessesMade={guesses.length} status={status} isLoading={isLoading} />
                 </div>
             </div>
 
@@ -236,9 +242,9 @@ export function GameArea({ game, allGames, guesses, status, allProgress, onGuess
                 <SearchInput
                     games={allGames}
                     onGuess={handleGuess}
-                    disabled={status !== 'playing'}
+                    disabled={status !== 'playing' || isLoading}
                     autoFocus={true}
-                    correctAnswers={[game.name]}
+                    correctAnswers={game ? [game.name] : []}
                 />
             </div>
 

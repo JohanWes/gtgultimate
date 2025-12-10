@@ -121,13 +121,8 @@ function App() {
     return <RunSummary runId={shareId} allGames={games} onPlay={handleExitShareMode} />;
   }
 
-  if (isLoading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-background text-white">
-        <div className="animate-pulse text-xl">Loading game data...</div>
-      </div>
-    );
-  }
+  // Removed global loading check to allow inline loading
+  // if (isLoading) { ... }
 
   if (error) {
     return (
@@ -164,25 +159,26 @@ function App() {
 
       <AnimatePresence mode="wait">
         {mode === 'standard' ? (
-          currentGame && (
+          (currentGame || isLoading) && (
             <PageTransition key="standard" className="h-full">
               <GameArea
-                game={currentGame}
+                game={currentGame || null}
                 allGames={games}
-                guesses={currentProgress.guesses}
-                status={currentProgress.status}
+                guesses={currentProgress?.guesses || []}
+                status={currentProgress?.status || 'playing'}
                 allProgress={gameState.allProgress}
                 onGuess={submitGuess}
                 onSkip={gameState.skipGuess}
                 onNextLevel={nextLevel}
+                isLoading={isLoading}
               />
             </PageTransition>
           )
         ) : (
-          endlessState.currentGame && (
+          (endlessState.currentGame || isLoading) && (
             <PageTransition key="endless" className="h-full">
               <EndlessGameArea
-                game={endlessState.currentGame}
+                game={endlessState.currentGame || null}
                 allGames={games}
                 state={endlessState.state}
                 onGuess={endlessState.submitGuess}
@@ -194,6 +190,7 @@ function App() {
                 isHighScoreModalOpen={showHighScoreModal}
                 onMarkShopVisited={endlessState.markShopVisited}
                 isStatsOpen={isStatsOpen}
+                isLoading={isLoading}
               />
             </PageTransition>
           )

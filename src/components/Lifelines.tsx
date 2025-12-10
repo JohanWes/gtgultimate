@@ -4,7 +4,7 @@ import synopsisData from '../assets/synopsis.json';
 
 interface LifelinesProps {
     state: EndlessState;
-    game: Game;
+    game: Game | undefined;
     onUseLifeline: (type: LifelineType) => void;
     animatingButton: LifelineType | null;
     doubleTroubleGame: Game | null;
@@ -26,10 +26,10 @@ export function Lifelines({
             <div className="grid grid-cols-1 gap-2">
                 <button
                     onClick={() => onUseLifeline('cover_peek')}
-                    disabled={isShopOpen || state.lifelines.cover_peek <= 0 || state.status !== 'playing' || !game.cover}
+                    disabled={isShopOpen || state.lifelines.cover_peek <= 0 || state.status !== 'playing' || !game?.cover}
                     className={clsx(
                         "w-full py-3 px-4 rounded-lg font-bold transition-all border flex items-center justify-between group",
-                        state.lifelines.cover_peek > 0 && state.status === 'playing' && game.cover
+                        state.lifelines.cover_peek > 0 && state.status === 'playing' && game?.cover
                             ? 'bg-gray-800 border-purple-500/30 text-purple-400 hover:bg-gray-750 hover:border-purple-500/50'
                             : 'bg-gray-900/50 border-gray-800 text-gray-600 cursor-not-allowed',
                         animatingButton === 'cover_peek' && 'animate-lifeline-pop'
@@ -128,10 +128,10 @@ export function Lifelines({
 
                 <button
                     onClick={() => onUseLifeline('synopsis')}
-                    disabled={isShopOpen || state.lifelines.synopsis <= 0 || state.status !== 'playing' || !synopsisData[game.id.toString() as keyof typeof synopsisData]}
+                    disabled={isShopOpen || state.lifelines.synopsis <= 0 || state.status !== 'playing' || !game || !synopsisData[game.id.toString() as keyof typeof synopsisData]}
                     className={clsx(
                         "w-full py-3 px-4 rounded-lg font-bold transition-all border flex items-center justify-between group",
-                        state.lifelines.synopsis > 0 && state.status === 'playing' && synopsisData[game.id.toString() as keyof typeof synopsisData]
+                        state.lifelines.synopsis > 0 && state.status === 'playing' && game && synopsisData[game.id.toString() as keyof typeof synopsisData]
                             ? 'bg-gray-800 border-green-500/30 text-green-400 hover:bg-gray-750 hover:border-green-500/50'
                             : 'bg-gray-900/50 border-gray-800 text-gray-600 cursor-not-allowed',
                         animatingButton === 'synopsis' && 'animate-lifeline-pop'

@@ -16,9 +16,10 @@ interface ScreenshotViewerProps {
     currentLevelIndex?: number; // For difficulty scaling
     zoomOutActive?: boolean; // Whether Zoom Out lifeline is active
     miniaturesInPicture?: boolean;
+    isLoading?: boolean;
 }
 
-export function ScreenshotViewer({ screenshots, revealedCount, status, cropPositions, doubleTroubleGame, currentLevelIndex = 0, zoomOutActive = false, miniaturesInPicture = false }: ScreenshotViewerProps) {
+export function ScreenshotViewer({ screenshots, revealedCount, status, cropPositions, doubleTroubleGame, currentLevelIndex = 0, zoomOutActive = false, miniaturesInPicture = false, isLoading = false }: ScreenshotViewerProps) {
     const [selectedIndex, setSelectedIndex] = useState(0);
     const [showCropped, setShowCropped] = useState(false);
     const { settings, updateSetting, hasSeenLockTip, markLockTipSeen } = useSettings();
@@ -134,17 +135,24 @@ export function ScreenshotViewer({ screenshots, revealedCount, status, cropPosit
                 }}
             >
                 {/* Main Image Layer */}
-                <div
-                    role="img"
-                    aria-label={`Screenshot ${selectedIndex + 1}`}
-                    style={{
-                        backgroundImage: obfuscatedScreenshots[selectedIndex] ? `url(${obfuscatedScreenshots[selectedIndex]})` : undefined,
-                        backgroundPosition: `${cropPositions[selectedIndex]?.x || 50}% ${cropPositions[selectedIndex]?.y || 50}%`,
-                        backgroundSize: `${getZoomScale(selectedIndex)}%`,
-                        backgroundRepeat: 'no-repeat'
-                    }}
-                    className="absolute inset-0 w-full h-full transition-opacity duration-300"
-                />
+                {isLoading ? (
+                    <div className="absolute inset-0 w-full h-full flex flex-col items-center justify-center bg-gray-900/50 backdrop-blur-sm animate-pulse">
+                        <div className="w-16 h-16 border-4 border-primary border-t-transparent rounded-full animate-spin mb-4" />
+                        <span className="text-white font-bold tracking-wider">Loading game data...</span>
+                    </div>
+                ) : (
+                    <div
+                        role="img"
+                        aria-label={`Screenshot ${selectedIndex + 1}`}
+                        style={{
+                            backgroundImage: obfuscatedScreenshots[selectedIndex] ? `url(${obfuscatedScreenshots[selectedIndex]})` : undefined,
+                            backgroundPosition: `${cropPositions[selectedIndex]?.x || 50}% ${cropPositions[selectedIndex]?.y || 50}%`,
+                            backgroundSize: `${getZoomScale(selectedIndex)}%`,
+                            backgroundRepeat: 'no-repeat'
+                        }}
+                        className="absolute inset-0 w-full h-full transition-opacity duration-300"
+                    />
+                )}
 
                 {/* Double Trouble Overlay */}
                 {doubleTroubleGame && obfuscatedDoubleTrouble[selectedIndex] && (
@@ -214,7 +222,9 @@ export function ScreenshotViewer({ screenshots, revealedCount, status, cropPosit
                                         !isRevealed && "cursor-not-allowed opacity-50 grayscale"
                                     )}
                                 >
-                                    {isRevealed ? (
+                                    {isLoading ? (
+                                        <div className="w-full h-full bg-white/5 animate-pulse" />
+                                    ) : isRevealed ? (
                                         <div className="relative w-full h-full">
                                             <div
                                                 style={{
@@ -279,7 +289,9 @@ export function ScreenshotViewer({ screenshots, revealedCount, status, cropPosit
                                         !isRevealed && "cursor-not-allowed opacity-50"
                                     )}
                                 >
-                                    {isRevealed ? (
+                                    {isLoading ? (
+                                        <div className="w-full h-full bg-white/5 animate-pulse" />
+                                    ) : isRevealed ? (
                                         <div className="relative w-full h-full overflow-hidden">
                                             {/* Thumbnail Image */}
                                             <div

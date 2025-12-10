@@ -4,13 +4,31 @@ import { clsx } from 'clsx';
 import type { Game } from '../types';
 
 interface InfoPanelProps {
-    game: Game;
+    game: Game | null;
     guessesMade: number; // 0 to 5
     status: 'playing' | 'won' | 'lost';
+    isLoading?: boolean;
 }
 
-export function InfoPanel({ game, guessesMade, status }: InfoPanelProps) {
+export function InfoPanel({ game, guessesMade, status, isLoading = false }: InfoPanelProps) {
     const showAll = status !== 'playing';
+
+    if (isLoading || !game) {
+        return (
+            <div className="grid grid-cols-4 gap-2 sm:flex sm:flex-col h-auto sm:h-full w-full">
+                {[1, 2, 3, 4].map((i) => (
+                    <div
+                        key={i}
+                        className="glass-panel p-1.5 sm:p-2.5 rounded-lg flex flex-col items-center justify-center text-center flex-1 animate-pulse"
+                    >
+                        <div className="w-4 h-4 rounded-full bg-white/10 mb-1.5" />
+                        <div className="h-2 w-12 bg-white/10 rounded mb-1" />
+                        <div className="h-3 w-16 bg-white/10 rounded" />
+                    </div>
+                ))}
+            </div>
+        );
+    }
 
     const hints = [
         {
