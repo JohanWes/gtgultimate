@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { type HighScore, fetchHighScores, submitHighScore } from '../utils/api';
 import { Trophy, RotateCcw, Send, X } from 'lucide-react';
 import { clsx } from 'clsx';
+import { useIsMobile } from '../hooks/useIsMobile';
 
 interface HighScoreModalProps {
     score: number;
@@ -15,6 +16,7 @@ export const HighScoreModal: React.FC<HighScoreModalProps> = ({ score, onPlayAga
     const [submitted, setSubmitted] = useState(false);
     const [loading, setLoading] = useState(true);
     const [submitting, setSubmitting] = useState(false);
+    const isMobile = useIsMobile();
 
     useEffect(() => {
         loadHighScores();
@@ -87,7 +89,8 @@ export const HighScoreModal: React.FC<HighScoreModalProps> = ({ score, onPlayAga
                                     maxLength={15}
                                     placeholder="Player Name"
                                     className="flex-1 bg-gray-800 border border-gray-700 rounded-lg px-4 py-3 text-white font-bold focus:outline-none focus:ring-2 focus:ring-blue-500 placeholder-gray-600"
-                                    autoFocus
+
+                                    autoFocus={!isMobile}
                                 />
                                 <button
                                     type="submit"
