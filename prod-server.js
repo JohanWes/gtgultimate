@@ -78,7 +78,7 @@ app.get('/api/highscores', (req, res) => {
 
 // POST /api/highscores
 app.post('/api/highscores', highscoreLimiter, (req, res) => {
-    const { name, score } = req.body;
+    const { name, score, runId } = req.body;
 
     if (!name || typeof score !== 'number') {
         return res.status(400).json({ error: 'Invalid input' });
@@ -87,6 +87,7 @@ app.post('/api/highscores', highscoreLimiter, (req, res) => {
     const newScore = {
         name: name.trim().substring(0, 20), // Limit name length
         score,
+        runId, // Optional run ID
         date: new Date().toISOString()
     };
 

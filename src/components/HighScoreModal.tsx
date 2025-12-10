@@ -1,16 +1,30 @@
 import React, { useState, useEffect } from 'react';
 import { type HighScore, fetchHighScores, submitHighScore } from '../utils/api';
-import { Trophy, RotateCcw, Send, X } from 'lucide-react';
+import { Trophy, RotateCcw, Send, X, Play } from 'lucide-react';
 import { clsx } from 'clsx';
 import { useIsMobile } from '../hooks/useIsMobile';
+import type { GuessWithResult, LifelineType } from '../types';
 
 interface HighScoreModalProps {
     score: number;
     onPlayAgain: () => void;
     onClose: () => void;
+    runData?: {
+        history: Array<{
+            gameId: number;
+            score: number;
+            status: 'won' | 'skipped' | 'lost';
+            guesses: GuessWithResult[];
+            lifelinesUsed: LifelineType[];
+            correctAnswer: string;
+            cropPositions: Array<{ x: number; y: number }>;
+        }>;
+        totalScore: number;
+        totalGames: number;
+    };
 }
 
-export const HighScoreModal: React.FC<HighScoreModalProps> = ({ score, onPlayAgain, onClose }) => {
+export const HighScoreModal: React.FC<HighScoreModalProps> = ({ score, onPlayAgain, onClose, runData }) => {
     const [highScores, setHighScores] = useState<HighScore[]>([]);
     const [name, setName] = useState('');
     const [submitted, setSubmitted] = useState(false);
@@ -46,7 +60,27 @@ export const HighScoreModal: React.FC<HighScoreModalProps> = ({ score, onPlayAga
         if (!name.trim() || submitting) return;
 
         setSubmitting(true);
-        await submitHighScore(name, score);
+        let runId: string | undefined = undefined;
+
+        // Ensure we save the run first if data is available
+        if (runData) {
+            try {
+                const response = await fetch('/api/run/save', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(runData)
+                });
+
+                if (response.ok) {
+                    const data = await response.json();
+                    runId = data.id;
+                }
+            } catch (err) {
+                console.error("Failed to save run:", err);
+            }
+        }
+
+        await submitHighScore(name, score, runId);
         setSubmitted(true);
         await loadHighScores();
         setSubmitting(false);
@@ -89,7 +123,6 @@ export const HighScoreModal: React.FC<HighScoreModalProps> = ({ score, onPlayAga
                                     maxLength={15}
                                     placeholder="Player Name"
                                     className="flex-1 bg-gray-800 border border-gray-700 rounded-lg px-4 py-3 text-white font-bold focus:outline-none focus:ring-2 focus:ring-blue-500 placeholder-gray-600"
-
                                     autoFocus={!isMobile}
                                 />
                                 <button
@@ -146,9 +179,24 @@ export const HighScoreModal: React.FC<HighScoreModalProps> = ({ score, onPlayAga
                                             )}>
                                                 {idx + 1}
                                             </span>
-                                            <span className="font-bold text-gray-200 truncate max-w-[120px]">
-                                                {s.name}
-                                            </span>
+                                            <div className="flex flex-col">
+                                                <div className="flex items-center gap-2">
+                                                    <span className="font-bold text-gray-200 truncate max-w-[120px]">
+                                                        {s.name}
+                                                    </span>
+                                                    {s.runId && (
+                                                        <a
+                                                            href={`/share/${s.runId}`}
+                                                            target="_blank"
+                                                            rel="noopener noreferrer"
+                                                            className="text-white/40 hover:text-blue-400 transition-colors"
+                                                            title="Watch Run"
+                                                        >
+                                                            <Play size={12} fill="currentColor" />
+                                                        </a>
+                                                    )}
+                                                </div>
+                                            </div>
                                         </div>
                                         <span className="font-mono font-bold text-yellow-500">
                                             {s.score}

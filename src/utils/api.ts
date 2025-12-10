@@ -4,6 +4,7 @@ export interface HighScore {
     name: string;
     score: number;
     date: string;
+    runId?: string;
 }
 
 export const fetchHighScores = async (): Promise<HighScore[]> => {
@@ -19,14 +20,14 @@ export const fetchHighScores = async (): Promise<HighScore[]> => {
     }
 };
 
-export const submitHighScore = async (name: string, score: number): Promise<HighScore | null> => {
+export const submitHighScore = async (name: string, score: number, runId?: string): Promise<HighScore | null> => {
     try {
         const response = await fetch(`${API_BASE_URL}/highscores`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
             },
-            body: JSON.stringify({ name, score }),
+            body: JSON.stringify({ name, score, runId }),
         });
         if (!response.ok) {
             throw new Error('Failed to submit highscore');
