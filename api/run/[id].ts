@@ -22,6 +22,8 @@ export default async function handler(req: any, res: any) {
             return res.status(404).json({ error: 'Run not found' });
         }
 
+        // Run data is immutable once saved, cache for 1 hour
+        res.setHeader('Cache-Control', 's-maxage=3600, stale-while-revalidate');
         return res.status(200).json(run);
     } catch (error) {
         console.error('Get Run API Error:', error);

@@ -1,4 +1,7 @@
 {
+    "regions": [
+        "arn1"
+    ],
     "functions": {
         "api/games.ts": {
             "includeFiles": "data/games_db.json"

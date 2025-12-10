@@ -15,6 +15,8 @@ export default async function handler(req, res) {
                 .limit(50)
                 .toArray();
 
+            // Cache for 60 seconds, serve stale for background update
+            res.setHeader('Cache-Control', 's-maxage=60, stale-while-revalidate');
             return res.status(200).json(scores);
         }
 
