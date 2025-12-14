@@ -357,18 +357,19 @@ app.post('/api/admin/update-game', (req, res) => {
         const data = fs.readFileSync(GAMES_DB_FILE, 'utf8');
         const games = JSON.parse(data);
 
-        const gameIndex = games.findIndex(g => g.id === id);
         if (gameIndex === -1) {
             return res.status(404).json({ error: 'Game not found' });
         }
 
-        // Update the name
-        games[gameIndex].name = name.trim();
+        // Update fields
+        if (name) games[gameIndex].name = name.trim();
+        if (req.body.platform) games[gameIndex].platform = req.body.platform.trim();
+        if (req.body.genre) games[gameIndex].genre = req.body.genre.trim();
 
         // Write back to file
         fs.writeFileSync(GAMES_DB_FILE, JSON.stringify(games, null, 2));
 
-        console.log(`Updated game ${id} name to: ${name}`);
+        console.log(`Updated game ${id}: ${JSON.stringify(games[gameIndex])}`);
         res.json({ success: true, game: games[gameIndex] });
     } catch (err) {
         console.error('Error updating game:', err);
@@ -441,6 +442,51 @@ function generateCropPositions(count) {
 }
 
 import Fuse from 'fuse.js';
+
+// POST /api/admin/search-local
+app.post('/api/admin/search-local', (req, res) => {
+    const adminKey = req.headers['x-admin-key'];
+    let authorized = false;
+    if (adminKey && process.env.ADMIN_KEY) {
+        try {
+            const bufferA = Buffer.from(adminKey);
+            const bufferB = Buffer.from(process.env.ADMIN_KEY);
+            if (bufferA.length === bufferB.length && crypto.timingSafeEqual(bufferA, bufferB)) {
+                authorized = true;
+            }
+        } catch (e) { }
+    }
+    if (!authorized) return res.status(401).json({ error: 'Unauthorized' });
+
+    const { query } = req.body;
+
+    try {
+        if (!fs.existsSync(GAMES_DB_FILE)) {
+            return res.json([]);
+        }
+
+        const data = fs.readFileSync(GAMES_DB_FILE, 'utf8');
+        const games = JSON.parse(data);
+
+        if (!query) {
+            // Return all games if no query, but maybe limit?
+            // Let's limit to 50 for performance if list is huge
+            return res.json(games.slice(0, 50));
+        }
+
+        const fuse = new Fuse(games, {
+            keys: ['name'],
+            threshold: 0.3
+        });
+
+        const results = fuse.search(query).map(r => r.item);
+        res.json(results);
+
+    } catch (err) {
+        console.error('Error searching local games:', err);
+        res.status(500).json({ error: 'Internal server error' });
+    }
+});
 
 // POST /api/admin/request-game
 app.post('/api/admin/request-game', async (req, res) => {

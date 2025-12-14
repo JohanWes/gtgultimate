@@ -1,7 +1,6 @@
 
 import clientPromise from '../_lib/mongodb.js';
 import crypto from 'crypto';
-
 import type { VercelRequest, VercelResponse } from '@vercel/node';
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
@@ -12,10 +11,6 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     const adminKey = req.headers['x-admin-key'];
     const envKey = process.env.ADMIN_KEY;
 
-    if (!envKey) {
-        return res.status(500).json({ error: 'Server misconfiguration: ADMIN_KEY not set' });
-    }
-
     let authorized = false;
     if (adminKey && envKey) {
         try {
@@ -24,43 +19,41 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
             if (bufferA.length === bufferB.length && crypto.timingSafeEqual(bufferA, bufferB)) {
                 authorized = true;
             }
-        } catch (e) {
-            // Ignore errors
-        }
+        } catch (e) { }
     }
 
     if (!authorized) {
         return res.status(401).json({ error: 'Unauthorized' });
     }
 
-    const { id, name } = req.body;
-
-    if (!id || !name) {
-        return res.status(400).json({ error: 'Missing id or name' });
-    }
+    const { query } = req.body;
 
     try {
         const client = await clientPromise;
         const db = client.db('guessthegame');
 
-        const updateFields: any = { name: name.trim() };
-        if (req.body.platform) updateFields.platform = req.body.platform.trim();
-        if (req.body.genre) updateFields.genre = req.body.genre.trim();
-
-        const result = await db.collection('games').updateOne(
-            { id: id },
-            { $set: updateFields }
-        );
-
-        if (result.matchedCount === 0) {
-            return res.status(404).json({ error: 'Game not found' });
+        if (!query) {
+            // Return top 50 if no query
+            const games = await db.collection('games')
+                .find({})
+                .limit(50)
+                .toArray();
+            return res.json(games);
         }
 
-        console.log(`Admin update: Game ${id} renamed to ${name}`);
-        res.json({ success: true, message: 'Game updated' });
+        // Use Regex for simple search 
+        // Note: For large DBs, text index is better, but regex is fine for ~2600 items
+        const games = await db.collection('games')
+            .find({
+                name: { $regex: query, $options: 'i' }
+            })
+            .limit(50)
+            .toArray();
+
+        res.json(games);
 
     } catch (err) {
-        console.error('Error updating game:', err);
+        console.error('Error searching games:', err);
         res.status(500).json({ error: 'Internal server error' });
     }
 }
