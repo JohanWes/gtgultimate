@@ -292,7 +292,7 @@ export function AdminGameEditor({ isOpen, onClose, game, onUpdate, onDelete }: A
             if (!response.ok) throw new Error('Search failed');
             const data = await response.json();
             setDbSearchResults(data);
-        } catch (err) {
+        } catch {
             setError('Failed to search database');
         } finally {
             setIsLoading(false);

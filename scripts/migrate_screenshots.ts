@@ -91,7 +91,7 @@ async function fetchScreenshotsForGame(gameId: number, accessToken: string): Pro
             }
         }
         return null;
-    } catch (error: any) {
+    } catch {
         // Return null on error to fallback to shuffle
         return null;
     }
@@ -179,7 +179,7 @@ export async function runMigration() {
                 shuffledCount++;
                 console.log('↻ Shuffled existing screenshots');
             }
-        } catch (error: any) {
+        } catch {
             // Error handling - still shuffle on error
             game.screenshots = shuffleArray(game.screenshots);
             game.cropPositions = generateCropPositions(game.screenshots.length);

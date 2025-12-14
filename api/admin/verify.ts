@@ -21,7 +21,7 @@ export default function handler(req: VercelRequest, res: VercelResponse) {
             if (bufferA.length === bufferB.length && crypto.timingSafeEqual(bufferA, bufferB)) {
                 return res.status(200).json({ success: true });
             }
-        } catch (e) {
+        } catch {
             // Ignore errors, auth failed
         }
     }

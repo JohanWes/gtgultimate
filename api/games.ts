@@ -1,7 +1,8 @@
+import type { VercelRequest, VercelResponse } from '@vercel/node';
 
 import clientPromise from './_lib/mongodb.js';
 
-export default async function handler(req, res) {
+export default async function handler(req: VercelRequest, res: VercelResponse) {
     if (req.method !== 'GET') {
         return res.status(405).json({ error: 'Method not allowed' });
     }
@@ -14,6 +15,7 @@ export default async function handler(req, res) {
 
         // Remove MongoDB internal _id field to keep client cleaner
         const cleanGames = games.map(game => {
+            // eslint-disable-next-line @typescript-eslint/no-unused-vars
             const { _id, ...rest } = game;
             return rest;
         });

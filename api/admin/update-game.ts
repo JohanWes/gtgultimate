@@ -24,7 +24,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
             if (bufferA.length === bufferB.length && crypto.timingSafeEqual(bufferA, bufferB)) {
                 authorized = true;
             }
-        } catch (e) {
+        } catch {
             // Ignore errors
         }
     }

@@ -22,7 +22,7 @@ if (!CLIENT_ID || !CLIENT_SECRET) {
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const GAMES_LIST_PATH = path.join(__dirname, '../games.json');
 const OUTPUT_FILE = path.join(__dirname, '../data/games_db.json');
-const OUTPUT_FILE = path.join(__dirname, '../data/games_db.json');
+
 
 interface GameEntry {
     name: string;
@@ -100,8 +100,8 @@ async function searchGame(name: string, year: number | undefined, accessToken: s
         // Or just return null for now to be safe
         return null;
 
-    } catch (error: any) {
-        // console.error(`Error searching for ${name}:`, error.response?.data || error.message);
+    } catch {
+        // console.error('Error searching for ${name}:', error.response?.data || error.message);
         return null;
     }
 }
@@ -119,7 +119,7 @@ async function main() {
     try {
         gamesList = await parseGamesList();
         console.log(`Found ${gamesList.length} games in games.json`);
-    } catch (error) {
+    } catch {
         console.log('games.json not found, skipping main list update.');
     }
 
@@ -128,7 +128,7 @@ async function main() {
         const existingContent = await fs.readFile(OUTPUT_FILE, 'utf-8');
         existingGames = JSON.parse(existingContent);
         console.log(`Loaded ${existingGames.length} existing games from DB.`);
-    } catch (error) {
+    } catch {
         console.log('No existing DB found, starting fresh.');
     }
 
@@ -136,7 +136,7 @@ async function main() {
 
     const processedGames = [...existingGames];
     const existingNames = new Set(existingGames.map(g => g.name.toLowerCase()));
-    const existingNames = new Set(existingGames.map(g => g.name.toLowerCase()));
+
 
     let foundCount = 0;
     let missingCount = 0;

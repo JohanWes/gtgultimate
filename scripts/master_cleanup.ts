@@ -38,9 +38,9 @@ async function main() {
 
     // 1. Load Data
     console.log('Loading files...');
-    let gamesDbRaw = await fs.readFile(GAMES_DB_PATH, 'utf-8');
+    const gamesDbRaw = await fs.readFile(GAMES_DB_PATH, 'utf-8');
 
-    let gamesDb = JSON.parse(gamesDbRaw);
+    const gamesDb = JSON.parse(gamesDbRaw);
 
     console.log(`Initial Counts - Games DB: ${gamesDb.length}`);
 
@@ -52,7 +52,7 @@ async function main() {
     let gamesConvertedCount = 0;
 
     for (const game of gamesDb) {
-        let newName = convertRomanToArabic(game.name);
+        const newName = convertRomanToArabic(game.name);
         if (newName !== game.name) {
             gamesConvertedCount++;
         }
