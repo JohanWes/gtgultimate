@@ -581,7 +581,9 @@ export function AdminGameEditor({ isOpen, onClose, game, onUpdate, onDelete }: A
                                                         <img src={url} alt={`Screenshot ${idx}`} className="w-full h-full object-cover" />
                                                         {isSelected && (
                                                             <div className="absolute inset-0 bg-green-500/30 flex items-center justify-center backdrop-blur-[1px]">
-                                                                <Check className="text-white drop-shadow-md" size={32} strokeWidth={3} />
+                                                                <div className="w-12 h-12 rounded-full bg-green-500 flex items-center justify-center shadow-lg border-2 border-white">
+                                                                    <span className="text-white text-2xl font-bold">{selectedScreenshots.indexOf(url) + 1}</span>
+                                                                </div>
                                                             </div>
                                                         )}
                                                     </div>
