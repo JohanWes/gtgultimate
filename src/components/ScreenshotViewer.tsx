@@ -99,7 +99,7 @@ export function ScreenshotViewer({ screenshots, revealedCount, status, cropPosit
     }, [revealedCount]);
 
     // Reset toggle when new game starts
-    // Reset toggle when new game starts
+
     useEffect(() => {
         if (status === 'playing') {
             setShowCropped(false);

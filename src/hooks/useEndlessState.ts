@@ -4,7 +4,6 @@ import { calculateScore, getShopItems, generateRandomCrop } from '../utils/endle
 import { areSimilarNames } from '../utils/seriesDetection';
 
 
-// Proper Fisher-Yates shuffle algorithm (unbiased)
 function shuffleArray<T>(array: T[]): T[] {
     const result = [...array];
     for (let i = result.length - 1; i > 0; i--) {
@@ -14,7 +13,6 @@ function shuffleArray<T>(array: T[]): T[] {
     return result;
 }
 
-// Helper to generate a random integer between min and max (inclusive)
 function getRandomInt(min: number, max: number): number {
     return Math.floor(Math.random() * (max - min + 1)) + min;
 }
@@ -167,7 +165,7 @@ export const useEndlessState = (allGames: Game[]) => {
         }
     }, [allGames, state.gameOrder.length]);
 
-    // Save state on change
+
     useEffect(() => {
         localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
         if (state.score > state.highScore) {
@@ -199,10 +197,7 @@ export const useEndlessState = (allGames: Game[]) => {
 
             let points = calculateScore(newGuesses.length);
 
-            // Balance Change: Progressive difficulty bonus
-            // Every time the shop appears (every 5 levels), increase flat score by 1
-            // e.g. Levels 1-5 (streak 0-4): +0
-            // Levels 6-10 (streak 5-9): +1
+            // Progressive difficulty bonus: +1 flat score every 5 levels
             const difficultyBonus = Math.floor(state.streak / 5);
             points += difficultyBonus;
 

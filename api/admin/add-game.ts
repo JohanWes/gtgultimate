@@ -69,7 +69,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
             screenshots: selectedScreenshots,
             cover: gameData.cover,
             cropPositions: cropPositions,
-            createdAt: new Date() // Good practice for DB
+            createdAt: new Date()
         };
 
         await db.collection('games').insertOne(newGame);

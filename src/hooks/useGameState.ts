@@ -1,10 +1,8 @@
 
 import { useState, useEffect } from 'react';
 import type { Game, GameStatus, LevelProgress, GuessResult } from '../types';
-// import gamesData from '../data/games_db.json'; // Removed static import
 import { areSimilarNames } from '../utils/seriesDetection';
 
-// const GAMES = gamesData as Game[]; // Removed static constant
 const STORAGE_KEY = 'guessthegame_unlimited_progress';
 
 // Load initial state from localStorage
@@ -52,7 +50,7 @@ export function useGameState() {
             });
     }, []);
 
-    // Save to local storage whenever state changes
+
     useEffect(() => {
         const dataToSave = { currentLevel, progress };
         console.log('💾 Saving to localStorage:', dataToSave);

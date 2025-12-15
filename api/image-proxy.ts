@@ -49,7 +49,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         const xPos = parseFloat(x as string);
         const yPos = parseFloat(y as string);
 
-        // Logical logic for crop (same as prod-server.js)
+        // Calculation for crop logic
         const scale = zoomVal / 100;
         const cropWidth = Math.round(width / scale);
         const cropHeight = Math.round(height / scale);
