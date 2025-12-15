@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { createPortal } from 'react-dom';
-import { X, AlertTriangle, Search, Check, Image as ImageIcon, Download } from 'lucide-react';
+import { X, AlertTriangle, Search, Image as ImageIcon, Download } from 'lucide-react';
 import type { Game } from '../types';
 import { useSettings } from '../hooks/useSettings';
 import clsx from 'clsx';
