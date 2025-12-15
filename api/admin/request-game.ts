@@ -25,19 +25,51 @@ async function getIgdbAccessToken(): Promise<string> {
                 grant_type: 'client_credentials',
             },
         });
-        igdbToken = response.data.access_token;
-        tokenExpiry = Date.now() + (response.data.expires_in * 1000) - 60000; // Buffer of 1 min
-        return igdbToken;
+        if (response.data.access_token) {
+            igdbToken = response.data.access_token;
+            tokenExpiry = Date.now() + (response.data.expires_in * 1000) - 60000; // Buffer of 1 min
+            return igdbToken!;
+        } else {
+            throw new Error('No access token in response');
+        }
     } catch (error: any) {
         console.error('Error getting access token:', error.response?.data || error.message);
         throw new Error('Failed to authenticate with IGDB');
     }
 }
 
-async function searchIgdbGame(name: string, accessToken: string) {
+const defaultFields = 'fields id, name, first_release_date, platforms.name, genres.name, summary, aggregated_rating, rating, screenshots.url, cover.url, rating_count;';
+
+async function searchIgdbGamesList(name: string, accessToken: string) {
     const query = `
-        fields id, name, first_release_date, platforms.name, genres.name, summary, aggregated_rating, rating, screenshots.url, cover.url, rating_count;
+        ${defaultFields}
         search "${name.replace(/"/g, '\\"')}";
+        limit 15;
+    `;
+
+    try {
+        const response = await axios.post(
+            'https://api.igdb.com/v4/games',
+            query,
+            {
+                headers: {
+                    'Client-ID': process.env.VITE_IGDB_CLIENT_ID,
+                    'Authorization': `Bearer ${accessToken}`,
+                    'Content-Type': 'text/plain',
+                },
+            }
+        );
+        return response.data || [];
+    } catch (error: any) {
+        console.error(`Error searching for ${name}:`, error.response?.data || error.message);
+        return [];
+    }
+}
+
+async function getIgdbGameDetails(igdbId: number, accessToken: string) {
+    const query = `
+        ${defaultFields}
+        where id = ${igdbId};
         limit 1;
     `;
 
@@ -53,13 +85,9 @@ async function searchIgdbGame(name: string, accessToken: string) {
                 },
             }
         );
-
-        if (response.data && response.data.length > 0) {
-            return response.data[0];
-        }
-        return null;
+        return response.data && response.data.length > 0 ? response.data[0] : null;
     } catch (error: any) {
-        console.error(`Error searching for ${name}:`, error.response?.data || error.message);
+        console.error(`Error getting details for ${igdbId}:`, error.response?.data || error.message);
         return null;
     }
 }
@@ -92,69 +120,91 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         return res.status(401).json({ error: 'Unauthorized' });
     }
 
-    const { name, skipCheck } = req.body;
-    if (!name) return res.status(400).json({ error: 'Missing name' });
+    const { name, mode, igdbId, skipCheck } = req.body;
+    // Default to search if name is provided, or details if igdbId is provided
+    const requestMode = mode || (igdbId ? 'details' : 'search');
 
     try {
-        // 2. Duplicate Check with MongoDB + Fuse.js
-        if (!skipCheck) {
-            const client = await clientPromise;
-            const db = client.db('guessthegame');
-            // Fetch names only for efficiency? Or all data needed for Fuse? Fuse needs keys.
-            const allGames = await db.collection('games').find({}, { projection: { name: 1 } }).toArray();
+        const token = await getIgdbAccessToken();
 
-            const fuse = new Fuse(allGames, {
-                keys: ['name'],
-                threshold: 0.3,
-                includeScore: true
-            });
+        if (requestMode === 'search') {
+            if (!name) return res.status(400).json({ error: 'Missing name for search' });
 
-            const results = fuse.search(name);
-            if (results.length > 0) {
-                const similarGames = results.map(r => r.item.name).slice(0, 5);
-                return res.status(409).json({
-                    error: 'Potential duplicates found',
-                    similarGames: similarGames
+            const results = await searchIgdbGamesList(name, token);
+
+            const mappedResults = results.map((g: any) => ({
+                id: g.id,
+                name: g.name,
+                year: g.first_release_date ? new Date(g.first_release_date * 1000).getFullYear() : 0,
+                platform: g.platforms ? g.platforms[0].name : 'Unknown',
+                genre: g.genres ? g.genres[0].name : 'Unknown',
+                cover: g.cover ? g.cover.url.replace('t_thumb', 't_cover_small').replace('//', 'https://') : null,
+                rating: Math.round(g.aggregated_rating || g.rating || 0),
+            }));
+
+            return res.json({ mode: 'search', results: mappedResults });
+        }
+
+        else if (requestMode === 'details') {
+            if (!igdbId) return res.status(400).json({ error: 'Missing igdbId for details' });
+
+            const gameData = await getIgdbGameDetails(igdbId, token);
+
+            if (!gameData) {
+                return res.status(404).json({ error: `Game with ID ${igdbId} not found on IGDB.` });
+            }
+
+            // Duplicate Check (only when saving/requesting detailed view to import)
+            if (!skipCheck) {
+                const client = await clientPromise;
+                const db = client.db('guessthegame');
+                const allGames = await db.collection('games').find({}, { projection: { name: 1 } }).toArray();
+
+                const fuse = new Fuse(allGames, {
+                    keys: ['name'],
+                    threshold: 0.3,
+                    includeScore: true
+                });
+
+                const results = fuse.search(gameData.name);
+                if (results.length > 0) {
+                    const similarGames = results.map(r => r.item.name).slice(0, 5);
+                    return res.status(409).json({
+                        error: 'Potential duplicates found',
+                        similarGames: similarGames,
+                        gameData: { id: gameData.id, name: gameData.name } // Send back context
+                    });
+                }
+            }
+
+            // Process screenshots
+            const allScreenshots = gameData.screenshots || [];
+            if (allScreenshots.length < 5) {
+                return res.status(400).json({
+                    error: `Found "${gameData.name}" but it only has ${allScreenshots.length} screenshots (minimum 5 required).`
                 });
             }
+
+            const screenshots = allScreenshots
+                .slice(0, 10)
+                .map((s: any) => s.url.replace('t_thumb', 't_720p').replace('//', 'https://'));
+
+            const cover = gameData.cover ? gameData.cover.url.replace('t_thumb', 't_cover_big').replace('//', 'https://') : null;
+
+            const responseData = {
+                id: gameData.id,
+                name: gameData.name,
+                year: gameData.first_release_date ? new Date(gameData.first_release_date * 1000).getFullYear() : 0,
+                platform: gameData.platforms ? gameData.platforms[0].name : 'Unknown',
+                genre: gameData.genres ? gameData.genres[0].name : 'Unknown',
+                synopsis: gameData.summary || '',
+                rating: Math.round(gameData.aggregated_rating || gameData.rating || 0),
+                cover: cover,
+                availableScreenshots: screenshots
+            };
+
+            return res.json(responseData);
         }
-
-        // 3. Fetch from IGDB
-        const token = await getIgdbAccessToken();
-        const gameData = await searchIgdbGame(name, token);
-
-        if (!gameData) {
-            return res.status(404).json({ error: `Game "${name}" not found on IGDB.` });
-        }
-
-        // 4. Process screenshots
-        const allScreenshots = gameData.screenshots || [];
-        if (allScreenshots.length < 5) {
-            return res.status(400).json({
-                error: `Found "${gameData.name}" but it only has ${allScreenshots.length} screenshots (minimum 5 required).`
-            });
-        }
-
-        // Return up to 10 screenshots
-        const screenshots = allScreenshots
-            .slice(0, 10)
-            .map((s: any) => s.url.replace('t_thumb', 't_720p').replace('//', 'https://'));
-
-        const cover = gameData.cover ? gameData.cover.url.replace('t_thumb', 't_cover_big').replace('//', 'https://') : null;
-
-        const responseData = {
-            id: gameData.id,
-            name: gameData.name,
-            year: gameData.first_release_date ? new Date(gameData.first_release_date * 1000).getFullYear() : 0,
-            platform: gameData.platforms ? gameData.platforms[0].name : 'Unknown',
-            genre: gameData.genres ? gameData.genres[0].name : 'Unknown',
-            synopsis: gameData.summary || '',
-            rating: Math.round(gameData.aggregated_rating || gameData.rating || 0),
-            cover: cover,
-            availableScreenshots: screenshots
-        };
-
-        res.json(responseData);
 
     } catch (err) {
         console.error('Error requesting game:', err);

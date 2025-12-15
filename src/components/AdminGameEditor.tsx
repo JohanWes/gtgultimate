@@ -14,7 +14,7 @@ interface AdminGameEditorProps {
 }
 
 type Mode = 'edit' | 'request' | 'database';
-type RequestStep = 'search' | 'review';
+type RequestStep = 'search' | 'review' | 'selection';
 
 export function AdminGameEditor({ isOpen, onClose, game, onUpdate, onDelete }: AdminGameEditorProps) {
     const [mode, setMode] = useState<Mode>('edit');
@@ -26,6 +26,7 @@ export function AdminGameEditor({ isOpen, onClose, game, onUpdate, onDelete }: A
     // Request Mode State
     const [requestStep, setRequestStep] = useState<RequestStep>('search');
     const [searchQuery, setSearchQuery] = useState('');
+    const [searchResults, setSearchResults] = useState<any[]>([]); // NEW
     const [foundGame, setFoundGame] = useState<any | null>(null);
     const [selectedScreenshots, setSelectedScreenshots] = useState<string[]>([]);
 
@@ -57,6 +58,7 @@ export function AdminGameEditor({ isOpen, onClose, game, onUpdate, onDelete }: A
             setRequestStep('search');
             setError(null);
             setFoundGame(null);
+            setSearchResults([]);
             setSelectedScreenshots([]);
             setSearchQuery('');
             setEditPlatform('');
@@ -173,11 +175,12 @@ export function AdminGameEditor({ isOpen, onClose, game, onUpdate, onDelete }: A
         }
     };
 
-    const handleSearch = async (e: React.FormEvent, skipCheck = false) => {
+    const handleSearch = async (e: React.FormEvent) => {
         if (e && e.preventDefault) e.preventDefault();
         setIsLoading(true);
         setError(null);
         setFoundGame(null);
+        setSearchResults([]);
         setSimilarGames([]);
 
         try {
@@ -187,7 +190,41 @@ export function AdminGameEditor({ isOpen, onClose, game, onUpdate, onDelete }: A
                     'Content-Type': 'application/json',
                     'x-admin-key': settings.adminKey
                 },
-                body: JSON.stringify({ name: searchQuery, skipCheck }),
+                body: JSON.stringify({ name: searchQuery, mode: 'search' }),
+            });
+
+            if (!response.ok) {
+                const data = await response.json();
+                throw new Error(data.error || 'Failed to search game');
+            }
+
+            const data = await response.json();
+            if (data.results && data.results.length > 0) {
+                setSearchResults(data.results);
+                setRequestStep('selection');
+            } else {
+                setError('No games found matching your query.');
+            }
+        } catch (err: any) {
+            setError(err.message);
+        } finally {
+            setIsLoading(false);
+        }
+    };
+
+    const handleSelectGame = async (igdbId: number, skipCheck = false) => {
+        setIsLoading(true);
+        setError(null);
+        setFoundGame(null);
+
+        try {
+            const response = await fetch('/api/admin/request-game', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'x-admin-key': settings.adminKey
+                },
+                body: JSON.stringify({ igdbId, mode: 'details', skipCheck }),
             });
 
             // 409 Conflict means potential duplicates
@@ -197,12 +234,21 @@ export function AdminGameEditor({ isOpen, onClose, game, onUpdate, onDelete }: A
                 if (data.similarGames) {
                     setSimilarGames(data.similarGames);
                 }
+                // When we get a duplicate error, we should probably keep the ID so we can "Search Anyway"
+                // But wait, "Search Anyway" uses handleSearch in the original code, but here we need to re-call handleSelectGame
+                // I'll attach the ID to the error state or just use a closure? 
+                // Using a closure in the render button is easiest.
+
+                // Store the "pending" game data if available to retry
+                if (data.gameData) {
+                    setFoundGame(data.gameData); // HACK: temporarily store minimal data to know what ID to retry
+                }
                 return;
             }
 
             if (!response.ok) {
                 const data = await response.json();
-                throw new Error(data.error || 'Failed to search game');
+                throw new Error(data.error || 'Failed to get game details');
             }
 
             const data = await response.json();
@@ -215,6 +261,7 @@ export function AdminGameEditor({ isOpen, onClose, game, onUpdate, onDelete }: A
 
             setRequestStep('review');
             setSelectedScreenshots(data.availableScreenshots.slice(0, 5));
+
         } catch (err: any) {
             setError(err.message);
         } finally {
@@ -312,7 +359,7 @@ export function AdminGameEditor({ isOpen, onClose, game, onUpdate, onDelete }: A
         <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm animate-in fade-in duration-200">
             <div className={clsx(
                 "bg-surface border border-white/10 rounded-xl max-h-[90vh] overflow-hidden flex flex-col shadow-2xl animate-in zoom-in-95 duration-200 relative",
-                requestStep === 'review' ? "w-full max-w-4xl" : "w-full max-w-md"
+                (requestStep === 'review' || requestStep === 'selection') ? "w-full max-w-4xl" : "w-full max-w-md"
             )}>
                 {/* Header */}
                 <div className="p-6 border-b border-white/10 flex-shrink-0">
@@ -510,6 +557,46 @@ export function AdminGameEditor({ isOpen, onClose, game, onUpdate, onDelete }: A
                                         {isLoading ? 'Searching...' : 'Search on IGDB'}
                                     </button>
                                 </form>
+                            ) : requestStep === 'selection' ? (
+                                /* SELECTION STEP */
+                                <div className="space-y-4">
+                                    <div className="flex justify-between items-center mb-2">
+                                        <h3 className="text-lg font-bold text-white">Select a Game</h3>
+                                        <button
+                                            onClick={() => setRequestStep('search')}
+                                            className="px-3 py-1 text-sm text-gray-400 hover:text-white hover:bg-white/10 rounded"
+                                        >
+                                            Back to Search
+                                        </button>
+                                    </div>
+                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-3 max-h-[60vh] overflow-y-auto pr-2">
+                                        {searchResults.map((result: any) => (
+                                            <button
+                                                key={result.id}
+                                                onClick={() => handleSelectGame(result.id)}
+                                                disabled={isLoading}
+                                                className="flex items-start gap-3 p-3 bg-white/5 hover:bg-white/10 rounded-lg border border-white/5 text-left transition-colors"
+                                            >
+                                                {result.cover ? (
+                                                    <img src={result.cover} alt="" className="w-16 h-20 object-cover rounded bg-black/50" />
+                                                ) : (
+                                                    <div className="w-16 h-20 bg-white/5 rounded flex items-center justify-center text-gray-600">
+                                                        <ImageIcon size={20} />
+                                                    </div>
+                                                )}
+                                                <div>
+                                                    <div className="font-bold text-white line-clamp-1">{result.name}</div>
+                                                    <div className="text-xs text-gray-400 mt-1 flex flex-wrap gap-2">
+                                                        <span>{result.year || '????'}</span>
+                                                        <span>•</span>
+                                                        <span>{result.platform}</span>
+                                                    </div>
+                                                    <div className="text-xs text-gray-500 mt-1">{result.genre}</div>
+                                                </div>
+                                            </button>
+                                        ))}
+                                    </div>
+                                </div>
                             ) : (
                                 /* REVIEW STEP */
                                 <div className="space-y-6">
@@ -594,10 +681,10 @@ export function AdminGameEditor({ isOpen, onClose, game, onUpdate, onDelete }: A
 
                                     <div className="flex justify-between items-center pt-4 border-t border-white/10">
                                         <button
-                                            onClick={() => setRequestStep('search')}
+                                            onClick={() => setRequestStep('selection')}
                                             className="px-4 py-2 text-gray-400 hover:text-white"
                                         >
-                                            Back to Search
+                                            Back to Selection
                                         </button>
                                         <button
                                             onClick={handleAddGame}
@@ -640,10 +727,10 @@ export function AdminGameEditor({ isOpen, onClose, game, onUpdate, onDelete }: A
                                         Cancel
                                     </button>
                                     <button
-                                        onClick={(e) => handleSearch(e, true)}
+                                        onClick={() => foundGame && handleSelectGame(foundGame.id, true)}
                                         className="px-3 py-1.5 text-xs font-bold text-white bg-red-500/20 hover:bg-red-500/40 border border-red-500/30 rounded transition-colors"
                                     >
-                                        I'm sure, Search Anyway
+                                        I'm sure, Import Anyway
                                     </button>
                                 </div>
                             </div>
@@ -655,3 +742,4 @@ export function AdminGameEditor({ isOpen, onClose, game, onUpdate, onDelete }: A
         document.body
     );
 }
+
