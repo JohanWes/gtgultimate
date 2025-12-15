@@ -13,7 +13,7 @@ let tokenExpiry = 0;
 
 async function getIgdbAccessToken(): Promise<string> {
     if (igdbToken && Date.now() < tokenExpiry) {
-        return igdbToken;
+        return igdbToken as string;
     }
 
     console.log('Authenticating with IGDB...');
@@ -36,7 +36,7 @@ async function getIgdbAccessToken(): Promise<string> {
 
 async function searchIgdbGame(name: string, accessToken: string) {
     const query = `
-        fields id, name, first_release_date, platforms.name, genres.name, aggregated_rating, rating, screenshots.url, cover.url, rating_count;
+        fields id, name, first_release_date, platforms.name, genres.name, summary, aggregated_rating, rating, screenshots.url, cover.url, rating_count;
         search "${name.replace(/"/g, '\\"')}";
         limit 1;
     `;
@@ -148,6 +148,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
             year: gameData.first_release_date ? new Date(gameData.first_release_date * 1000).getFullYear() : 0,
             platform: gameData.platforms ? gameData.platforms[0].name : 'Unknown',
             genre: gameData.genres ? gameData.genres[0].name : 'Unknown',
+            synopsis: gameData.summary || '',
             rating: Math.round(gameData.aggregated_rating || gameData.rating || 0),
             cover: cover,
             availableScreenshots: screenshots

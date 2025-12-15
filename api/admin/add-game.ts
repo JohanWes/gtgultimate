@@ -65,6 +65,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
             year: gameData.year,
             platform: gameData.platform,
             genre: gameData.genre,
+            synopsis: gameData.synopsis,
             rating: gameData.rating,
             screenshots: selectedScreenshots,
             cover: gameData.cover,

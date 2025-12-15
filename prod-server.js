@@ -82,7 +82,7 @@ async function getIgdbAccessToken() {
 
 async function searchIgdbGame(name, accessToken) {
     const query = `
-        fields id, name, first_release_date, platforms.name, genres.name, aggregated_rating, rating, screenshots.url, cover.url, rating_count;
+        fields id, name, first_release_date, platforms.name, genres.name, summary, aggregated_rating, rating, screenshots.url, cover.url, rating_count;
         search "${name.replace(/"/g, '\\"')}";
         limit 1;
     `;
@@ -228,6 +228,7 @@ app.post('/api/admin/request-game', requireAdmin, async (req, res) => {
             year: gameData.first_release_date ? new Date(gameData.first_release_date * 1000).getFullYear() : 0,
             platform: gameData.platforms ? gameData.platforms[0].name : 'Unknown',
             genre: gameData.genres ? gameData.genres[0].name : 'Unknown',
+            synopsis: gameData.summary || '',
             rating: Math.round(gameData.aggregated_rating || gameData.rating || 0),
             cover,
             availableScreenshots: screenshots
@@ -251,6 +252,7 @@ app.post('/api/admin/add-game', requireAdmin, (req, res) => {
     const newGame = {
         ...gameData,
         screenshots: selectedScreenshots,
+        synopsis: gameData.synopsis,
         addedAt: new Date().toISOString()
     };
     // Ensure we only keep what we need, but spreading gameData is fine if it matches schema

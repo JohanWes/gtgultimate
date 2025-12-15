@@ -32,6 +32,7 @@ export function AdminGameEditor({ isOpen, onClose, game, onUpdate, onDelete }: A
     // New state for editing metadata during request
     const [editPlatform, setEditPlatform] = useState('');
     const [editGenre, setEditGenre] = useState('');
+    const [editSynopsis, setEditSynopsis] = useState('');
 
     // Database Mode State
     const [dbSearchQuery, setDbSearchQuery] = useState('');
@@ -60,6 +61,7 @@ export function AdminGameEditor({ isOpen, onClose, game, onUpdate, onDelete }: A
             setSearchQuery('');
             setEditPlatform('');
             setEditGenre('');
+            setEditSynopsis('');
             setDbSearchQuery('');
             setDbSearchResults([]);
             setEditingGameId(null);
@@ -209,6 +211,7 @@ export function AdminGameEditor({ isOpen, onClose, game, onUpdate, onDelete }: A
             // Initialize edit fields
             setEditPlatform(data.platform || 'Unknown');
             setEditGenre(data.genre || 'Unknown');
+            setEditSynopsis(data.synopsis || '');
 
             setRequestStep('review');
             setSelectedScreenshots(data.availableScreenshots.slice(0, 5));
@@ -250,7 +253,8 @@ export function AdminGameEditor({ isOpen, onClose, game, onUpdate, onDelete }: A
                     gameData: {
                         ...foundGame,
                         platform: editPlatform,
-                        genre: editGenre
+                        genre: editGenre,
+                        synopsis: editSynopsis
                     },
                     selectedScreenshots
                 }),
@@ -537,6 +541,15 @@ export function AdminGameEditor({ isOpen, onClose, game, onUpdate, onDelete }: A
                                                         className="w-full bg-black/30 border border-white/10 rounded px-2 py-1 text-sm text-white focus:outline-none focus:border-primary transition-colors"
                                                     />
                                                 </div>
+                                            </div>
+
+                                            <div className="mt-3 space-y-1">
+                                                <label className="text-xs font-medium text-gray-500 uppercase">Synopsis</label>
+                                                <textarea
+                                                    value={editSynopsis}
+                                                    onChange={(e) => setEditSynopsis(e.target.value)}
+                                                    className="w-full bg-black/30 border border-white/10 rounded px-2 py-1 text-sm text-white focus:outline-none focus:border-primary transition-colors h-24 resize-none"
+                                                />
                                             </div>
 
                                             <div className="flex flex-wrap gap-2 mt-3 text-sm text-gray-400">
