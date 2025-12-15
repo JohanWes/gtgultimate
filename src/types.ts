@@ -10,6 +10,7 @@ export interface Game {
     screenshots: string[];
     cover: string | null;
     cropPositions: Array<{ x: number; y: number }>; // Random crop positions for each screenshot
+    synopsis?: string;
 }
 
 export interface BaitGame {

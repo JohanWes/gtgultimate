@@ -241,8 +241,8 @@ export function EndlessGameArea({
             const randomGame = otherGames[Math.floor(Math.random() * otherGames.length)];
             setDoubleTroubleGame(randomGame);
         } else if (type === 'synopsis' && game) {
-            // Look up synopsis from separate data file
-            const synopsis = synopsisData[game.id.toString() as keyof typeof synopsisData];
+            // Look up synopsis from DB first, then separate data file
+            const synopsis = game.synopsis || synopsisData[game.id.toString() as keyof typeof synopsisData];
 
             // Check if synopsis is available - if not, don't consume the lifeline
             if (!synopsis) {
