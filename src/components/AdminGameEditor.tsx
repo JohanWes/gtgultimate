@@ -646,31 +646,69 @@ export function AdminGameEditor({ isOpen, onClose, game, onUpdate, onDelete }: A
                                         </div>
                                     </div>
 
+                                    {/* Selected Screenshots Preview */}
+                                    <div className="mb-8">
+                                        <h4 className="text-sm font-bold text-gray-400 mb-3 uppercase tracking-wider">Selected Order (1-5)</h4>
+                                        <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+                                            {[0, 1, 2, 3, 4].map((index) => {
+                                                const url = selectedScreenshots[index];
+                                                return (
+                                                    <div
+                                                        key={index}
+                                                        onClick={() => url && toggleScreenshot(url)}
+                                                        className={clsx(
+                                                            "aspect-video rounded-lg border-2 relative group overflow-hidden transition-all",
+                                                            url
+                                                                ? "border-green-500 bg-black cursor-pointer hover:border-red-500"
+                                                                : "border-white/10 bg-white/5 border-dashed flex items-center justify-center"
+                                                        )}
+                                                    >
+                                                        {url ? (
+                                                            <>
+                                                                <img src={url} alt={`Selected ${index + 1}`} className="w-full h-full object-cover" />
+                                                                <div className="absolute inset-0 bg-black/0 group-hover:bg-black/40 transition-colors flex items-center justify-center">
+                                                                    <div className="w-10 h-10 rounded-full bg-green-500 group-hover:bg-red-500 flex items-center justify-center shadow-lg text-white font-bold transition-colors">
+                                                                        {index + 1}
+                                                                        <X className="absolute opacity-0 group-hover:opacity-100 transition-opacity" size={20} />
+                                                                    </div>
+                                                                </div>
+                                                            </>
+                                                        ) : (
+                                                            <div className="text-gray-600 font-bold text-lg">#{index + 1}</div>
+                                                        )}
+                                                    </div>
+                                                );
+                                            })}
+                                        </div>
+                                    </div>
+
+                                    {/* Available Screenshots Picker */}
                                     <div>
                                         <div className="flex justify-between items-center mb-3">
-                                            <label className="text-sm font-medium text-gray-300">Select 5 Screenshots</label>
+                                            <label className="text-sm font-medium text-gray-300">Available Screenshots - Click to Add</label>
                                             <span className={clsx("text-sm font-bold", selectedScreenshots.length === 5 ? "text-green-400" : "text-orange-400")}>
                                                 {selectedScreenshots.length} / 5 Selected
                                             </span>
                                         </div>
-                                        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-2">
+                                        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-2 max-h-[40vh] overflow-y-auto pr-2">
                                             {foundGame?.availableScreenshots.map((url: string, idx: number) => {
                                                 const isSelected = selectedScreenshots.includes(url);
+                                                const selectedIndex = selectedScreenshots.indexOf(url);
                                                 return (
                                                     <div
                                                         key={idx}
                                                         onClick={() => toggleScreenshot(url)}
                                                         className={clsx(
                                                             "aspect-video rounded cursor-pointer relative group overflow-hidden border-2 transition-all",
-                                                            isSelected ? "border-green-500 opacity-100" : "border-transparent opacity-60 hover:opacity-100"
+                                                            isSelected
+                                                                ? "border-green-500 opacity-40 grayscale"
+                                                                : "border-transparent opacity-100 hover:border-white/50"
                                                         )}
                                                     >
                                                         <img src={url} alt={`Screenshot ${idx}`} className="w-full h-full object-cover" />
                                                         {isSelected && (
-                                                            <div className="absolute inset-0 bg-green-500/30 flex items-center justify-center backdrop-blur-[1px]">
-                                                                <div className="w-12 h-12 rounded-full bg-green-500 flex items-center justify-center shadow-lg border-2 border-white">
-                                                                    <span className="text-white text-2xl font-bold">{selectedScreenshots.indexOf(url) + 1}</span>
-                                                                </div>
+                                                            <div className="absolute inset-0 flex items-center justify-center">
+                                                                <span className="font-bold text-white text-xl shadow-black drop-shadow-md">#{selectedIndex + 1}</span>
                                                             </div>
                                                         )}
                                                     </div>
