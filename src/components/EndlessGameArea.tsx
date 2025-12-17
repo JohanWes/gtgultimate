@@ -14,6 +14,7 @@ import { Lifelines } from './Lifelines';
 import type { ConsultantOptionsHandle } from '../types';
 import { TopScoresTicker } from './TopScoresTicker';
 import { AdminGameEditor } from './AdminGameEditor';
+import { BonusRound } from './BonusRound'; // Import BonusRound
 import { clsx } from 'clsx';
 import { AlertCircle, X, ArrowRight, Flame } from 'lucide-react';
 import { useSettings } from '../hooks/useSettings';
@@ -29,6 +30,7 @@ interface EndlessGameAreaProps {
     onNextLevel: () => void;
     onUseLifeline: (type: LifelineType) => void;
     onBuyShopItem: (itemId: string, cost?: number) => void;
+    onBonusGuess: (gameId: number) => void; // New Prop
     onRequestHighScore: () => void;
     isHighScoreModalOpen: boolean;
     onMarkShopVisited: () => void;
@@ -46,6 +48,7 @@ export function EndlessGameArea({
     onNextLevel,
     onUseLifeline,
     onBuyShopItem,
+    onBonusGuess,
     onRequestHighScore,
     isHighScoreModalOpen,
     onMarkShopVisited,
@@ -87,7 +90,15 @@ export function EndlessGameArea({
         if (game) {
             setDisplayGameName(game.name);
         }
-    }, [game?.name]);
+        // Safety Reset for UI states when level changes
+        setConsultantOptions(null);
+        setDoubleTroubleGame(null);
+        setCoverImageSrc(null);
+        setShowSynopsis(false);
+        setErrorMessage(null);
+        setShowCoverPeek(false);
+        // We do NOT reset showShop here as it has its own logic to appear at specific intervals
+    }, [game?.name, state.currentLevelIndex]);
 
     // Admin Access Listener
     useEffect(() => {
@@ -400,6 +411,22 @@ export function EndlessGameArea({
             setIsSharing(false);
         }
     };
+
+
+
+
+    // RENDER: Bonus Round
+    if (state.bonusRound?.active && state.bonusRound.games.length > 0) {
+        return (
+            <div className="mx-auto pb-8 px-0 sm:px-4 game-container endless-game transition-all duration-500 max-w-6xl">
+                <BonusRound
+                    games={state.bonusRound.games}
+                    targetId={state.bonusRound.targetId}
+                    onGuess={onBonusGuess}
+                />
+            </div>
+        );
+    }
 
     // Input Area
     return (

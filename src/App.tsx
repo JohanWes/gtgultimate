@@ -186,6 +186,7 @@ function App() {
                 onNextLevel={endlessState.nextLevel}
                 onUseLifeline={endlessState.useLifeline}
                 onBuyShopItem={endlessState.buyShopItem}
+                onBonusGuess={endlessState.submitBonusGuess}
                 onRequestHighScore={handleRequestHighScore}
                 isHighScoreModalOpen={showHighScoreModal}
                 onMarkShopVisited={endlessState.markShopVisited}

@@ -82,6 +82,12 @@ export interface EndlessState {
     hotStreakCount: number; // Number of consecutive "Close to Perfect" guesses (1st or 2nd image)
     isHotStreakActive: boolean; // Whether the hot streak effect is currently active (>= 3 hotStreakCount)
     lastShopStreak: number; // The streak count at which the shop was last visited
+    bonusRound?: {
+        active: boolean;
+        games: Game[];
+        targetId: number;
+    };
+    hasBonusRoundOccurredInCurrentBlock: boolean; // Tracks if bonus triggered in current 5-level interval
 }
 
 export interface ShopItem {
