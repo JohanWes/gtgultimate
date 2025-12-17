@@ -35,18 +35,19 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         if (!query) {
             // Return top 50 if no query
             const games = await db.collection('games')
-                .find({})
+                .find({}, { projection: { id: 1, name: 1, year: 1, platform: 1, genre: 1, rating: 1 } })
                 .limit(50)
                 .toArray();
             return res.json(games);
         }
 
-        // Use Regex for simple search 
+        // Use Regex for simple search
         // Note: For large DBs, text index is better, but regex is fine for ~2600 items
         const games = await db.collection('games')
-            .find({
-                name: { $regex: query, $options: 'i' }
-            })
+            .find(
+                { name: { $regex: query, $options: 'i' } },
+                { projection: { id: 1, name: 1, year: 1, platform: 1, genre: 1, rating: 1 } }
+            )
             .limit(50)
             .toArray();
 

@@ -3,7 +3,6 @@ import clientPromise from '../_lib/mongodb.js';
 import crypto from 'crypto';
 import type { VercelRequest, VercelResponse } from '@vercel/node';
 import axios from 'axios';
-import Fuse from 'fuse.js';
 
 // --- IGDB HELPER FUNCTIONS ---
 // Note: In a serverless environment, local variables like token check might not persist between cold starts,
@@ -158,21 +157,19 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
             if (!skipCheck) {
                 const client = await clientPromise;
                 const db = client.db('guessthegame');
-                const allGames = await db.collection('games').find({}, { projection: { name: 1 } }).toArray();
 
-                const fuse = new Fuse(allGames, {
-                    keys: ['name'],
-                    threshold: 0.3,
-                    includeScore: true
-                });
+                // Use MongoDB regex for case-insensitive exact match instead of loading all games into memory
+                const escapedName = gameData.name.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+                const existingGame = await db.collection('games').findOne(
+                    { name: { $regex: `^${escapedName}$`, $options: 'i' } },
+                    { projection: { name: 1 } }
+                );
 
-                const results = fuse.search(gameData.name);
-                if (results.length > 0) {
-                    const similarGames = results.map(r => r.item.name).slice(0, 5);
+                if (existingGame) {
                     return res.status(409).json({
-                        error: 'Potential duplicates found',
-                        similarGames: similarGames,
-                        gameData: { id: gameData.id, name: gameData.name } // Send back context
+                        error: 'Potential duplicate found',
+                        similarGames: [existingGame.name],
+                        gameData: { id: gameData.id, name: gameData.name }
                     });
                 }
             }
