@@ -45,7 +45,9 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
         const updateFields: any = { name: name.trim() };
         if (req.body.platform) updateFields.platform = req.body.platform.trim();
+        if (req.body.platform) updateFields.platform = req.body.platform.trim();
         if (req.body.genre) updateFields.genre = req.body.genre.trim();
+        if (req.body.redactedRegions) updateFields.redactedRegions = req.body.redactedRegions;
 
         const result = await db.collection('games').updateOne(
             { id: id },

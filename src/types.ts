@@ -11,6 +11,7 @@ export interface Game {
     cover: string | null;
     cropPositions: Array<{ x: number; y: number }>; // Random crop positions for each screenshot
     synopsis?: string;
+    redactedRegions?: Record<number, Array<{ x: number; y: number; width: number; height: number }>>;
 }
 
 export interface BaitGame {

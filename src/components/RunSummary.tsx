@@ -230,6 +230,47 @@ export function RunSummary({ runId, allGames, onPlay }: RunSummaryProps) {
                                                                 <div className="absolute bottom-0 right-1 text-[10px] font-bold text-white drop-shadow-md">
                                                                     {screenIdx + 1}
                                                                 </div>
+                                                                {/* Redaction Overlay */}
+                                                                {game?.redactedRegions?.[screenIdx] && game.redactedRegions[screenIdx].map((region, rIdx) => {
+                                                                    // Calculate styles (inline logic similar to ScreenshotViewer)
+                                                                    // Note: RunSummary uses 'zoom' which is roughly equivalent to getZoomScale returns
+                                                                    // If zoom <= 100, purely % based.
+                                                                    // If zoom > 100, project coordinates.
+
+                                                                    let style: React.CSSProperties = {};
+
+                                                                    if (zoom <= 100) {
+                                                                        style = {
+                                                                            left: `${region.x}%`,
+                                                                            top: `${region.y}%`,
+                                                                            width: `${region.width}%`,
+                                                                            height: `${region.height}%`
+                                                                        };
+                                                                    } else {
+                                                                        const zoomFactor = zoom / 100;
+                                                                        const visiblePortion = 100 / zoomFactor;
+                                                                        const centerX = position.x; // Use the used position
+                                                                        const centerY = position.y;
+
+                                                                        const viewLeft = centerX - (visiblePortion / 2);
+                                                                        const viewTop = centerY - (visiblePortion / 2);
+
+                                                                        style = {
+                                                                            left: `${(region.x - viewLeft) * zoomFactor}%`,
+                                                                            top: `${(region.y - viewTop) * zoomFactor}%`,
+                                                                            width: `${region.width * zoomFactor}%`,
+                                                                            height: `${region.height * zoomFactor}%`
+                                                                        };
+                                                                    }
+
+                                                                    return (
+                                                                        <div
+                                                                            key={`r-${rIdx}`}
+                                                                            className="absolute bg-black pointer-events-none"
+                                                                            style={style}
+                                                                        />
+                                                                    );
+                                                                })}
                                                             </div>
                                                         );
                                                     })

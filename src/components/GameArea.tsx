@@ -177,6 +177,7 @@ export function GameArea({ game, allGames, guesses, status, allProgress, onGuess
                             cropPositions={game?.cropPositions || []}
                             miniaturesInPicture={settings.miniaturesInPicture}
                             isLoading={isLoading}
+                            redactedRegions={game?.redactedRegions}
                         />
                         {status === 'playing' && !isLoading && (
                             <button

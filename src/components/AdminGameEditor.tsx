@@ -5,6 +5,8 @@ import type { Game } from '../types';
 import { useSettings } from '../hooks/useSettings';
 import clsx from 'clsx';
 
+import { RedactionModal, type RedactionRegion } from './RedactionModal';
+
 interface AdminGameEditorProps {
     isOpen: boolean;
     onClose: () => void;
@@ -34,6 +36,9 @@ export function AdminGameEditor({ isOpen, onClose, game, onUpdate, onDelete }: A
     const [editPlatform, setEditPlatform] = useState('');
     const [editGenre, setEditGenre] = useState('');
     const [editSynopsis, setEditSynopsis] = useState('');
+    const [redactedRegions, setRedactedRegions] = useState<Record<number, RedactionRegion[]>>({});
+
+
 
     // Database Mode State
     const [dbSearchQuery, setDbSearchQuery] = useState('');
@@ -43,6 +48,7 @@ export function AdminGameEditor({ isOpen, onClose, game, onUpdate, onDelete }: A
     // Edit Mode Extended State
     const [platform, setPlatform] = useState('');
     const [genre, setGenre] = useState('');
+    const [showRedactionModal, setShowRedactionModal] = useState(false);
 
     // Shared State
     const [isLoading, setIsLoading] = useState(false);
@@ -63,15 +69,19 @@ export function AdminGameEditor({ isOpen, onClose, game, onUpdate, onDelete }: A
             setSearchQuery('');
             setEditPlatform('');
             setEditGenre('');
+            setEditGenre('');
             setEditSynopsis('');
+            setRedactedRegions({});
             setDbSearchQuery('');
             setDbSearchResults([]);
             setEditingGameId(null);
+            setShowRedactionModal(false);
 
             if (game) {
                 setName(game.name);
                 setPlatform(game.platform);
                 setGenre(game.genre);
+                if (game.redactedRegions) setRedactedRegions(game.redactedRegions);
             }
         }
     }, [isOpen, game]);
@@ -84,12 +94,14 @@ export function AdminGameEditor({ isOpen, onClose, game, onUpdate, onDelete }: A
                 setName(gameToEdit.name);
                 setPlatform(gameToEdit.platform);
                 setGenre(gameToEdit.genre);
+                setRedactedRegions(gameToEdit.redactedRegions || {});
             }
         } else if (game && mode === 'edit' && !editingGameId) {
             // Fallback to prop game if not editing a specific DB game
             setName(game.name);
             setPlatform(game.platform);
             setGenre(game.genre);
+            setRedactedRegions(game.redactedRegions || {});
         }
     }, [mode, editingGameId, dbSearchResults, game]);
 
@@ -111,7 +123,8 @@ export function AdminGameEditor({ isOpen, onClose, game, onUpdate, onDelete }: A
                     id: editingGameId || game?.id,
                     name: name,
                     platform: platform,
-                    genre: genre
+                    genre: genre,
+                    redactedRegions: redactedRegions
                 }),
             });
 
@@ -259,6 +272,9 @@ export function AdminGameEditor({ isOpen, onClose, game, onUpdate, onDelete }: A
             setEditGenre(data.genre || 'Unknown');
             setEditSynopsis(data.synopsis || '');
 
+            // Reset redactions for new game
+            setRedactedRegions({});
+
             setRequestStep('review');
             setSelectedScreenshots(data.availableScreenshots.slice(0, 5));
 
@@ -301,7 +317,8 @@ export function AdminGameEditor({ isOpen, onClose, game, onUpdate, onDelete }: A
                         ...foundGame,
                         platform: editPlatform,
                         genre: editGenre,
-                        synopsis: editSynopsis
+                        synopsis: editSynopsis,
+                        redactedRegions: redactedRegions
                     },
                     selectedScreenshots
                 }),
@@ -440,6 +457,19 @@ export function AdminGameEditor({ isOpen, onClose, game, onUpdate, onDelete }: A
                                             onChange={(e) => setGenre(e.target.value)}
                                             className="w-full bg-black/50 border border-white/10 rounded-lg px-4 py-3 text-white focus:outline-none focus:border-primary transition-colors"
                                         />
+                                    </div>
+
+                                    <div>
+                                        <button
+                                            type="button"
+                                            onClick={() => setShowRedactionModal(true)}
+                                            className="w-full py-3 bg-white/10 text-white font-bold rounded-lg hover:bg-white/20 border border-white/10 flex items-center justify-center gap-2"
+                                        >
+                                            <ImageIcon size={20} /> Open Redaction Tool
+                                        </button>
+                                        <p className="text-xs text-gray-500 mt-2 text-center">
+                                            Edit {Object.keys(redactedRegions).length > 0 ? 'existing' : ''} redactions on current screenshots.
+                                        </p>
                                     </div>
 
                                     <div className="flex justify-between items-center pt-2">
@@ -646,6 +676,18 @@ export function AdminGameEditor({ isOpen, onClose, game, onUpdate, onDelete }: A
                                         </div>
                                     </div>
 
+                                    <div className="mt-4">
+                                        <button
+                                            type="button"
+                                            onClick={() => setShowRedactionModal(true)}
+                                            disabled={selectedScreenshots.length !== 5}
+                                            className="w-full py-2 bg-white/10 text-white font-bold rounded-lg hover:bg-white/20 border border-white/10 flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                                        >
+                                            <ImageIcon size={18} /> Configure Redactions
+                                        </button>
+                                        {selectedScreenshots.length !== 5 && <p className="text-xs text-red-500 mt-1">Select 5 screenshots first.</p>}
+                                    </div>
+
                                     {/* Selected Screenshots Preview */}
                                     <div className="mb-8">
                                         <h4 className="text-sm font-bold text-gray-400 mb-3 uppercase tracking-wider">Selected Order (1-5)</h4>
@@ -776,6 +818,19 @@ export function AdminGameEditor({ isOpen, onClose, game, onUpdate, onDelete }: A
                     </div>
                 )}
             </div>
+
+            {showRedactionModal && (
+                <RedactionModal
+                    isOpen={showRedactionModal}
+                    onClose={() => setShowRedactionModal(false)}
+                    screenshots={mode === 'edit'
+                        ? (dbSearchResults.find(g => g.id === editingGameId)?.screenshots || game?.screenshots || [])
+                        : selectedScreenshots
+                    }
+                    initialRedactions={redactedRegions}
+                    onSave={(newRedactions) => setRedactedRegions(newRedactions)}
+                />
+            )}
         </div>,
         document.body
     );

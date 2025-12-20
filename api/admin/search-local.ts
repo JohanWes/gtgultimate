@@ -35,7 +35,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         if (!query) {
             // Return top 50 if no query
             const games = await db.collection('games')
-                .find({}, { projection: { id: 1, name: 1, year: 1, platform: 1, genre: 1, rating: 1 } })
+                .find({}, { projection: { id: 1, name: 1, year: 1, platform: 1, genre: 1, rating: 1, screenshots: 1, redactedRegions: 1 } })
                 .limit(50)
                 .toArray();
             return res.json(games);
@@ -46,7 +46,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         const games = await db.collection('games')
             .find(
                 { name: { $regex: query, $options: 'i' } },
-                { projection: { id: 1, name: 1, year: 1, platform: 1, genre: 1, rating: 1 } }
+                { projection: { id: 1, name: 1, year: 1, platform: 1, genre: 1, rating: 1, screenshots: 1, redactedRegions: 1 } }
             )
             .limit(50)
             .toArray();

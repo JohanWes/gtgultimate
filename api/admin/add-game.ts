@@ -70,6 +70,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
             screenshots: selectedScreenshots,
             cover: gameData.cover,
             cropPositions: cropPositions,
+            redactedRegions: gameData.redactedRegions,
             createdAt: new Date()
         };
 

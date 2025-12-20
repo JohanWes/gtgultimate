@@ -466,6 +466,7 @@ export function EndlessGameArea({
                             zoomOutActive={state.zoomOutActive}
                             miniaturesInPicture={settings.miniaturesInPicture}
                             isLoading={isLoading}
+                            redactedRegions={game?.redactedRegions}
                         />
 
                         {state.status === 'playing' && !isLoading && (

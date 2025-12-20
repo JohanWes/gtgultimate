@@ -13,13 +13,14 @@ interface ScreenshotViewerProps {
     status: 'playing' | 'won' | 'lost';
     cropPositions: Array<{ x: number; y: number }>;
     doubleTroubleGame?: Game;
-    currentLevelIndex?: number; // For difficulty scaling
-    zoomOutActive?: boolean; // Whether Zoom Out lifeline is active
+    currentLevelIndex?: number;
+    zoomOutActive?: boolean;
     miniaturesInPicture?: boolean;
     isLoading?: boolean;
+    redactedRegions?: Record<number, Array<{ x: number; y: number; width: number; height: number }>>;
 }
 
-export function ScreenshotViewer({ screenshots, revealedCount, status, cropPositions, doubleTroubleGame, currentLevelIndex = 0, zoomOutActive = false, miniaturesInPicture = false, isLoading = false }: ScreenshotViewerProps) {
+export function ScreenshotViewer({ screenshots, revealedCount, status, cropPositions, doubleTroubleGame, currentLevelIndex = 0, zoomOutActive = false, miniaturesInPicture = false, isLoading = false, redactedRegions }: ScreenshotViewerProps) {
     const [selectedIndex, setSelectedIndex] = useState(0);
     const [showCropped, setShowCropped] = useState(false);
     const { settings, updateSetting, hasSeenLockTip, markLockTipSeen } = useSettings();
@@ -99,7 +100,6 @@ export function ScreenshotViewer({ screenshots, revealedCount, status, cropPosit
     }, [revealedCount]);
 
     // Reset toggle when new game starts
-
     useEffect(() => {
         if (status === 'playing') {
             setShowCropped(false);
@@ -120,7 +120,38 @@ export function ScreenshotViewer({ screenshots, revealedCount, status, cropPosit
         return () => clearTimeout(timer);
     }, [miniaturesInPicture, hasSeenLockTip, isOverlayLocked]);
 
+    // Helper to calculate redaction styles 
+    const getRedactionStyle = (region: { x: number, y: number, width: number, height: number }, index: number, positions: Array<{ x: number, y: number }>) => {
+        const zoom = getZoomScale(index);
 
+        // If zoom is <= 100, we simply render percentage based on full image
+        if (zoom <= 100) {
+            return {
+                left: `${region.x}%`,
+                top: `${region.y}%`,
+                width: `${region.width}%`,
+                height: `${region.height}%`
+            };
+        }
+
+        // If zoomed, we need to project coordinates
+        // Logic must match Proxy cropping logic
+        const zoomFactor = zoom / 100;
+        const visiblePortion = 100 / zoomFactor;
+
+        const centerX = positions[index]?.x || 50;
+        const centerY = positions[index]?.y || 50;
+
+        const viewLeft = centerX - (visiblePortion / 2);
+        const viewTop = centerY - (visiblePortion / 2);
+
+        return {
+            left: `${(region.x - viewLeft) * zoomFactor}%`,
+            top: `${(region.y - viewTop) * zoomFactor}%`,
+            width: `${region.width * zoomFactor}%`,
+            height: `${region.height * zoomFactor}%`
+        };
+    };
 
     return (
         <div className="space-y-3">
@@ -141,17 +172,28 @@ export function ScreenshotViewer({ screenshots, revealedCount, status, cropPosit
                         <span className="text-white font-bold tracking-wider">Loading game data...</span>
                     </div>
                 ) : (
-                    <div
-                        role="img"
-                        aria-label={`Screenshot ${selectedIndex + 1}`}
-                        style={{
-                            backgroundImage: obfuscatedScreenshots[selectedIndex] ? `url(${obfuscatedScreenshots[selectedIndex]})` : undefined,
-                            backgroundPosition: getZoomScale(selectedIndex) > 100 ? 'center' : `${cropPositions[selectedIndex]?.x || 50}% ${cropPositions[selectedIndex]?.y || 50}%`,
-                            backgroundSize: getZoomScale(selectedIndex) > 100 ? 'cover' : `${getZoomScale(selectedIndex)}%`,
-                            backgroundRepeat: 'no-repeat'
-                        }}
-                        className="absolute inset-0 w-full h-full transition-opacity duration-300"
-                    />
+                    <>
+                        <div
+                            role="img"
+                            aria-label={`Screenshot ${selectedIndex + 1}`}
+                            style={{
+                                backgroundImage: obfuscatedScreenshots[selectedIndex] ? `url(${obfuscatedScreenshots[selectedIndex]})` : undefined,
+                                backgroundPosition: getZoomScale(selectedIndex) > 100 ? 'center' : `${cropPositions[selectedIndex]?.x || 50}% ${cropPositions[selectedIndex]?.y || 50}%`,
+                                backgroundSize: getZoomScale(selectedIndex) > 100 ? 'cover' : `${getZoomScale(selectedIndex)}%`,
+                                backgroundRepeat: 'no-repeat'
+                            }}
+                            className="absolute inset-0 w-full h-full transition-opacity duration-300"
+                        />
+
+                        {/* Redaction Overlay - Only for main image */}
+                        {redactedRegions && redactedRegions[selectedIndex] && redactedRegions[selectedIndex].map((region, idx) => (
+                            <div
+                                key={`redaction-${idx}`}
+                                className="absolute bg-black pointer-events-none z-10"
+                                style={getRedactionStyle(region, selectedIndex, cropPositions)}
+                            />
+                        ))}
+                    </>
                 )}
 
                 {/* Double Trouble Overlay */}
@@ -225,7 +267,7 @@ export function ScreenshotViewer({ screenshots, revealedCount, status, cropPosit
                                     {isLoading ? (
                                         <div className="w-full h-full bg-white/5 animate-pulse" />
                                     ) : isRevealed ? (
-                                        <div className="relative w-full h-full">
+                                        <div className="relative w-full h-full text-left">
                                             <div
                                                 style={{
                                                     backgroundImage: blobSrc ? `url(${blobSrc})` : undefined,
@@ -235,6 +277,15 @@ export function ScreenshotViewer({ screenshots, revealedCount, status, cropPosit
                                                 }}
                                                 className="absolute inset-0 w-full h-full"
                                             />
+                                            {/* Redaction on thumbnails */}
+                                            {redactedRegions && redactedRegions[idx] && redactedRegions[idx].map((region, rIdx) => (
+                                                <div
+                                                    key={`thumb-redaction-${rIdx}`}
+                                                    className="absolute bg-black pointer-events-none"
+                                                    style={getRedactionStyle(region, idx, cropPositions)}
+                                                />
+                                            ))}
+
                                             {doubleTroubleGame && obfuscatedDoubleTrouble[idx] && (
                                                 <div
                                                     style={{
@@ -292,7 +343,7 @@ export function ScreenshotViewer({ screenshots, revealedCount, status, cropPosit
                                     {isLoading ? (
                                         <div className="w-full h-full bg-white/5 animate-pulse" />
                                     ) : isRevealed ? (
-                                        <div className="relative w-full h-full overflow-hidden">
+                                        <div className="relative w-full h-full overflow-hidden text-left">
                                             {/* Thumbnail Image */}
                                             <div
                                                 style={{
@@ -303,6 +354,14 @@ export function ScreenshotViewer({ screenshots, revealedCount, status, cropPosit
                                                 }}
                                                 className="absolute inset-0 w-full h-full"
                                             />
+                                            {/* Redaction on thumbnails */}
+                                            {redactedRegions && redactedRegions[idx] && redactedRegions[idx].map((region, rIdx) => (
+                                                <div
+                                                    key={`thumb-redaction-${rIdx}`}
+                                                    className="absolute bg-black pointer-events-none"
+                                                    style={getRedactionStyle(region, idx, cropPositions)}
+                                                />
+                                            ))}
 
                                             {/* Double Trouble Thumbnail Overlay */}
                                             {doubleTroubleGame && obfuscatedDoubleTrouble[idx] && (
