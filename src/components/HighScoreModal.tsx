@@ -87,21 +87,21 @@ export const HighScoreModal: React.FC<HighScoreModalProps> = ({ score, onPlayAga
     };
 
     return (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm animate-in fade-in duration-300">
-            <div className="bg-gray-900 border border-gray-700 rounded-2xl shadow-2xl max-w-md w-full overflow-hidden flex flex-col max-h-[90vh] relative">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 animate-in fade-in duration-300">
+            <div className="bg-surface/85 supports-[backdrop-filter]:bg-surface/55 backdrop-blur-xl border border-white/10 rounded-2xl shadow-2xl max-w-md w-full overflow-hidden flex flex-col max-h-[90vh] relative">
                 {/* Close Button */}
                 <button
                     onClick={onClose}
-                    className="absolute top-4 right-4 text-gray-400 hover:text-white transition-colors z-10 p-1 hover:bg-white/10 rounded-full"
+                    className="absolute top-4 right-4 text-muted hover:text-text transition-colors z-10 p-1 hover:bg-white/10 rounded-full"
                 >
                     <X size={24} />
                 </button>
 
                 {/* Header */}
-                <div className="p-6 bg-gradient-to-br from-purple-900/50 to-blue-900/50 border-b border-white/10 text-center">
-                    <h2 className="text-3xl font-black text-white mb-2 tracking-tight">GAME OVER</h2>
+                <div className="p-6 bg-gradient-to-br from-purple-900/40 to-blue-900/30 border-b border-white/10 text-center">
+                    <h2 className="text-3xl font-black text-white mb-2 tracking-tight font-display">GAME OVER</h2>
                     <div className="flex flex-col items-center justify-center gap-1">
-                        <span className="text-gray-400 text-sm uppercase tracking-widest font-bold">Final Score</span>
+                        <span className="text-muted text-sm uppercase tracking-widest font-bold">Final Score</span>
                         <span className="text-5xl font-black text-transparent bg-clip-text bg-gradient-to-r from-yellow-400 to-orange-500 drop-shadow-lg">
                             {score}
                         </span>
@@ -112,7 +112,7 @@ export const HighScoreModal: React.FC<HighScoreModalProps> = ({ score, onPlayAga
                 <div className="p-6 flex-1 overflow-y-auto custom-scrollbar">
                     {!submitted ? (
                         <form onSubmit={handleSubmit} className="mb-8">
-                            <label className="block text-sm font-bold text-gray-400 mb-2 uppercase tracking-wider">
+                            <label className="block text-sm font-bold text-muted mb-2 uppercase tracking-wider">
                                 Enter your name
                             </label>
                             <div className="flex gap-2">
@@ -122,13 +122,13 @@ export const HighScoreModal: React.FC<HighScoreModalProps> = ({ score, onPlayAga
                                     onChange={(e) => setName(e.target.value)}
                                     maxLength={15}
                                     placeholder="Player Name"
-                                    className="flex-1 bg-gray-800 border border-gray-700 rounded-lg px-4 py-3 text-white font-bold focus:outline-none focus:ring-2 focus:ring-blue-500 placeholder-gray-600"
+                                    className="flex-1 bg-surface/60 border border-white/10 rounded-lg px-4 py-3 text-text font-bold focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary/40 placeholder:text-muted/60"
                                     autoFocus={!isMobile}
                                 />
                                 <button
                                     type="submit"
                                     disabled={!name.trim() || submitting}
-                                    className="bg-blue-600 hover:bg-blue-500 disabled:bg-gray-700 disabled:text-gray-500 text-white px-4 py-2 rounded-lg font-bold transition-colors flex items-center justify-center"
+                                    className="bg-primary hover:brightness-110 disabled:bg-white/10 disabled:text-muted text-onPrimary px-4 py-2 rounded-lg font-bold transition-colors flex items-center justify-center"
                                 >
                                     {submitting ? (
                                         <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
@@ -157,7 +157,7 @@ export const HighScoreModal: React.FC<HighScoreModalProps> = ({ score, onPlayAga
                                 <div className="w-8 h-8 border-4 border-blue-500/30 border-t-blue-500 rounded-full animate-spin" />
                             </div>
                         ) : highScores.length === 0 ? (
-                            <div className="text-center py-8 text-gray-500 italic">
+                            <div className="text-center py-8 text-muted italic">
                                 No scores yet. Be the first!
                             </div>
                         ) : (
@@ -167,7 +167,7 @@ export const HighScoreModal: React.FC<HighScoreModalProps> = ({ score, onPlayAga
                                         key={idx}
                                         className={clsx(
                                             "flex items-center justify-between p-3 rounded-lg border",
-                                            s.name === name && submitted ? "bg-blue-500/20 border-blue-500/50" : "bg-gray-800/50 border-white/5"
+                                            s.name === name && submitted ? "bg-primary/20 border-primary/40" : "bg-surface/45 border-white/10"
                                         )}
                                     >
                                         <div className="flex items-center gap-3">
@@ -181,7 +181,7 @@ export const HighScoreModal: React.FC<HighScoreModalProps> = ({ score, onPlayAga
                                             </span>
                                             <div className="flex flex-col">
                                                 <div className="flex items-center gap-2">
-                                                    <span className="font-bold text-gray-200 truncate max-w-[120px]">
+                                                    <span className="font-bold text-text truncate max-w-[120px] opacity-90">
                                                         {s.name}
                                                     </span>
                                                     {s.runId && (
@@ -189,7 +189,7 @@ export const HighScoreModal: React.FC<HighScoreModalProps> = ({ score, onPlayAga
                                                             href={`/share/${s.runId}`}
                                                             target="_blank"
                                                             rel="noopener noreferrer"
-                                                            className="text-white/40 hover:text-blue-400 transition-colors"
+                                                            className="text-white/40 hover:text-primary transition-colors"
                                                             title="Watch Run"
                                                         >
                                                             <Play size={12} fill="currentColor" />
@@ -209,7 +209,7 @@ export const HighScoreModal: React.FC<HighScoreModalProps> = ({ score, onPlayAga
                 </div>
 
                 {/* Footer */}
-                <div className="p-4 bg-gray-800/80 border-t border-white/5 backdrop-blur-sm">
+                <div className="p-4 bg-transparent border-t border-white/10">
                     <button
                         onClick={onPlayAgain}
                         className="w-full bg-white text-black hover:bg-gray-200 py-3 rounded-xl font-black text-lg uppercase tracking-wide transition-transform hover:scale-[1.02] active:scale-[0.98] flex items-center justify-center gap-2"
@@ -222,4 +222,3 @@ export const HighScoreModal: React.FC<HighScoreModalProps> = ({ score, onPlayAga
         </div>
     );
 };
-

@@ -8,20 +8,23 @@ export default {
     theme: {
         extend: {
             colors: {
-                background: 'var(--background)',
-                surface: 'var(--surface)',
-                primary: 'var(--primary)',
-                secondary: 'var(--secondary)',
-                accent: 'var(--accent)',
-                success: 'var(--success)',
-                warning: 'var(--warning)',
-                error: 'var(--error)',
-                text: 'var(--text)',
-                muted: 'var(--muted)',
+                background: 'rgb(var(--background) / <alpha-value>)',
+                surface: 'rgb(var(--surface) / <alpha-value>)',
+                primary: 'rgb(var(--primary) / <alpha-value>)',
+                secondary: 'rgb(var(--secondary) / <alpha-value>)',
+                accent: 'rgb(var(--accent) / <alpha-value>)',
+                success: 'rgb(var(--success) / <alpha-value>)',
+                warning: 'rgb(var(--warning) / <alpha-value>)',
+                error: 'rgb(var(--error) / <alpha-value>)',
+                text: 'rgb(var(--text) / <alpha-value>)',
+                muted: 'rgb(var(--muted) / <alpha-value>)',
+                onPrimary: 'rgb(var(--on-primary) / <alpha-value>)',
+                onAccent: 'rgb(var(--on-accent) / <alpha-value>)',
             },
             fontFamily: {
-                sans: ['Inter', 'sans-serif'],
-                mono: ['Roboto Mono', 'monospace'],
+                sans: ['Atkinson Hyperlegible', 'ui-sans-serif', 'system-ui', 'sans-serif'],
+                display: ['Oxanium', 'Atkinson Hyperlegible', 'ui-sans-serif', 'system-ui', 'sans-serif'],
+                mono: ['Fragment Mono', 'ui-monospace', 'SFMono-Regular', 'monospace'],
             },
             keyframes: {
                 'lifeline-shake': {

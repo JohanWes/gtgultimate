@@ -2,6 +2,7 @@ import { XCircle, Circle, Trophy } from 'lucide-react';
 import { clsx } from 'clsx';
 import gtgLogo from '../assets/gtgultimate.jpg';
 import retroLogo from '../assets/logo-retro.png';
+import midnightBlackLogo from '../assets/midnightblack.jpg';
 import type { LevelProgress, GameMode } from '../types';
 import { useSettings } from '../hooks/useSettings';
 
@@ -18,7 +19,12 @@ interface SidebarProps {
 
 export function Sidebar({ totalLevels, currentLevel, progress, onSelectLevel, isOpen, onClose, currentMode, onModeSwitch }: SidebarProps) {
     const { settings } = useSettings();
-    const logoSrc = settings.theme === 'retro' ? retroLogo : gtgLogo;
+    const logoSrc =
+        settings.theme === 'retro'
+            ? retroLogo
+            : settings.theme === 'midnight-black'
+                ? midnightBlackLogo
+                : gtgLogo;
 
     const levels = Array.from({ length: totalLevels }, (_, i) => i + 1);
 
@@ -51,7 +57,7 @@ export function Sidebar({ totalLevels, currentLevel, progress, onSelectLevel, is
                             className={clsx(
                                 "flex-1 py-1.5 text-xs font-bold rounded-md transition-all",
                                 currentMode === 'standard'
-                                    ? "bg-primary text-white shadow-sm"
+                                    ? "bg-primary text-onPrimary shadow-sm"
                                     : "text-muted hover:text-white hover:bg-white/5"
                             )}
                         >
@@ -62,7 +68,7 @@ export function Sidebar({ totalLevels, currentLevel, progress, onSelectLevel, is
                             className={clsx(
                                 "flex-1 py-1.5 text-xs font-bold rounded-md transition-all",
                                 currentMode === 'endless'
-                                    ? "bg-orange-600 text-white shadow-sm"
+                                    ? "bg-accent text-onAccent shadow-sm"
                                     : "text-muted hover:text-white hover:bg-white/5"
                             )}
                         >
@@ -77,7 +83,7 @@ export function Sidebar({ totalLevels, currentLevel, progress, onSelectLevel, is
                                 <span>{completedCount} / {totalLevels} Completed</span>
                             </>
                         ) : (
-                            <span className="font-bold uppercase tracking-wider text-orange-400">Lifelines</span>
+                            <span className="font-bold uppercase tracking-wider text-accent">Lifelines</span>
                         )}
                     </div>
                 </div>

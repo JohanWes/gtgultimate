@@ -54,7 +54,7 @@ export function Layout({ children, gameState, currentMode, onModeSwitch, endless
                     >
                         <Menu size={24} />
                     </button>
-                    <span className="font-bold text-lg">Level {gameState.currentLevel}</span>
+                    <span className="font-bold text-lg font-display">Level {gameState.currentLevel}</span>
                     <div className="flex items-center gap-1">
                         {showStatsButton && (
                             <button
@@ -78,7 +78,7 @@ export function Layout({ children, gameState, currentMode, onModeSwitch, endless
                     {showStatsButton && (
                         <button
                             onClick={() => onStatsOpenChange?.(true)}
-                            className="p-2 bg-surface/50 hover:bg-surface border border-white/10 rounded-lg transition-all hover:scale-105 backdrop-blur-sm shadow-lg text-gray-400 hover:text-white"
+                            className="p-2 bg-surface/50 hover:bg-surface border border-white/10 rounded-lg transition-all hover:scale-105 backdrop-blur-sm shadow-lg text-muted hover:text-text"
                             title="Statistics"
                         >
                             <BarChart2 size={20} />
@@ -86,7 +86,7 @@ export function Layout({ children, gameState, currentMode, onModeSwitch, endless
                     )}
                     <button
                         onClick={() => setIsSettingsOpen(true)}
-                        className="p-2 bg-surface/50 hover:bg-surface border border-white/10 rounded-lg transition-all hover:scale-105 backdrop-blur-sm shadow-lg text-gray-400 hover:text-white"
+                        className="p-2 bg-surface/50 hover:bg-surface border border-white/10 rounded-lg transition-all hover:scale-105 backdrop-blur-sm shadow-lg text-muted hover:text-text"
                         title="Settings"
                     >
                         <Settings size={20} />

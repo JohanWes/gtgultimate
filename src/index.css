@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Roboto+Mono:wght@400;500;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:wght@400;700&family=Fragment+Mono&family=Oxanium:wght@500;600;700&display=swap');
 
 @tailwind base;
 @tailwind components;
@@ -6,72 +6,122 @@
 
 @layer base {
   :root {
+    --font-body: "Atkinson Hyperlegible";
+    --font-display: "Oxanium";
+    --font-mono: "Fragment Mono";
+
     /* Default Theme (Slate-based) */
-    --background: #0f172a;
+    --background: 15 23 42;
     /* Slate 900 */
-    --surface: #1e293b;
+    --surface: 30 41 59;
     /* Slate 800 */
-    --primary: #3b82f6;
+    --primary: 59 130 246;
     /* Blue 500 */
-    --secondary: #64748b;
+    --secondary: 100 116 139;
     /* Slate 500 */
-    --accent: #64748b;
-    /* Slate 500 */
-    --success: #22c55e;
+    --accent: 249 115 22;
+    /* Orange 500 */
+    --success: 34 197 94;
     /* Green 500 */
-    --warning: #fbbf24;
+    --warning: 251 191 36;
     /* Amber 400 */
-    --error: #ef4444;
+    --error: 239 68 68;
     /* Red 500 */
-    --text: #f8fafc;
+    --text: 248 250 252;
     /* Slate 50 */
-    --muted: #94a3b8;
+    --muted: 148 163 184;
     /* Slate 400 */
+    --on-primary: 255 255 255;
+    --on-accent: 11 18 32;
   }
 
   [data-theme='retro'] {
     /* Retro Theme (Neon/Cyberpunk) */
-    --background: #101010;
+    --background: 16 16 16;
     /* Deep black/gray */
-    --surface: #1a1a1a;
+    --surface: 26 26 26;
     /* Dark gray */
-    --primary: #39ff14;
+    --primary: 57 255 20;
     /* Neon Green */
-    --secondary: #ff00ff;
+    --secondary: 255 0 255;
     /* Neon Pink */
-    --accent: #ff3333;
-    /* Bright Red */
-    --success: #39ff14;
-    /* Neon Green */
-    --warning: #fe019a;
+    --accent: 254 1 154;
     /* Hot Pink */
-    --error: #ff3333;
+    --success: 57 255 20;
+    /* Neon Green */
+    --warning: 254 1 154;
+    /* Hot Pink */
+    --error: 255 51 51;
     /* Bright Red */
-    --text: #ffffff;
-    --muted: #aaffaa;
+    --text: 255 255 255;
+    --muted: 170 255 170;
     /* Light neon green */
+    --on-primary: 16 16 16;
+    --on-accent: 16 16 16;
+  }
+
+  [data-theme='midnight-black'] {
+    /* Midnight Black (Inky / high-contrast / gritty) */
+    --background: 2 4 8;
+    --surface: 10 12 18;
+    --primary: 70 155 255;
+    --secondary: 120 132 150;
+    --accent: 255 196 61;
+    --success: 57 255 20;
+    --warning: 255 196 61;
+    --error: 255 68 68;
+    --text: 255 255 255;
+    --muted: 156 168 186;
+    --on-primary: 255 255 255;
+    --on-accent: 10 12 18;
   }
 
   body {
-    background-color: var(--background);
-    color: var(--text);
-    font-family: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, "Noto Sans", sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji";
+    background-color: rgb(var(--background));
+    color: rgb(var(--text));
+    font-family: var(--font-body), ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", "Helvetica Neue", Arial, sans-serif;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
+    color-scheme: dark;
+  }
+
+  body[data-theme='midnight-black'] {
+    background-image:
+      radial-gradient(1200px 800px at 18% 0%, rgb(70 155 255 / 0.18), transparent 62%),
+      radial-gradient(900px 650px at 110% 30%, rgb(255 196 61 / 0.10), transparent 55%),
+      radial-gradient(1000px 700px at 40% 120%, rgb(255 255 255 / 0.05), transparent 60%),
+      linear-gradient(180deg, rgb(255 255 255 / 0.035), transparent 40%, rgb(0 0 0 / 0.2));
+    background-attachment: fixed;
+  }
+
+  h1, h2, h3, .font-display {
+    font-family: var(--font-display), var(--font-body), ui-sans-serif, system-ui, sans-serif;
+  }
+
+  code, pre {
+    font-family: var(--font-mono), ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
   }
 }
 
 @layer utilities {
   .glass-panel {
     @apply backdrop-blur-md shadow-xl;
-    background-color: color-mix(in srgb, var(--surface), transparent 20%);
-    border: 1px solid color-mix(in srgb, var(--text), transparent 90%);
+    background-color: color-mix(in srgb, rgb(var(--surface)), transparent 20%);
+    border: 1px solid color-mix(in srgb, rgb(var(--text)), transparent 90%);
   }
 
   [data-theme='retro'] .glass-panel {
-    background-color: color-mix(in srgb, var(--surface), transparent 20%);
-    border: 1px solid var(--secondary);
-    box-shadow: 0 0 10px var(--secondary), inset 0 0 5px var(--primary);
+    background-color: color-mix(in srgb, rgb(var(--surface)), transparent 20%);
+    border: 1px solid rgb(var(--secondary));
+    box-shadow: 0 0 10px rgb(var(--secondary)), inset 0 0 5px rgb(var(--primary));
+  }
+
+  [data-theme='midnight-black'] .glass-panel {
+    background-color: color-mix(in srgb, rgb(var(--surface)), transparent 45%);
+    border: 1px solid rgb(var(--text) / 0.10);
+    box-shadow:
+      0 16px 60px rgb(0 0 0 / 0.65),
+      inset 0 1px 0 rgb(255 255 255 / 0.05);
   }
 
   .text-shadow {
@@ -79,12 +129,12 @@
   }
 
   [data-theme='retro'] .text-shadow {
-    text-shadow: 0 0 5px var(--primary), 0 0 10px var(--secondary);
+    text-shadow: 0 0 5px rgb(var(--primary)), 0 0 10px rgb(var(--secondary));
   }
 
   .custom-scrollbar {
     scrollbar-width: thin;
-    scrollbar-color: var(--secondary) var(--surface);
+    scrollbar-color: rgb(var(--secondary)) rgb(var(--surface));
   }
 
   .custom-scrollbar::-webkit-scrollbar {
@@ -97,14 +147,14 @@
   }
 
   .custom-scrollbar::-webkit-scrollbar-thumb {
-    background-color: var(--secondary);
+    background-color: rgb(var(--secondary));
     border-radius: 4px;
     border: 2px solid transparent;
     background-clip: content-box;
   }
 
   .custom-scrollbar::-webkit-scrollbar-thumb:hover {
-    background-color: var(--muted);
+    background-color: rgb(var(--muted));
   }
 
   .animate-pulse-fire {
@@ -122,6 +172,45 @@
     50% {
       box-shadow: 0 0 30px 10px rgba(239, 68, 68, 0.7), 0 0 60px 20px rgba(249, 115, 22, 0.5);
       border-color: rgba(249, 115, 22, 1);
+    }
+  }
+
+  @keyframes enter {
+    from {
+      opacity: var(--tw-enter-opacity, 1);
+      transform: translate3d(var(--tw-enter-translate-x, 0), var(--tw-enter-translate-y, 0), 0)
+        scale3d(var(--tw-enter-scale, 1), var(--tw-enter-scale, 1), 1);
+    }
+    to {
+      opacity: 1;
+      transform: translate3d(0, 0, 0) scale3d(1, 1, 1);
+    }
+  }
+
+  .animate-in {
+    animation-name: enter;
+    animation-duration: 200ms;
+    animation-timing-function: cubic-bezier(0.16, 1, 0.3, 1);
+    animation-fill-mode: both;
+  }
+
+  .fade-in { --tw-enter-opacity: 0; }
+  .zoom-in { --tw-enter-scale: 0.95; }
+  .zoom-in-95 { --tw-enter-scale: 0.95; }
+  .slide-in-from-bottom-2 { --tw-enter-translate-y: 0.5rem; }
+  .slide-in-from-bottom-4 { --tw-enter-translate-y: 1rem; }
+  .slide-in-from-top-2 { --tw-enter-translate-y: -0.5rem; }
+  .slide-in-from-right { --tw-enter-translate-x: 1rem; }
+
+  .duration-100 { animation-duration: 100ms; }
+  .duration-200 { animation-duration: 200ms; }
+  .duration-300 { animation-duration: 300ms; }
+  .duration-500 { animation-duration: 500ms; }
+  .duration-700 { animation-duration: 700ms; }
+
+  @media (prefers-reduced-motion: reduce) {
+    .animate-in {
+      animation-duration: 1ms;
     }
   }
 

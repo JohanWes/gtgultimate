@@ -50,35 +50,35 @@ export function StatsModal({ stats, totalGames, winRate, averageGuesses, onReset
         : 'conic-gradient(#374151 0% 100%)';
 
     return (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm animate-in fade-in duration-200">
-            <div className="bg-surface border border-white/10 rounded-xl p-6 max-w-lg w-full shadow-2xl animate-in zoom-in-95 duration-200 relative max-h-[90vh] overflow-y-auto custom-scrollbar">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 animate-in fade-in duration-200">
+            <div className="bg-surface/85 supports-[backdrop-filter]:bg-surface/55 backdrop-blur-xl border border-white/10 rounded-xl p-6 max-w-lg w-full shadow-2xl animate-in zoom-in-95 duration-200 relative max-h-[90vh] overflow-y-auto custom-scrollbar">
                 <button
                     onClick={onClose}
-                    className="absolute top-4 right-4 text-gray-400 hover:text-white transition-colors"
+                    className="absolute top-4 right-4 text-muted hover:text-text transition-colors"
                 >
                     <X size={24} />
                 </button>
 
-                <h2 className="text-2xl font-bold mb-6 text-white flex items-center gap-2">
+                <h2 className="text-2xl font-bold mb-6 text-text flex items-center gap-2 font-display">
                     📊 Your Statistics
                 </h2>
 
                 {/* Summary Cards */}
                 <div className="grid grid-cols-3 gap-3 mb-6">
-                    <div className="bg-gray-800/50 rounded-lg p-3 text-center border border-white/5">
+                    <div className="bg-surface/60 rounded-lg p-3 text-center border border-white/10">
                         <Trophy className="w-5 h-5 text-yellow-400 mx-auto mb-1" />
                         <div className="text-2xl font-bold text-white">{stats.totalCorrect}</div>
-                        <div className="text-xs text-gray-400">Correct Guesses</div>
+                        <div className="text-xs text-muted">Correct Guesses</div>
                     </div>
-                    <div className="bg-gray-800/50 rounded-lg p-3 text-center border border-white/5">
+                    <div className="bg-surface/60 rounded-lg p-3 text-center border border-white/10">
                         <Target className="w-5 h-5 text-blue-400 mx-auto mb-1" />
                         <div className="text-2xl font-bold text-white">{winRate.toFixed(0)}%</div>
-                        <div className="text-xs text-gray-400">Guess Accuracy</div>
+                        <div className="text-xs text-muted">Guess Accuracy</div>
                     </div>
-                    <div className="bg-gray-800/50 rounded-lg p-3 text-center border border-white/5">
+                    <div className="bg-surface/60 rounded-lg p-3 text-center border border-white/10">
                         <TrendingUp className="w-5 h-5 text-green-400 mx-auto mb-1" />
                         <div className="text-2xl font-bold text-white">{averageGuesses.toFixed(1)}</div>
-                        <div className="text-xs text-gray-400">Avg Guesses</div>
+                        <div className="text-xs text-muted">Avg Guesses</div>
                     </div>
                 </div>
 
@@ -87,7 +87,7 @@ export function StatsModal({ stats, totalGames, winRate, averageGuesses, onReset
                 {/* Genre Breakdown */}
                 {sortedGenres.length > 0 && (
                     <div className="mb-6">
-                        <h3 className="text-sm font-semibold text-gray-400 uppercase tracking-wider mb-3">Genre Breakdown - Your best genres</h3>
+                        <h3 className="text-sm font-semibold text-muted uppercase tracking-wider mb-3">Genre Breakdown - Your best genres</h3>
                         <div className="flex gap-4">
                             {/* Pie Chart */}
                             <div
@@ -102,8 +102,8 @@ export function StatsModal({ stats, totalGames, winRate, averageGuesses, onReset
                                             className="w-2.5 h-2.5 rounded-sm flex-shrink-0"
                                             style={{ backgroundColor: GENRE_COLORS[idx % GENRE_COLORS.length] }}
                                         />
-                                        <span className="text-gray-300 truncate">{genre}</span>
-                                        <span className="text-gray-500 ml-auto">{((data.total / genreTotal) * 100).toFixed(0)}%</span>
+                                        <span className="text-text truncate opacity-90">{genre}</span>
+                                        <span className="text-muted ml-auto">{((data.total / genreTotal) * 100).toFixed(0)}%</span>
                                     </div>
                                 ))}
                             </div>
@@ -114,14 +114,14 @@ export function StatsModal({ stats, totalGames, winRate, averageGuesses, onReset
                 {/* Decade Breakdown */}
                 {sortedDecades.length > 0 && (
                     <div className="mb-6">
-                        <h3 className="text-sm font-semibold text-gray-400 uppercase tracking-wider mb-3">Decade Performance - Your best decades</h3>
+                        <h3 className="text-sm font-semibold text-muted uppercase tracking-wider mb-3">Decade Performance - Your best decades</h3>
                         <div className="space-y-2">
                             {sortedDecades.map(([decade, data]) => {
                                 const successRate = data.total > 0 ? (data.correct / data.total) * 100 : 0;
                                 return (
                                     <div key={decade} className="flex items-center gap-2">
-                                        <span className="text-xs text-gray-400 w-12">{decade}</span>
-                                        <div className="flex-1 bg-gray-800 rounded-full h-4 overflow-hidden">
+                                        <span className="text-xs text-muted w-12">{decade}</span>
+                                        <div className="flex-1 bg-white/10 rounded-full h-4 overflow-hidden">
                                             <div
                                                 className="h-full rounded-full transition-all duration-500"
                                                 style={{
@@ -130,7 +130,7 @@ export function StatsModal({ stats, totalGames, winRate, averageGuesses, onReset
                                                 }}
                                             />
                                         </div>
-                                        <span className="text-xs text-gray-400 w-10 text-right">{successRate.toFixed(0)}%</span>
+                                        <span className="text-xs text-muted w-10 text-right">{successRate.toFixed(0)}%</span>
                                     </div>
                                 );
                             })}
@@ -140,8 +140,8 @@ export function StatsModal({ stats, totalGames, winRate, averageGuesses, onReset
 
                 {/* Empty State */}
                 {totalGames === 0 && (
-                    <div className="text-center py-8 text-gray-400">
-                        <p className="text-lg mb-2">No games played yet!</p>
+                    <div className="text-center py-8 text-muted">
+                        <p className="text-lg mb-2 font-display text-text">No games played yet!</p>
                         <p className="text-sm">Play some Endless Mode to see your stats here.</p>
                     </div>
                 )}
@@ -161,7 +161,7 @@ export function StatsModal({ stats, totalGames, winRate, averageGuesses, onReset
                     </button>
                     <button
                         onClick={onClose}
-                        className="px-4 py-2 bg-white text-black font-bold rounded-lg hover:bg-gray-200 transition-colors"
+                        className="px-4 py-2 bg-text text-background font-bold rounded-lg hover:brightness-110 transition-colors"
                     >
                         Done
                     </button>

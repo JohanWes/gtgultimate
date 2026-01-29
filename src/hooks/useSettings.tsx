@@ -8,7 +8,7 @@ export interface Settings {
     nextLevelOnEnter: boolean;
     skipOnEsc: boolean;
     adminKey: string;
-    theme: 'default' | 'retro';
+    theme: 'default' | 'retro' | 'midnight-black';
     miniaturesInPicture: boolean;
     miniaturesLocked: boolean;
 }

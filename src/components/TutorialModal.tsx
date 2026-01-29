@@ -317,7 +317,7 @@ export function TutorialModal({ isOpen, onClose, onComplete }: TutorialModalProp
                 {/* Close button */}
                 <button
                     onClick={onClose}
-                    className="absolute top-4 right-4 z-10 p-2 text-gray-400 hover:text-white hover:bg-white/10 rounded-lg transition-all"
+                    className="absolute top-4 right-4 z-10 p-2 text-muted hover:text-text hover:bg-white/10 rounded-lg transition-all"
                 >
                     <X size={20} />
                 </button>
