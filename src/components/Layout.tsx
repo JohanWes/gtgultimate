@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { Menu, Settings, BarChart2 } from 'lucide-react';
+import { AnimatePresence } from 'framer-motion';
 import { Sidebar } from './Sidebar';
 import { StatsModal } from './StatsModal';
 import { useGameState } from '../hooks/useGameState';
@@ -47,10 +48,10 @@ export function Layout({ children, gameState, currentMode, onModeSwitch, endless
 
             <div className="flex-1 flex flex-col min-w-0">
                 {/* Mobile Header */}
-                <header className="md:hidden p-4 border-b border-white/10 flex items-center justify-between bg-surface/80 backdrop-blur sticky top-0 z-30">
+                <header className="md:hidden p-4 border-b border-white/10 flex items-center justify-between glass-panel-soft sticky top-0 z-30 rounded-none">
                     <button
                         onClick={() => setIsSidebarOpen(true)}
-                        className="p-2 -ml-2 hover:bg-white/5 rounded-lg transition-colors"
+                        className="p-2 -ml-2 hover:bg-white/8 rounded-lg transition-colors ui-focus-ring"
                     >
                         <Menu size={24} />
                     </button>
@@ -59,14 +60,14 @@ export function Layout({ children, gameState, currentMode, onModeSwitch, endless
                         {showStatsButton && (
                             <button
                                 onClick={() => onStatsOpenChange?.(true)}
-                                className="p-2 hover:bg-white/5 rounded-lg transition-colors"
+                                className="p-2 hover:bg-white/8 rounded-lg transition-colors ui-focus-ring"
                             >
                                 <BarChart2 size={24} />
                             </button>
                         )}
                         <button
                             onClick={() => setIsSettingsOpen(true)}
-                            className="p-2 -mr-2 hover:bg-white/5 rounded-lg transition-colors"
+                            className="p-2 -mr-2 hover:bg-white/8 rounded-lg transition-colors ui-focus-ring"
                         >
                             <Settings size={24} />
                         </button>
@@ -78,7 +79,7 @@ export function Layout({ children, gameState, currentMode, onModeSwitch, endless
                     {showStatsButton && (
                         <button
                             onClick={() => onStatsOpenChange?.(true)}
-                            className="p-2 bg-surface/50 hover:bg-surface border border-white/10 rounded-lg transition-all hover:scale-105 backdrop-blur-sm shadow-lg text-muted hover:text-text"
+                            className="p-2 glass-panel-soft hover:border-white/20 rounded-lg transition-all hover:scale-105 shadow-lg text-muted hover:text-text ui-focus-ring"
                             title="Statistics"
                         >
                             <BarChart2 size={20} />
@@ -86,32 +87,36 @@ export function Layout({ children, gameState, currentMode, onModeSwitch, endless
                     )}
                     <button
                         onClick={() => setIsSettingsOpen(true)}
-                        className="p-2 bg-surface/50 hover:bg-surface border border-white/10 rounded-lg transition-all hover:scale-105 backdrop-blur-sm shadow-lg text-muted hover:text-text"
+                        className="p-2 glass-panel-soft hover:border-white/20 rounded-lg transition-all hover:scale-105 shadow-lg text-muted hover:text-text ui-focus-ring"
                         title="Settings"
                     >
                         <Settings size={20} />
                     </button>
                 </div>
 
-                <main className="flex-1 p-0 sm:p-2 md:p-3 overflow-y-auto custom-scrollbar relative">
+                <main className="flex-1 p-0 sm:p-2 md:p-3 overflow-y-auto custom-scrollbar stable-scrollbar-gutter relative">
                     {children}
                 </main>
             </div>
 
-            {isSettingsOpen && (
-                <SettingsModal onClose={() => setIsSettingsOpen(false)} />
-            )}
+            <AnimatePresence>
+                {isSettingsOpen && (
+                    <SettingsModal onClose={() => setIsSettingsOpen(false)} />
+                )}
+            </AnimatePresence>
 
-            {isStatsOpen && endlessStats && (
-                <StatsModal
-                    stats={endlessStats.stats}
-                    totalGames={endlessStats.totalGames}
-                    winRate={endlessStats.winRate}
-                    averageGuesses={endlessStats.averageGuesses}
-                    onReset={endlessStats.resetStats}
-                    onClose={() => onStatsOpenChange?.(false)}
-                />
-            )}
+            <AnimatePresence>
+                {isStatsOpen && endlessStats && (
+                    <StatsModal
+                        stats={endlessStats.stats}
+                        totalGames={endlessStats.totalGames}
+                        winRate={endlessStats.winRate}
+                        averageGuesses={endlessStats.averageGuesses}
+                        onReset={endlessStats.resetStats}
+                        onClose={() => onStatsOpenChange?.(false)}
+                    />
+                )}
+            </AnimatePresence>
 
             <FullScreenToggle className="fixed bottom-4 right-4 z-50" />
         </div>

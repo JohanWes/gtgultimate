@@ -43,7 +43,7 @@ export function Sidebar({ totalLevels, currentLevel, progress, onSelectLevel, is
 
             {/* Sidebar */}
             <div className={clsx(
-                "fixed md:sticky md:top-0 md:h-screen inset-y-0 left-0 z-50 bg-surface border-r border-white/10 transform transition-all duration-300 ease-in-out md:transform-none flex flex-col",
+                "fixed md:sticky md:top-0 md:h-screen inset-y-0 left-0 z-50 bg-surface/90 supports-[backdrop-filter]:bg-surface/60 backdrop-blur-md border-r border-white/10 shadow-2xl transform transition-all duration-300 ease-in-out md:transform-none flex flex-col",
                 isOpen ? "translate-x-0" : "-translate-x-full",
                 "w-64"
             )}>
@@ -55,7 +55,7 @@ export function Sidebar({ totalLevels, currentLevel, progress, onSelectLevel, is
                         <button
                             onClick={() => onModeSwitch('standard')}
                             className={clsx(
-                                "flex-1 py-1.5 text-xs font-bold rounded-md transition-all",
+                                "flex-1 py-1.5 text-xs font-bold rounded-md transition-all ui-focus-ring",
                                 currentMode === 'standard'
                                     ? "bg-primary text-onPrimary shadow-sm"
                                     : "text-muted hover:text-white hover:bg-white/5"
@@ -66,7 +66,7 @@ export function Sidebar({ totalLevels, currentLevel, progress, onSelectLevel, is
                         <button
                             onClick={() => onModeSwitch('endless')}
                             className={clsx(
-                                "flex-1 py-1.5 text-xs font-bold rounded-md transition-all",
+                                "flex-1 py-1.5 text-xs font-bold rounded-md transition-all ui-focus-ring",
                                 currentMode === 'endless'
                                     ? "bg-accent text-onAccent shadow-sm"
                                     : "text-muted hover:text-white hover:bg-white/5"
@@ -106,10 +106,10 @@ export function Sidebar({ totalLevels, currentLevel, progress, onSelectLevel, is
                                         if (window.innerWidth < 768) onClose();
                                     }}
                                     className={clsx(
-                                        "w-full flex items-center justify-between px-3 py-2 rounded text-sm transition-all",
+                                        "w-full flex items-center justify-between px-3 py-2 rounded text-sm transition-all ui-focus-ring",
                                         isCurrent
                                             ? "bg-primary/20 border border-primary/50 text-white"
-                                            : "hover:bg-white/5 text-muted hover:text-white",
+                                            : "hover:bg-white/8 text-muted hover:text-white",
                                         isLast && "pb-2"
                                     )}
                                 >

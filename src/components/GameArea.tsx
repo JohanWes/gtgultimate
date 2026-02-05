@@ -182,7 +182,7 @@ export function GameArea({ game, allGames, guesses, status, allProgress, onGuess
                         {status === 'playing' && !isLoading && (
                             <button
                                 onClick={onSkip}
-                                className="absolute top-4 left-4 z-20 bg-red-500/80 hover:bg-red-600 text-white px-4 py-2 rounded-lg font-bold shadow-lg backdrop-blur-sm transition-all hover:scale-105 text-sm active:animate-lifeline-slide"
+                                className="absolute top-4 left-4 z-20 bg-red-500/80 hover:bg-red-600 text-white px-4 py-2 rounded-lg font-bold shadow-lg backdrop-blur-sm transition-all hover:scale-105 text-sm active:animate-lifeline-slide ui-focus-ring"
                             >
                                 SKIP
                             </button>
@@ -224,7 +224,7 @@ export function GameArea({ game, allGames, guesses, status, allProgress, onGuess
                     </p>
                     <button
                         onClick={onNextLevel}
-                        className="inline-flex items-center gap-2 px-5 py-2 bg-white text-black font-bold rounded-full hover:scale-105 transition-transform text-sm"
+                        className="inline-flex items-center gap-2 px-5 py-2 bg-white text-black font-bold rounded-full hover:scale-105 transition-transform text-sm ui-focus-ring"
                     >
                         Next Level <ArrowRight size={20} />
                     </button>
@@ -285,7 +285,7 @@ export function GameArea({ game, allGames, guesses, status, allProgress, onGuess
                                     <div
                                         key={idx}
                                         className={`flex items-center justify-between p-2 rounded-lg bg-surface/50 border ${borderClass} text-muted animate-in slide-in-from-bottom-2 fade-in text-sm`}
-                                        style={{ animationDelay: `${idx * 100}ms` }}
+                                        style={{ animationDelay: `${idx * 50}ms` }}
                                     >
                                         <span className="font-medium text-white">{guess.name}</span>
                                         <div className={`flex items-center gap-2 ${colorClass}`}>

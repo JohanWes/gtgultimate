@@ -2,10 +2,12 @@
 import { useState, useEffect } from 'react';
 import { clsx } from 'clsx';
 import { Lock, Maximize2, Minimize2, ArrowRight } from 'lucide-react';
+import { motion, useReducedMotion } from 'framer-motion';
 import type { Game } from '../types';
 import { getDifficultyZoomBonus } from '../utils/endlessUtils';
 import { useObfuscatedImages } from '../hooks/useObfuscatedImages';
 import { useSettings } from '../hooks/useSettings';
+import { buildTransition, motionDurations } from '../utils/motion';
 
 interface ScreenshotViewerProps {
     screenshots: string[];
@@ -26,6 +28,7 @@ export function ScreenshotViewer({ screenshots, revealedCount, status, cropPosit
     const { settings, updateSetting, hasSeenLockTip, markLockTipSeen } = useSettings();
     const isOverlayLocked = settings.miniaturesLocked;
     const [showTip, setShowTip] = useState(false);
+    const shouldReduceMotion = useReducedMotion();
 
     const getZoomScale = (index: number) => {
         // If Zoom Out lifeline is active, return 100% for all images
@@ -93,6 +96,7 @@ export function ScreenshotViewer({ screenshots, revealedCount, status, cropPosit
     // Obfuscate images to prevent inspecting source
     const obfuscatedScreenshots = useObfuscatedImages(effectiveScreenshots);
     const obfuscatedDoubleTrouble = useObfuscatedImages(effectiveDoubleTrouble);
+    const levelTransitionKey = `${screenshots[0] ?? 'none'}:${currentLevelIndex}`;
 
     // Auto-select the newly revealed screenshot
     useEffect(() => {
@@ -173,26 +177,34 @@ export function ScreenshotViewer({ screenshots, revealedCount, status, cropPosit
                     </div>
                 ) : (
                     <>
-                        <div
-                            role="img"
-                            aria-label={`Screenshot ${selectedIndex + 1}`}
-                            style={{
-                                backgroundImage: obfuscatedScreenshots[selectedIndex] ? `url(${obfuscatedScreenshots[selectedIndex]})` : undefined,
-                                backgroundPosition: getZoomScale(selectedIndex) > 100 ? 'center' : `${cropPositions[selectedIndex]?.x || 50}% ${cropPositions[selectedIndex]?.y || 50}%`,
-                                backgroundSize: getZoomScale(selectedIndex) > 100 ? 'cover' : `${getZoomScale(selectedIndex)}%`,
-                                backgroundRepeat: 'no-repeat'
-                            }}
-                            className="absolute inset-0 w-full h-full transition-opacity duration-300"
-                        />
-
-                        {/* Redaction Overlay - Only for main image */}
-                        {redactedRegions && redactedRegions[selectedIndex] && redactedRegions[selectedIndex].map((region, idx) => (
+                        <motion.div
+                            key={levelTransitionKey}
+                            initial={{ opacity: shouldReduceMotion ? 1 : 0.6, scale: shouldReduceMotion ? 1 : 1.01, y: shouldReduceMotion ? 0 : 6 }}
+                            animate={{ opacity: 1, scale: 1, y: 0 }}
+                            transition={buildTransition(motionDurations.fast, !!shouldReduceMotion)}
+                            className="absolute inset-0 w-full h-full"
+                        >
                             <div
-                                key={`redaction-${idx}`}
-                                className="absolute bg-black pointer-events-none z-10"
-                                style={getRedactionStyle(region, selectedIndex, cropPositions)}
+                                role="img"
+                                aria-label={`Screenshot ${selectedIndex + 1}`}
+                                style={{
+                                    backgroundImage: obfuscatedScreenshots[selectedIndex] ? `url(${obfuscatedScreenshots[selectedIndex]})` : undefined,
+                                    backgroundPosition: getZoomScale(selectedIndex) > 100 ? 'center' : `${cropPositions[selectedIndex]?.x || 50}% ${cropPositions[selectedIndex]?.y || 50}%`,
+                                    backgroundSize: getZoomScale(selectedIndex) > 100 ? 'cover' : `${getZoomScale(selectedIndex)}%`,
+                                    backgroundRepeat: 'no-repeat'
+                                }}
+                                className="absolute inset-0 w-full h-full transition-opacity duration-300"
                             />
-                        ))}
+
+                            {/* Redaction Overlay - Only for main image */}
+                            {redactedRegions && redactedRegions[selectedIndex] && redactedRegions[selectedIndex].map((region, idx) => (
+                                <div
+                                    key={`redaction-${idx}`}
+                                    className="absolute bg-black pointer-events-none z-10"
+                                    style={getRedactionStyle(region, selectedIndex, cropPositions)}
+                                />
+                            ))}
+                        </motion.div>
                     </>
                 )}
 
@@ -390,4 +402,3 @@ export function ScreenshotViewer({ screenshots, revealedCount, status, cropPosit
         </div >
     );
 }
-

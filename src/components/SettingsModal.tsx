@@ -1,5 +1,7 @@
 import { X, BookOpen } from 'lucide-react';
+import { motion, useReducedMotion } from 'framer-motion';
 import { useSettings } from '../hooks/useSettings';
+import { buildTransition, motionDurations } from '../utils/motion';
 
 interface SettingsModalProps {
     onClose: () => void;
@@ -7,16 +9,31 @@ interface SettingsModalProps {
 
 export function SettingsModal({ onClose }: SettingsModalProps) {
     const { settings, updateSetting, setIsTutorialOpen } = useSettings();
+    const shouldReduceMotion = useReducedMotion();
+    const overlayTransition = buildTransition(motionDurations.standard, !!shouldReduceMotion);
+    const panelTransition = buildTransition(motionDurations.standard, !!shouldReduceMotion);
 
     return (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 animate-in fade-in duration-200">
-            <div className="bg-surface/85 supports-[backdrop-filter]:bg-surface/55 backdrop-blur-xl border border-white/10 rounded-xl max-w-md w-full shadow-2xl animate-in zoom-in-95 duration-200 relative flex flex-col max-h-[90vh] overflow-hidden">
+        <motion.div
+            className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={overlayTransition}
+        >
+            <motion.div
+                className="glass-panel-strong rounded-xl max-w-md w-full shadow-2xl relative flex flex-col max-h-[90vh] overflow-hidden"
+                initial={{ opacity: 0, scale: shouldReduceMotion ? 1 : 0.97, y: shouldReduceMotion ? 0 : 8 }}
+                animate={{ opacity: 1, scale: 1, y: 0 }}
+                exit={{ opacity: 0, scale: shouldReduceMotion ? 1 : 0.985, y: shouldReduceMotion ? 0 : 6 }}
+                transition={panelTransition}
+            >
                 {/* Fixed Header */}
                 <div className="flex items-center justify-between p-4 md:p-6 border-b border-white/10 shrink-0">
                     <h2 className="text-2xl font-bold text-text font-display">Settings</h2>
                     <button
                         onClick={onClose}
-                        className="text-muted hover:text-text transition-colors"
+                        className="text-muted hover:text-text transition-colors ui-focus-ring rounded-md"
                         aria-label="Close settings"
                     >
                         <X size={24} />
@@ -65,7 +82,7 @@ export function SettingsModal({ onClose }: SettingsModalProps) {
                         <select
                             value={settings.theme}
                             onChange={(e) => updateSetting('theme', e.target.value as 'default' | 'retro' | 'midnight-black')}
-                            className="bg-surface/60 border border-white/10 rounded px-3 py-1.5 text-text text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary/40 w-40 ml-4"
+                            className="bg-surface/60 border border-white/10 rounded px-3 py-1.5 text-text text-sm ui-focus-ring w-40 ml-4"
                         >
                             <option value="default">Default</option>
                             <option value="retro">Retro</option>
@@ -116,7 +133,7 @@ export function SettingsModal({ onClose }: SettingsModalProps) {
                             type="password"
                             value={settings.adminKey}
                             onChange={(e) => updateSetting('adminKey', e.target.value)}
-                            className="bg-surface/60 border border-white/10 rounded px-3 py-1.5 text-text text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary/40 w-40 ml-4"
+                            className="bg-surface/60 border border-white/10 rounded px-3 py-1.5 text-text text-sm ui-focus-ring w-40 ml-4"
                             placeholder="Admin Key"
                         />
                     </div>
@@ -126,12 +143,12 @@ export function SettingsModal({ onClose }: SettingsModalProps) {
                 <div className="p-4 md:p-6 border-t border-white/10 bg-transparent shrink-0 flex justify-end">
                     <button
                         onClick={onClose}
-                        className="px-6 py-2 bg-text text-background font-bold rounded-lg hover:brightness-110 transition-colors w-full sm:w-auto"
+                        className="px-6 py-2 bg-text text-background font-bold rounded-lg hover:brightness-110 transition-colors w-full sm:w-auto ui-focus-ring"
                     >
                         Done
                     </button>
                 </div>
-            </div>
-        </div>
+            </motion.div>
+        </motion.div>
     );
 }

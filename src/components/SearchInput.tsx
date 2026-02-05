@@ -204,12 +204,12 @@ export function SearchInput({ games, onGuess, disabled, autoFocus, correctAnswer
                         onKeyDown={handleKeyDown}
                         disabled={disabled}
                         placeholder={disabled ? "Game Over" : "Type to search for a game..."}
-                        className="w-full pl-11 pr-11 py-2.5 glass-panel rounded-xl text-base text-text focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all shadow-lg placeholder:text-muted"
+                        className="w-full pl-11 pr-11 py-2.5 glass-panel rounded-xl text-base text-text ui-focus-ring transition-all shadow-lg placeholder:text-muted"
                     />
                     <button
                         type="submit"
                         disabled={disabled || !displayValue}
-                        className="absolute inset-y-0 right-0 pr-3 flex items-center text-muted hover:text-white disabled:opacity-50 transition-colors"
+                        className="absolute inset-y-0 right-0 pr-3 flex items-center text-muted hover:text-white disabled:opacity-50 transition-colors ui-focus-ring rounded-md"
                     >
                         <Send size={18} />
                     </button>
@@ -219,13 +219,13 @@ export function SearchInput({ games, onGuess, disabled, autoFocus, correctAnswer
             {isOpen && !hideResults && results.length > 0 && (
                 <ul
                     ref={listRef}
-                    className="absolute w-full mt-2 bg-surface border border-white/10 rounded-xl shadow-2xl overflow-hidden max-h-48 overflow-y-auto custom-scrollbar animate-in fade-in slide-in-from-top-2"
+                    className="absolute w-full mt-2 glass-panel-strong backdrop-blur-xl border border-white/10 rounded-xl shadow-2xl overflow-hidden max-h-48 overflow-y-auto custom-scrollbar animate-in fade-in slide-in-from-top-2"
                 >
                     {results.map((game, idx) => {
                         const isSelected = idx === selectedIndex;
                         const buttonClass = isSelected
-                            ? "bg-primary/20 text-white"
-                            : "text-muted hover:bg-white/5 hover:text-white";
+                            ? "bg-primary/25 text-white border-l-2 border-primary"
+                            : "text-muted hover:bg-white/8 hover:text-white";
 
                         return (
                             <li key={game.id}>

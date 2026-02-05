@@ -2,8 +2,10 @@ import React, { useState, useEffect } from 'react';
 import { type HighScore, fetchHighScores, submitHighScore } from '../utils/api';
 import { Trophy, RotateCcw, Send, X, Play } from 'lucide-react';
 import { clsx } from 'clsx';
+import { motion, useReducedMotion } from 'framer-motion';
 import { useIsMobile } from '../hooks/useIsMobile';
 import type { GuessWithResult, LifelineType } from '../types';
+import { buildTransition, motionDurations } from '../utils/motion';
 
 interface HighScoreModalProps {
     score: number;
@@ -31,6 +33,7 @@ export const HighScoreModal: React.FC<HighScoreModalProps> = ({ score, onPlayAga
     const [loading, setLoading] = useState(true);
     const [submitting, setSubmitting] = useState(false);
     const isMobile = useIsMobile();
+    const shouldReduceMotion = useReducedMotion();
 
     useEffect(() => {
         loadHighScores();
@@ -86,19 +89,34 @@ export const HighScoreModal: React.FC<HighScoreModalProps> = ({ score, onPlayAga
         setSubmitting(false);
     };
 
+    const overlayTransition = buildTransition(motionDurations.standard, !!shouldReduceMotion);
+    const panelTransition = buildTransition(motionDurations.standard, !!shouldReduceMotion);
+
     return (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 animate-in fade-in duration-300">
-            <div className="bg-surface/85 supports-[backdrop-filter]:bg-surface/55 backdrop-blur-xl border border-white/10 rounded-2xl shadow-2xl max-w-md w-full overflow-hidden flex flex-col max-h-[90vh] relative">
+        <motion.div
+            className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={overlayTransition}
+        >
+            <motion.div
+                className="glass-panel-strong rounded-2xl shadow-2xl max-w-md w-full overflow-hidden flex flex-col max-h-[90vh] relative"
+                initial={{ opacity: 0, scale: shouldReduceMotion ? 1 : 0.965, y: shouldReduceMotion ? 0 : 8 }}
+                animate={{ opacity: 1, scale: 1, y: 0 }}
+                exit={{ opacity: 0, scale: shouldReduceMotion ? 1 : 0.985, y: shouldReduceMotion ? 0 : 6 }}
+                transition={panelTransition}
+            >
                 {/* Close Button */}
                 <button
                     onClick={onClose}
-                    className="absolute top-4 right-4 text-muted hover:text-text transition-colors z-10 p-1 hover:bg-white/10 rounded-full"
+                    className="absolute top-4 right-4 text-muted hover:text-text transition-colors z-10 p-1 hover:bg-white/10 rounded-full ui-focus-ring"
                 >
                     <X size={24} />
                 </button>
 
                 {/* Header */}
-                <div className="p-6 bg-gradient-to-br from-purple-900/40 to-blue-900/30 border-b border-white/10 text-center">
+                <div className="p-6 bg-gradient-to-br from-primary/30 to-accent/20 border-b border-white/10 text-center">
                     <h2 className="text-3xl font-black text-white mb-2 tracking-tight font-display">GAME OVER</h2>
                     <div className="flex flex-col items-center justify-center gap-1">
                         <span className="text-muted text-sm uppercase tracking-widest font-bold">Final Score</span>
@@ -122,13 +140,13 @@ export const HighScoreModal: React.FC<HighScoreModalProps> = ({ score, onPlayAga
                                     onChange={(e) => setName(e.target.value)}
                                     maxLength={15}
                                     placeholder="Player Name"
-                                    className="flex-1 bg-surface/60 border border-white/10 rounded-lg px-4 py-3 text-text font-bold focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary/40 placeholder:text-muted/60"
+                                    className="flex-1 bg-surface/60 border border-white/10 rounded-lg px-4 py-3 text-text font-bold ui-focus-ring placeholder:text-muted/60"
                                     autoFocus={!isMobile}
                                 />
                                 <button
                                     type="submit"
                                     disabled={!name.trim() || submitting}
-                                    className="bg-primary hover:brightness-110 disabled:bg-white/10 disabled:text-muted text-onPrimary px-4 py-2 rounded-lg font-bold transition-colors flex items-center justify-center"
+                                    className="bg-primary hover:brightness-110 disabled:bg-white/10 disabled:text-muted text-onPrimary px-4 py-2 rounded-lg font-bold transition-colors flex items-center justify-center ui-focus-ring"
                                 >
                                     {submitting ? (
                                         <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
@@ -166,8 +184,8 @@ export const HighScoreModal: React.FC<HighScoreModalProps> = ({ score, onPlayAga
                                     <div
                                         key={idx}
                                         className={clsx(
-                                            "flex items-center justify-between p-3 rounded-lg border",
-                                            s.name === name && submitted ? "bg-primary/20 border-primary/40" : "bg-surface/45 border-white/10"
+                                            "flex items-center justify-between p-3 rounded-lg border glass-panel-soft",
+                                            s.name === name && submitted ? "bg-primary/20 border-primary/40" : "border-white/10"
                                         )}
                                     >
                                         <div className="flex items-center gap-3">
@@ -212,13 +230,13 @@ export const HighScoreModal: React.FC<HighScoreModalProps> = ({ score, onPlayAga
                 <div className="p-4 bg-transparent border-t border-white/10">
                     <button
                         onClick={onPlayAgain}
-                        className="w-full bg-white text-black hover:bg-gray-200 py-3 rounded-xl font-black text-lg uppercase tracking-wide transition-transform hover:scale-[1.02] active:scale-[0.98] flex items-center justify-center gap-2"
+                        className="w-full bg-text text-background hover:brightness-110 py-3 rounded-xl font-black text-lg uppercase tracking-wide transition-transform hover:scale-[1.02] active:scale-[0.98] flex items-center justify-center gap-2 ui-focus-ring"
                     >
                         <RotateCcw size={20} />
                         Play Again
                     </button>
                 </div>
-            </div>
-        </div>
+            </motion.div>
+        </motion.div>
     );
 };

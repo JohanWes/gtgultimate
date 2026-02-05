@@ -36,7 +36,7 @@ export function FullScreenToggle({ className }: FullScreenToggleProps) {
         <button
             onClick={toggleFullscreen}
             className={clsx(
-                "p-2 bg-surface/50 hover:bg-surface border border-white/10 rounded-lg transition-all hover:scale-105 backdrop-blur-sm shadow-lg text-gray-400 hover:text-white",
+                "p-2 glass-panel-soft border border-white/10 rounded-lg transition-all hover:scale-105 shadow-lg text-muted hover:text-white ui-focus-ring",
                 className
             )}
             title={isFullscreen ? "Exit Full Screen" : "Enter Full Screen"}

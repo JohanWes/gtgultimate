@@ -198,18 +198,20 @@ function App() {
         )}
       </AnimatePresence>
 
-      {showHighScoreModal && (
-        <HighScoreModal
-          score={endlessState.state.score}
-          onPlayAgain={handlePlayAgain}
-          onClose={handleModalClose}
-          runData={{
-            history: endlessState.state.history,
-            totalScore: endlessState.state.score,
-            totalGames: endlessState.state.history.length
-          }}
-        />
-      )}
+      <AnimatePresence>
+        {showHighScoreModal && (
+          <HighScoreModal
+            score={endlessState.state.score}
+            onPlayAgain={handlePlayAgain}
+            onClose={handleModalClose}
+            runData={{
+              history: endlessState.state.history,
+              totalScore: endlessState.state.score,
+              totalGames: endlessState.state.history.length
+            }}
+          />
+        )}
+      </AnimatePresence>
 
       {isMobile ? (
         <MobileTutorialModal

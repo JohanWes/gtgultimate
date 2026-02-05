@@ -29,11 +29,11 @@ export const TopScoresTicker: React.FC = () => {
     if (loading || topScores.length === 0) return null;
 
     return (
-        <div className="bg-gray-800/50 rounded-xl backdrop-blur-sm border border-gray-700 shadow-lg overflow-hidden">
+        <div className="glass-panel rounded-xl border border-white/10 shadow-lg overflow-hidden">
             {/* Header */}
-            <div className="bg-gray-900/50 px-4 py-2 border-b border-white/5 flex items-center justify-center gap-2">
+            <div className="bg-surface/60 px-4 py-2 border-b border-white/10 flex items-center justify-center gap-2">
                 <Trophy className="text-yellow-500" size={14} />
-                <span className="text-[10px] text-gray-400 uppercase tracking-wider font-bold">Top 3</span>
+                <span className="text-[10px] text-muted uppercase tracking-wider font-bold">Top 3</span>
             </div>
 
             {/* Grid */}
@@ -43,12 +43,12 @@ export const TopScoresTicker: React.FC = () => {
                         <div className={clsx(
                             "w-6 h-6 mx-auto mb-1.5 flex items-center justify-center rounded-full text-[11px] font-bold",
                             idx === 0 ? "bg-yellow-500/20 text-yellow-400" :
-                                idx === 1 ? "bg-gray-400/20 text-gray-300" :
+                                idx === 1 ? "bg-slate-400/20 text-slate-200" :
                                     "bg-orange-500/20 text-orange-400"
                         )}>
                             {idx + 1}
                         </div>
-                        <span className="text-gray-300 text-xs font-medium truncate" title={score.name}>
+                        <span className="text-muted text-xs font-medium truncate" title={score.name}>
                             {score.name}
                         </span>
                         <span className="text-white font-mono text-sm font-bold mt-0.5">

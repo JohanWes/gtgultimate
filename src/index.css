@@ -33,6 +33,12 @@
     /* Slate 400 */
     --on-primary: 255 255 255;
     --on-accent: 11 18 32;
+
+    --motion-fast: 140ms;
+    --motion-standard: 220ms;
+    --motion-emphasis: 300ms;
+    --motion-ease-standard: cubic-bezier(0.16, 1, 0.3, 1);
+    --motion-ease-emphasis: cubic-bezier(0.22, 1, 0.36, 1);
   }
 
   [data-theme='retro'] {
@@ -104,24 +110,84 @@
 }
 
 @layer utilities {
+  .glass-panel-soft {
+    @apply backdrop-blur-sm shadow-lg;
+    background-color: color-mix(in srgb, rgb(var(--surface)), transparent 34%);
+    border: 1px solid color-mix(in srgb, rgb(var(--text)), transparent 92%);
+  }
+
   .glass-panel {
     @apply backdrop-blur-md shadow-xl;
-    background-color: color-mix(in srgb, rgb(var(--surface)), transparent 20%);
+    background-color: color-mix(in srgb, rgb(var(--surface)), transparent 24%);
     border: 1px solid color-mix(in srgb, rgb(var(--text)), transparent 90%);
+  }
+
+  .glass-panel-strong {
+    @apply backdrop-blur-xl shadow-2xl;
+    background-color: color-mix(in srgb, rgb(var(--surface)), transparent 14%);
+    border: 1px solid color-mix(in srgb, rgb(var(--text)), transparent 86%);
+  }
+
+  [data-theme='retro'] .glass-panel-soft {
+    background-color: color-mix(in srgb, rgb(var(--surface)), transparent 30%);
+    border: 1px solid rgb(var(--secondary) / 0.5);
+    box-shadow: 0 0 8px rgb(var(--secondary) / 0.35), inset 0 0 4px rgb(var(--primary) / 0.25);
   }
 
   [data-theme='retro'] .glass-panel {
     background-color: color-mix(in srgb, rgb(var(--surface)), transparent 20%);
-    border: 1px solid rgb(var(--secondary));
-    box-shadow: 0 0 10px rgb(var(--secondary)), inset 0 0 5px rgb(var(--primary));
+    border: 1px solid rgb(var(--secondary) / 0.75);
+    box-shadow: 0 0 10px rgb(var(--secondary) / 0.5), inset 0 0 5px rgb(var(--primary) / 0.3);
+  }
+
+  [data-theme='retro'] .glass-panel-strong {
+    background-color: color-mix(in srgb, rgb(var(--surface)), transparent 14%);
+    border: 1px solid rgb(var(--secondary) / 0.9);
+    box-shadow:
+      0 0 14px rgb(var(--secondary) / 0.6),
+      inset 0 0 8px rgb(var(--primary) / 0.35);
+  }
+
+  [data-theme='midnight-black'] .glass-panel-soft {
+    background-color: color-mix(in srgb, rgb(var(--surface)), transparent 56%);
+    border: 1px solid rgb(var(--text) / 0.08);
+    box-shadow:
+      0 10px 35px rgb(0 0 0 / 0.5),
+      inset 0 1px 0 rgb(255 255 255 / 0.04);
   }
 
   [data-theme='midnight-black'] .glass-panel {
-    background-color: color-mix(in srgb, rgb(var(--surface)), transparent 45%);
+    background-color: color-mix(in srgb, rgb(var(--surface)), transparent 46%);
     border: 1px solid rgb(var(--text) / 0.10);
     box-shadow:
       0 16px 60px rgb(0 0 0 / 0.65),
       inset 0 1px 0 rgb(255 255 255 / 0.05);
+  }
+
+  [data-theme='midnight-black'] .glass-panel-strong {
+    background-color: color-mix(in srgb, rgb(var(--surface)), transparent 38%);
+    border: 1px solid rgb(var(--text) / 0.12);
+    box-shadow:
+      0 20px 70px rgb(0 0 0 / 0.72),
+      inset 0 1px 0 rgb(255 255 255 / 0.06);
+  }
+
+  .ui-focus-ring {
+    @apply focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/50 focus-visible:ring-offset-2 focus-visible:ring-offset-background;
+  }
+
+  .ui-pressable {
+    transition-property: transform, filter, box-shadow, border-color, background-color, color;
+    transition-duration: var(--motion-standard);
+    transition-timing-function: var(--motion-ease-standard);
+  }
+
+  .ui-pressable:hover {
+    filter: brightness(1.08);
+  }
+
+  .ui-pressable:active {
+    transform: scale(0.98);
   }
 
   .text-shadow {
@@ -157,6 +223,10 @@
     background-color: rgb(var(--muted));
   }
 
+  .stable-scrollbar-gutter {
+    scrollbar-gutter: stable;
+  }
+
   .animate-pulse-fire {
     animation: pulse-fire 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
   }
@@ -189,8 +259,8 @@
 
   .animate-in {
     animation-name: enter;
-    animation-duration: 200ms;
-    animation-timing-function: cubic-bezier(0.16, 1, 0.3, 1);
+    animation-duration: var(--motion-standard);
+    animation-timing-function: var(--motion-ease-standard);
     animation-fill-mode: both;
   }
 

@@ -1,6 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import confetti from 'canvas-confetti';
+import { motion, useReducedMotion } from 'framer-motion';
+import { clsx } from 'clsx';
 import { getShopItems } from '../utils/endlessUtils';
+import { buildTransition, motionDurations } from '../utils/motion';
 
 interface ShopModalProps {
     score: number;
@@ -12,6 +15,7 @@ export const ShopModal: React.FC<ShopModalProps> = ({ score, onBuy, onContinue }
     const items = getShopItems();
     const [purchasedItems, setPurchasedItems] = useState<Set<string>>(new Set());
     const [discountedItemIds, setDiscountedItemIds] = useState<Set<string>>(new Set());
+    const shouldReduceMotion = useReducedMotion();
 
     const modalRef = React.useRef<HTMLDivElement>(null);
 
@@ -52,7 +56,7 @@ export const ShopModal: React.FC<ShopModalProps> = ({ score, onBuy, onContinue }
             spread: 100,
             origin: { y: 0.6 },
             colors: ['#FFD700', '#FFA500', '#FFFFFF', '#FF0000'],
-            zIndex: 10000 // Higher than modal
+            zIndex: 55
         });
 
         // 2. Side cannons
@@ -65,7 +69,7 @@ export const ShopModal: React.FC<ShopModalProps> = ({ score, onBuy, onContinue }
                 spread: 55,
                 origin: { x: origins.left, y: origins.top }, // Left side of modal
                 colors: ['#FFD700', '#FFA500'],
-                zIndex: 10000
+                zIndex: 55
             });
 
             confetti({
@@ -74,7 +78,7 @@ export const ShopModal: React.FC<ShopModalProps> = ({ score, onBuy, onContinue }
                 spread: 55,
                 origin: { x: origins.right, y: origins.top },
                 colors: ['#FFD700', '#FFA500'],
-                zIndex: 10000
+                zIndex: 55
             });
 
             if (Date.now() < end) {
@@ -95,21 +99,37 @@ export const ShopModal: React.FC<ShopModalProps> = ({ score, onBuy, onContinue }
         onBuy(itemId, cost);
     };
 
+    const overlayTransition = buildTransition(motionDurations.standard, !!shouldReduceMotion);
+    const panelTransition = buildTransition(motionDurations.standard, !!shouldReduceMotion);
+
     return (
-        <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-40 p-4">
-            <div ref={modalRef} className="bg-gray-900 border border-gray-700 rounded-xl p-6 max-w-2xl w-full shadow-2xl">
+        <motion.div
+            className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={overlayTransition}
+        >
+            <motion.div
+                ref={modalRef}
+                className="glass-panel-strong rounded-2xl p-6 max-w-2xl w-full animate-in fade-in zoom-in-95 relative z-[60]"
+                initial={{ opacity: 0, scale: shouldReduceMotion ? 1 : 0.96, y: shouldReduceMotion ? 0 : 8 }}
+                animate={{ opacity: 1, scale: 1, y: 0 }}
+                exit={{ opacity: 0, scale: shouldReduceMotion ? 1 : 0.98, y: shouldReduceMotion ? 0 : 6 }}
+                transition={panelTransition}
+            >
                 <h2 className="text-3xl font-bold text-white mb-2 text-center">The Shop</h2>
-                <p className="text-gray-400 text-center mb-8">Spend your hard-earned points to survive longer.</p>
+                <p className="text-muted text-center mb-8">Spend your hard-earned points to survive longer.</p>
 
                 <div className="flex justify-center mb-8">
-                    <div className="bg-gray-800 px-6 py-3 rounded-lg border border-yellow-500/30">
-                        <span className="text-gray-400 mr-2">Current Score:</span>
+                    <div className="glass-panel-soft px-6 py-3 rounded-xl border border-yellow-500/30">
+                        <span className="text-muted mr-2">Current Score:</span>
                         <span className="text-2xl font-bold text-yellow-400">{score}</span>
                     </div>
                 </div>
 
                 {greedPurchased && (
-                    <div className="mb-4 p-3 bg-orange-900/30 border border-orange-500/50 rounded-lg">
+                    <div className="mb-4 p-3 glass-panel-soft border border-orange-500/40 rounded-xl bg-orange-500/10">
                         <p className="text-orange-300 text-sm text-center font-medium">
                             ⚠️ You chose Greed is Good - all other shop items are now unavailable!
                         </p>
@@ -141,10 +161,12 @@ export const ShopModal: React.FC<ShopModalProps> = ({ score, onBuy, onContinue }
                         return (
                             <div
                                 key={item.id}
-                                className={`bg-gray-800 border rounded-lg p-4 flex flex-col transition-opacity ${isDisabled && !canAfford ? 'opacity-40' :
-                                    isDisabled ? 'opacity-50' : 'opacity-100'
-                                    } ${isGreed && !isDisabled ? 'border-orange-500/50' : 'border-gray-700'
-                                    } relative overflow-hidden`}
+                                className={clsx(
+                                    "glass-panel-soft border rounded-xl p-4 flex flex-col transition-all duration-200 relative overflow-hidden",
+                                    isDisabled && !canAfford ? 'opacity-45' : isDisabled ? 'opacity-55' : 'opacity-100',
+                                    isGreed && !isDisabled ? 'border-orange-500/50' : 'border-white/10',
+                                    !isDisabled && "hover:border-white/20 hover:brightness-105"
+                                )}
                             >
                                 {isDiscounted && !isDisabled && !alreadyPurchased && (
                                     <div className="absolute top-0 right-0 bg-red-600 text-white text-[10px] uppercase font-bold px-2 py-0.5 rounded-bl-lg shadow-md animate-pulse">
@@ -152,15 +174,14 @@ export const ShopModal: React.FC<ShopModalProps> = ({ score, onBuy, onContinue }
                                     </div>
                                 )}
                                 <h3 className="text-lg font-bold text-white mb-1">{item.name}</h3>
-                                <p className={`text-sm mb-4 flex-grow ${isGreed ? 'text-orange-300' : 'text-gray-400'
-                                    }`}>
+                                <p className={`text-sm mb-4 flex-grow ${isGreed ? 'text-orange-300' : 'text-muted'}`}>
                                     {description}
                                 </p>
                                 <div className="flex items-center justify-between mt-auto">
                                     <div className="flex flex-col">
                                         {isDiscounted ? (
                                             <div className="flex items-center gap-2">
-                                                <span className="text-xs text-gray-500 line-through">{originalCost} pts</span>
+                                                <span className="text-xs text-muted/60 line-through">{originalCost} pts</span>
                                                 <span className="font-bold text-green-400">{finalCost} pts</span>
                                             </div>
                                         ) : (
@@ -172,10 +193,12 @@ export const ShopModal: React.FC<ShopModalProps> = ({ score, onBuy, onContinue }
                                     <button
                                         onClick={() => handleBuy(item.id, finalCost)}
                                         disabled={isDisabled}
-                                        className={`px-3 py-1 rounded text-sm font-medium transition-colors ${!isDisabled
-                                            ? 'bg-blue-600 hover:bg-blue-500 text-white cursor-pointer'
-                                            : 'bg-gray-700 text-gray-500 cursor-not-allowed'
-                                            }`}
+                                        className={clsx(
+                                            "px-3 py-1 rounded-lg text-sm font-medium transition-all duration-200 ui-focus-ring",
+                                            !isDisabled
+                                                ? 'bg-primary text-onPrimary cursor-pointer hover:brightness-110 active:scale-[0.98]'
+                                                : 'bg-surface/40 text-muted/60 border border-white/10 cursor-not-allowed'
+                                        )}
                                     >
                                         {alreadyPurchased ? 'Purchased' : 'Buy'}
                                     </button>
@@ -188,12 +211,12 @@ export const ShopModal: React.FC<ShopModalProps> = ({ score, onBuy, onContinue }
                 <div className="flex justify-center">
                     <button
                         onClick={onContinue}
-                        className="px-8 py-3 bg-green-600 hover:bg-green-500 text-white font-bold rounded-lg transition-colors text-lg"
+                        className="px-8 py-3 bg-success hover:brightness-110 text-onPrimary font-bold rounded-xl transition-all duration-200 text-lg active:scale-[0.98] ui-focus-ring"
                     >
                         Continue Run
                     </button>
                 </div>
-            </div>
-        </div>
+            </motion.div>
+        </motion.div>
     );
 };
