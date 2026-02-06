@@ -106,9 +106,9 @@ export function Sidebar({ totalLevels, currentLevel, progress, onSelectLevel, is
                                         if (window.innerWidth < 768) onClose();
                                     }}
                                     className={clsx(
-                                        "w-full flex items-center justify-between px-3 py-2 rounded text-sm transition-all ui-focus-ring",
+                                        "w-full flex items-center justify-between px-3 py-2 rounded border border-transparent text-sm transition-all ui-focus-ring",
                                         isCurrent
-                                            ? "bg-primary/20 border border-primary/50 text-white"
+                                            ? "bg-primary/20 border-primary/50 text-white"
                                             : "hover:bg-white/8 text-muted hover:text-white",
                                         isLast && "pb-2"
                                     )}
