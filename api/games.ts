@@ -20,7 +20,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
             return rest;
         });
 
-        res.setHeader('Cache-Control', 'no-store, max-age=0');
+        res.setHeader('Cache-Control', 'public, s-maxage=30');
         res.status(200).json(cleanGames);
     } catch (error) {
         console.error('API Error:', error);
