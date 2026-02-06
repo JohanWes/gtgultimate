@@ -37,6 +37,7 @@ interface EndlessGameAreaProps {
     onMarkShopVisited: () => void;
     isStatsOpen: boolean;
     isLoading?: boolean;
+    isFullscreen?: boolean;
 }
 
 // eslint-disable-next-line react-refresh/only-export-components
@@ -54,7 +55,8 @@ export function EndlessGameArea({
     isHighScoreModalOpen,
     onMarkShopVisited,
     isStatsOpen,
-    isLoading = false
+    isLoading = false,
+    isFullscreen = false
 }: EndlessGameAreaProps) {
     const [showShop, setShowShop] = useState(false);
     const [anagramHint, setAnagramHint] = useState<string | null>(null);
@@ -367,6 +369,9 @@ export function EndlessGameArea({
     }, [game?.id]);
 
     const { settings, isSettingsOpen } = useSettings();
+    const containerWidthClass = isFullscreen
+        ? (settings.miniaturesInPicture ? "max-w-[min(94vw,86rem)]" : "max-w-[min(93vw,76rem)]")
+        : (settings.miniaturesInPicture ? "max-w-[85rem]" : "max-w-6xl");
 
     // Handle Enter key for Next Level / Try Again
     useEffect(() => {
@@ -500,7 +505,7 @@ export function EndlessGameArea({
     // RENDER: Bonus Round
     if (state.bonusRound?.active && state.bonusRound.games.length > 0) {
         return (
-            <div className="mx-auto pb-8 px-0 sm:px-4 game-container endless-game transition-all duration-500 max-w-6xl">
+            <div className={clsx("mx-auto pb-8 px-0 sm:px-4 game-container endless-game transition-all duration-500", containerWidthClass)}>
                 <BonusRound
                     games={state.bonusRound.games}
                     targetId={state.bonusRound.targetId}
@@ -514,7 +519,7 @@ export function EndlessGameArea({
     return (
         <div className={clsx(
             "mx-auto pb-8 px-0 sm:px-4 game-container endless-game transition-all duration-500",
-            settings.miniaturesInPicture ? "max-w-[85rem]" : "max-w-6xl"
+            containerWidthClass
         )}>
             <AdminGameEditor
                 isOpen={adminModalOpen}

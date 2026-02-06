@@ -15,9 +15,10 @@ interface SidebarProps {
     onClose: () => void;
     currentMode: GameMode;
     onModeSwitch: (mode: GameMode) => void;
+    collapsed?: boolean;
 }
 
-export function Sidebar({ totalLevels, currentLevel, progress, onSelectLevel, isOpen, onClose, currentMode, onModeSwitch }: SidebarProps) {
+export function Sidebar({ totalLevels, currentLevel, progress, onSelectLevel, isOpen, onClose, currentMode, onModeSwitch, collapsed = false }: SidebarProps) {
     const { settings } = useSettings();
     const logoSrc =
         settings.theme === 'retro'
@@ -35,7 +36,8 @@ export function Sidebar({ totalLevels, currentLevel, progress, onSelectLevel, is
             {/* Mobile overlay */}
             <div
                 className={clsx(
-                    "fixed inset-0 bg-black/50 z-40 md:hidden transition-opacity",
+                    "fixed inset-0 bg-black/50 z-40 transition-opacity",
+                    !collapsed && "md:hidden",
                     isOpen ? "opacity-100" : "opacity-0 pointer-events-none"
                 )}
                 onClick={onClose}
@@ -43,8 +45,9 @@ export function Sidebar({ totalLevels, currentLevel, progress, onSelectLevel, is
 
             {/* Sidebar */}
             <div className={clsx(
-                "fixed md:sticky md:top-0 md:h-screen inset-y-0 left-0 z-50 bg-surface/90 supports-[backdrop-filter]:bg-surface/60 backdrop-blur-md border-r border-white/10 shadow-2xl transform transition-all duration-300 ease-in-out md:transform-none flex flex-col",
-                isOpen ? "translate-x-0" : "-translate-x-full",
+                "fixed inset-y-0 left-0 z-50 bg-surface/90 supports-[backdrop-filter]:bg-surface/60 backdrop-blur-md border-r border-white/10 shadow-2xl transform transition-all duration-300 ease-in-out flex flex-col",
+                !collapsed && "md:sticky md:top-0 md:h-screen md:transform-none",
+                isOpen ? "translate-x-0" : collapsed ? "-translate-x-full" : "-translate-x-full md:translate-x-0",
                 "w-64"
             )}>
                 <div className="px-4 py-3 border-b border-white/10 flex-shrink-0 flex flex-col gap-3">
@@ -53,7 +56,10 @@ export function Sidebar({ totalLevels, currentLevel, progress, onSelectLevel, is
                     {/* Game Mode Toggles */}
                     <div className="flex bg-black/20 p-1 rounded-lg">
                         <button
-                            onClick={() => onModeSwitch('standard')}
+                            onClick={() => {
+                                onModeSwitch('standard');
+                                if (collapsed) onClose();
+                            }}
                             className={clsx(
                                 "flex-1 py-1.5 text-xs font-bold rounded-md transition-all ui-focus-ring",
                                 currentMode === 'standard'
@@ -64,7 +70,10 @@ export function Sidebar({ totalLevels, currentLevel, progress, onSelectLevel, is
                             Standard
                         </button>
                         <button
-                            onClick={() => onModeSwitch('endless')}
+                            onClick={() => {
+                                onModeSwitch('endless');
+                                if (collapsed) onClose();
+                            }}
                             className={clsx(
                                 "flex-1 py-1.5 text-xs font-bold rounded-md transition-all ui-focus-ring",
                                 currentMode === 'endless'
@@ -103,7 +112,7 @@ export function Sidebar({ totalLevels, currentLevel, progress, onSelectLevel, is
                                     key={level}
                                     onClick={() => {
                                         onSelectLevel(level);
-                                        if (window.innerWidth < 768) onClose();
+                                        if (window.innerWidth < 768 || collapsed) onClose();
                                     }}
                                     className={clsx(
                                         "w-full flex items-center justify-between px-3 py-2 rounded border border-transparent text-sm transition-all ui-focus-ring",

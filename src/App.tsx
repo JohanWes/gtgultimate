@@ -10,6 +10,7 @@ import { useGameState } from './hooks/useGameState';
 import { useEndlessState } from './hooks/useEndlessState';
 import { useEndlessStats } from './hooks/useEndlessStats';
 import { useSettings } from './hooks/useSettings';
+import { useFullscreen } from './hooks/useFullscreen';
 import type { GameMode } from './types';
 import { MobileTutorialModal } from './components/MobileTutorialModal';
 import { useIsMobile } from './hooks/useIsMobile';
@@ -20,6 +21,7 @@ function App() {
   const [showHighScoreModal, setShowHighScoreModal] = useState(false);
   const [isStatsOpen, setIsStatsOpen] = useState(false);
   const isMobile = useIsMobile();
+  const { isFullscreen, toggleFullscreen } = useFullscreen();
 
   const gameState = useGameState();
   const { currentGame, currentProgress, games, submitGuess, nextLevel, isLoading, error } = gameState;
@@ -146,6 +148,8 @@ function App() {
       gameState={gameState}
       currentMode={mode}
       onModeSwitch={handleModeSwitch}
+      isFullscreen={isFullscreen}
+      onToggleFullscreen={toggleFullscreen}
       isStatsOpen={isStatsOpen}
       onStatsOpenChange={setIsStatsOpen}
       endlessStats={{
@@ -171,6 +175,7 @@ function App() {
                 onSkip={gameState.skipGuess}
                 onNextLevel={nextLevel}
                 isLoading={isLoading}
+                isFullscreen={isFullscreen}
               />
             </PageTransition>
           )
@@ -192,6 +197,7 @@ function App() {
                 onMarkShopVisited={endlessState.markShopVisited}
                 isStatsOpen={isStatsOpen}
                 isLoading={isLoading}
+                isFullscreen={isFullscreen}
               />
             </PageTransition>
           )

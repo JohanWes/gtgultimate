@@ -18,9 +18,10 @@ interface GameAreaProps {
     onSkip: () => void;
     onNextLevel: () => void;
     isLoading?: boolean;
+    isFullscreen?: boolean;
 }
 
-export function GameArea({ game, allGames, guesses, status, allProgress, onGuess, onSkip, onNextLevel, isLoading = false }: GameAreaProps) {
+export function GameArea({ game, allGames, guesses, status, allProgress, onGuess, onSkip, onNextLevel, isLoading = false, isFullscreen = false }: GameAreaProps) {
     const revealedCount = status === 'playing' ? guesses.length + 1 : 5;
     const [errorMessage, setErrorMessage] = useState<string | null>(null);
     const [similarNameMessage, setSimilarNameMessage] = useState<boolean>(false);
@@ -118,6 +119,9 @@ export function GameArea({ game, allGames, guesses, status, allProgress, onGuess
     };
 
     const { settings, isSettingsOpen } = useSettings();
+    const containerWidthClass = isFullscreen
+        ? (settings.miniaturesInPicture ? "max-w-[min(94vw,82rem)]" : "max-w-[min(93vw,72rem)]")
+        : (settings.miniaturesInPicture ? "max-w-7xl" : "max-w-5xl");
 
     // Handle Keyboard Shortcuts (Enter for Next Level, Esc for Skip)
     useEffect(() => {
@@ -148,7 +152,7 @@ export function GameArea({ game, allGames, guesses, status, allProgress, onGuess
     return (
         <div className={clsx(
             "mx-auto space-y-2 pb-8 game-container standard-game transition-all duration-500",
-            settings.miniaturesInPicture ? "max-w-7xl" : "max-w-5xl"
+            containerWidthClass
         )}>
             {game && (
                 <AdminGameEditor
