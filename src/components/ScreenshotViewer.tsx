@@ -20,10 +20,9 @@ interface ScreenshotViewerProps {
     miniaturesInPicture?: boolean;
     isLoading?: boolean;
     redactedRegions?: Record<number, Array<{ x: number; y: number; width: number; height: number }>>;
-    applyDifficultyZoomBonus?: boolean;
 }
 
-export function ScreenshotViewer({ screenshots, revealedCount, status, cropPositions, doubleTroubleGame, currentLevelIndex = 0, zoomOutActive = false, miniaturesInPicture = false, isLoading = false, redactedRegions, applyDifficultyZoomBonus = false }: ScreenshotViewerProps) {
+export function ScreenshotViewer({ screenshots, revealedCount, status, cropPositions, doubleTroubleGame, currentLevelIndex = 0, zoomOutActive = false, miniaturesInPicture = false, isLoading = false, redactedRegions }: ScreenshotViewerProps) {
     const [selectedIndex, setSelectedIndex] = useState(0);
     const [showCropped, setShowCropped] = useState(false);
     const { settings, updateSetting, hasSeenLockTip, markLockTipSeen } = useSettings();
@@ -32,10 +31,6 @@ export function ScreenshotViewer({ screenshots, revealedCount, status, cropPosit
     const shouldReduceMotion = useReducedMotion();
 
     const getZoomScale = (index: number) => {
-        const difficultyBonus = applyDifficultyZoomBonus
-            ? getDifficultyZoomBonus(currentLevelIndex)
-            : 0;
-
         // If Zoom Out lifeline is active, return 100% for all images
         if (zoomOutActive && status === 'playing') {
             return 100;
@@ -43,6 +38,9 @@ export function ScreenshotViewer({ screenshots, revealedCount, status, cropPosit
 
         // If game is over and user wants to see cropped version
         if (status !== 'playing' && showCropped) {
+            // Calculate difficulty bonus: +10% every 10 levels
+            const difficultyBonus = getDifficultyZoomBonus(currentLevelIndex);
+
             // Use the same zoom levels as during gameplay
             switch (index) {
                 case 0: return 500 + difficultyBonus;
@@ -55,13 +53,16 @@ export function ScreenshotViewer({ screenshots, revealedCount, status, cropPosit
 
         if (status !== 'playing') return 100; // 100% - full image
 
+        // Calculate difficulty bonus: +10% every 10 levels
+        const difficultyBonus = getDifficultyZoomBonus(currentLevelIndex);
+
         // Base zoom levels with difficulty scaling
         switch (index) {
             case 0: return 500 + difficultyBonus; // 500% -> 510% -> 520% etc.
             case 1: return 400 + difficultyBonus; // 400% -> 410% -> 420% etc.
             case 2: return 300 + difficultyBonus; // 300% -> 310% -> 320% etc.
             case 3: return 200 + difficultyBonus; // 200% -> 210% -> 220% etc.
-            default: return 100 + difficultyBonus; // 5th image is full in standard mode (bonus disabled)
+            default: return 100 + difficultyBonus; // 100% -> 110% -> 120% etc.
         }
     };
 
@@ -137,17 +138,16 @@ export function ScreenshotViewer({ screenshots, revealedCount, status, cropPosit
             };
         }
 
-        // If zoomed, we need to project coordinates.
-        // Logic matches /api/image-proxy crop math (x/y are top-left crop offsets, not crop center).
+        // If zoomed, we need to project coordinates
+        // Logic must match Proxy cropping logic
         const zoomFactor = zoom / 100;
         const visiblePortion = 100 / zoomFactor;
 
-        const xPos = positions[index]?.x || 50;
-        const yPos = positions[index]?.y || 50;
-        const maxOffset = 100 - visiblePortion;
+        const centerX = positions[index]?.x || 50;
+        const centerY = positions[index]?.y || 50;
 
-        const viewLeft = maxOffset * (xPos / 100);
-        const viewTop = maxOffset * (yPos / 100);
+        const viewLeft = centerX - (visiblePortion / 2);
+        const viewTop = centerY - (visiblePortion / 2);
 
         return {
             left: `${(region.x - viewLeft) * zoomFactor}%`,
