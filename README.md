@@ -2,14 +2,14 @@
 
 A screenshot-based video game trivia application. Players identify games from progressively revealing screenshots across two game modes: Standard (casual progression through all levels) and Endless (roguelike with permadeath and scoring).
 
-![Game Modes](https://img.shields.io/badge/Game%20Modes-Standard%20%7C%20Endless-blue) ![Games](https://img.shields.io/badge/Games-2615-green) ![Built With](https://img.shields.io/badge/Built%20With-React%20%2B%20TypeScript-61dafb)
+![Game Modes](https://img.shields.io/badge/Game%20Modes-Standard%20%7C%20Endless-blue) ![Games](https://img.shields.io/badge/Games-4000-green) ![Built With](https://img.shields.io/badge/Built%20With-React%20%2B%20TypeScript-61dafb)
 
 ---
 
 ## Game Modes
 
 ### Standard Mode
-Casual progression through all 2615 levels at your own pace.
+Casual progression through all 4000 levels at your own pace.
 
 - 5 guesses per game with progressive clues (screenshots, release year, platform, genre, rating)
 - Progress tracking with persistent state (won, lost, or unplayed)
@@ -118,7 +118,7 @@ Self-contained setup using local filesystem for storage.
 
 ## Key Features
 
-- **2615 curated games** from IGDB (Internet Game Database)
+- **4000 curated games** from IGDB (Internet Game Database)
 - **Fuzzy search** via Fuse.js (handles typos and abbreviations)
 - **Series detection**: Warns when guessing a game from the same series (e.g., "Portal" vs "Portal 2")
 - **Progressive reveal**: 5 screenshots per game with metadata unlocking
@@ -130,7 +130,7 @@ Self-contained setup using local filesystem for storage.
 ---
 
 ## Tech Stack
-The game database (`data/games_db.json`) contains 2615 titles curated from IGDB with the following filters:
+The game database currently contains 4000 titles curated from IGDB with the following filters:
 
 - `rating_count > 100` (popularity threshold)
 - `aggregated_rating > 70` (quality threshold)
@@ -138,7 +138,10 @@ The game database (`data/games_db.json`) contains 2615 titles curated from IGDB 
 - Main games only (no DLC/expansions/episodes)
 - Minimum 5 high-resolution screenshots
 
-The database is bundled with the application. No external API calls are made at runtime.
+I have not (believe it or not!) manually reviewed all 4000 one by one.
+That means there may still be duplicates, and some entries/screenshots may expose game titles more directly than ideal.
+
+For Vercel deployment, games are served from MongoDB. In local Docker mode, games are read from the bundled JSON file.
 
 **Regenerating the database** (requires IGDB API credentials):
 ```bash
