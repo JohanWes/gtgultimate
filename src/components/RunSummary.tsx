@@ -249,11 +249,10 @@ export function RunSummary({ runId, allGames, onPlay }: RunSummaryProps) {
                                                                     } else {
                                                                         const zoomFactor = zoom / 100;
                                                                         const visiblePortion = 100 / zoomFactor;
-                                                                        const centerX = position.x; // Use the used position
-                                                                        const centerY = position.y;
+                                                                        const maxOffset = 100 - visiblePortion;
 
-                                                                        const viewLeft = centerX - (visiblePortion / 2);
-                                                                        const viewTop = centerY - (visiblePortion / 2);
+                                                                        const viewLeft = maxOffset * (position.x / 100);
+                                                                        const viewTop = maxOffset * (position.y / 100);
 
                                                                         style = {
                                                                             left: `${(region.x - viewLeft) * zoomFactor}%`,

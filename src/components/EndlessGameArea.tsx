@@ -550,6 +550,7 @@ export function EndlessGameArea({
                             cropPositions={game?.cropPositions || []}
                             doubleTroubleGame={doubleTroubleGame || undefined}
                             currentLevelIndex={state.currentLevelIndex}
+                            applyDifficultyZoomBonus={true}
                             zoomOutActive={state.zoomOutActive}
                             miniaturesInPicture={settings.miniaturesInPicture}
                             isLoading={isLoading}
