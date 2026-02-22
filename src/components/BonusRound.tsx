@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import type { Game } from '../types';
 import { clsx } from 'clsx';
 import { ArrowRight } from 'lucide-react';
@@ -15,11 +15,23 @@ export function BonusRound({ games, targetId, onGuess }: BonusRoundProps) {
     const { settings } = useSettings();
     const [selectedId, setSelectedId] = useState<number | null>(games[0]?.id || null);
     const [viewState, setViewState] = useState<'selecting' | 'processing' | 'result'>('selecting');
+    const resolveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+    const confettiTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
     const targetGame = games.find(g => g.id === targetId);
-    if (!targetGame) return null;
-
     const selectedGame = games.find(g => g.id === selectedId);
+    const isCorrect = selectedId === targetId;
+
+    const clearTimers = useCallback(() => {
+        if (resolveTimerRef.current) {
+            clearTimeout(resolveTimerRef.current);
+            resolveTimerRef.current = null;
+        }
+        if (confettiTimerRef.current) {
+            clearTimeout(confettiTimerRef.current);
+            confettiTimerRef.current = null;
+        }
+    }, []);
 
     const handleSelect = (id: number) => {
         if (viewState !== 'selecting') return;
@@ -30,9 +42,10 @@ export function BonusRound({ games, targetId, onGuess }: BonusRoundProps) {
     const handleFinalConfirm = () => {
         if (!selectedId) return;
         setViewState('processing');
+        clearTimers();
 
         // 3 second delay for suspense
-        setTimeout(() => {
+        resolveTimerRef.current = setTimeout(() => {
             const isCorrect = selectedId === targetId;
             setViewState('result');
 
@@ -46,7 +59,7 @@ export function BonusRound({ games, targetId, onGuess }: BonusRoundProps) {
                     zIndex: 2000
                 });
                 // Second burst
-                setTimeout(() => {
+                confettiTimerRef.current = setTimeout(() => {
                     confetti({
                         particleCount: 80,
                         spread: 100,
@@ -60,11 +73,11 @@ export function BonusRound({ games, targetId, onGuess }: BonusRoundProps) {
         }, 3000);
     };
 
-    const handleNextLevel = () => {
+    const handleNextLevel = useCallback(() => {
         if (selectedId) {
             onGuess(selectedId);
         }
-    };
+    }, [onGuess, selectedId]);
 
     // Handle "Next Level on Enter"
     useEffect(() => {
@@ -76,9 +89,11 @@ export function BonusRound({ games, targetId, onGuess }: BonusRoundProps) {
 
         window.addEventListener('keydown', handleKeyDown);
         return () => window.removeEventListener('keydown', handleKeyDown);
-    }, [viewState, settings.nextLevelOnEnter, selectedId]);
+    }, [handleNextLevel, settings.nextLevelOnEnter, viewState]);
 
-    const isCorrect = selectedId === targetId;
+    useEffect(() => clearTimers, [clearTimers]);
+
+    if (!targetGame) return null;
 
     return (
         <div className="relative w-full max-w-6xl mx-auto p-4 flex flex-col items-center gap-6 animate-in fade-in zoom-in duration-500">

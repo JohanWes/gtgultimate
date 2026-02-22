@@ -172,6 +172,12 @@
       inset 0 1px 0 rgb(255 255 255 / 0.06);
   }
 
+  /* Keep search suggestions readable on the darkest theme without removing glass transparency */
+  [data-theme='midnight-black'] .search-results-panel {
+    background-color: color-mix(in srgb, rgb(var(--surface)), transparent 14%);
+    border-color: rgb(var(--text) / 0.2);
+  }
+
   .ui-focus-ring {
     @apply focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/50 focus-visible:ring-offset-2 focus-visible:ring-offset-background;
   }

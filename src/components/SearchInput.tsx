@@ -219,7 +219,7 @@ export function SearchInput({ games, onGuess, disabled, autoFocus, correctAnswer
             {isOpen && !hideResults && results.length > 0 && (
                 <ul
                     ref={listRef}
-                    className="absolute w-full mt-2 glass-panel-strong backdrop-blur-xl border border-white/10 rounded-xl shadow-2xl overflow-hidden max-h-48 overflow-y-auto custom-scrollbar animate-in fade-in slide-in-from-top-2"
+                    className="search-results-panel absolute w-full mt-2 glass-panel-strong backdrop-blur-xl border border-white/10 rounded-xl shadow-2xl overflow-hidden max-h-48 overflow-y-auto custom-scrollbar animate-in fade-in slide-in-from-top-2"
                 >
                     {results.map((game, idx) => {
                         const isSelected = idx === selectedIndex;
