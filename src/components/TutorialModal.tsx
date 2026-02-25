@@ -270,7 +270,7 @@ function TwoModesStep() {
                 <div className="flex-1 glass-panel-soft rounded-xl p-3 md:p-4">
                     <div className="text-base md:text-lg font-bold text-accent">Endless</div>
                     <p className="text-xs text-muted mt-1 leading-relaxed">
-                        Roguelike. 5 lives. Score 5/4/3/2/1 points by guess number.
+                        Roguelike. 5 guesses. Score 5/4/3/2/1 points by guess number.
                     </p>
                 </div>
             </div>
@@ -315,7 +315,7 @@ function ShopStep() {
             </h2>
             <p className="text-sm text-muted max-w-sm leading-relaxed">
                 Every <span className="text-primary font-semibold">5 levels</span> in Endless Mode,
-                spend points on power-ups to extend your run.
+                spend points on lifelines to extend your run.
             </p>
         </div>
     );
