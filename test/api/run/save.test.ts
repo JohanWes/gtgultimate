@@ -9,7 +9,7 @@ const mongoMocks = vi.hoisted(() => {
   return { insertOne, collection, db, client };
 });
 
-vi.mock('../_lib/mongodb.js', () => ({
+vi.mock('../../../api/_lib/mongodb.js', () => ({
   default: Promise.resolve(mongoMocks.client),
 }));
 
@@ -21,7 +21,7 @@ vi.mock('crypto', async (importOriginal) => {
   };
 });
 
-import handler from './save';
+import handler from '../../../api/run/save';
 
 describe('/api/run/save', () => {
   beforeEach(() => {

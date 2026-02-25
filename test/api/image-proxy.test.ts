@@ -19,7 +19,7 @@ vi.mock('sharp', () => ({
   default: sharpMocks.sharpFn,
 }));
 
-import handler from './image-proxy';
+import handler from '../../api/image-proxy';
 
 describe('/api/image-proxy', () => {
   beforeEach(() => {

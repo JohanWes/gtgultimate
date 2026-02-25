@@ -1,7 +1,7 @@
 import { afterEach, describe, expect, it } from 'vitest';
 import { createMocks } from 'node-mocks-http';
 
-import handler from './verify';
+import handler from '../../../api/admin/verify';
 
 const ORIGINAL_ADMIN_KEY = process.env.ADMIN_KEY;
 

@@ -9,11 +9,11 @@ const mongoMocks = vi.hoisted(() => {
   return { findOne, collection, db, client };
 });
 
-vi.mock('../_lib/mongodb.js', () => ({
+vi.mock('../../../api/_lib/mongodb.js', () => ({
   default: Promise.resolve(mongoMocks.client),
 }));
 
-import handler from './[id]';
+import handler from '../../../api/run/[id]';
 
 describe('/api/run/[id]', () => {
   beforeEach(() => {

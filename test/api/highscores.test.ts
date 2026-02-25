@@ -18,11 +18,11 @@ const mongoMocks = vi.hoisted(() => {
   return { toArray, limit, sort, find, insertOne, collection, db, client };
 });
 
-vi.mock('./_lib/mongodb.js', () => ({
+vi.mock('../../api/_lib/mongodb.js', () => ({
   default: Promise.resolve(mongoMocks.client),
 }));
 
-import handler from './highscores';
+import handler from '../../api/highscores';
 
 describe('/api/highscores', () => {
   beforeEach(() => {
