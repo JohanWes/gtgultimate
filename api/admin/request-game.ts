@@ -19,8 +19,8 @@ async function getIgdbAccessToken(): Promise<string> {
     try {
         const response = await axios.post('https://id.twitch.tv/oauth2/token', null, {
             params: {
-                client_id: process.env.VITE_IGDB_CLIENT_ID,
-                client_secret: process.env.VITE_IGDB_CLIENT_SECRET,
+                client_id: process.env.IGDB_CLIENT_ID,
+                client_secret: process.env.IGDB_CLIENT_SECRET,
                 grant_type: 'client_credentials',
             },
         });
@@ -52,7 +52,7 @@ async function searchIgdbGamesList(name: string, accessToken: string) {
             query,
             {
                 headers: {
-                    'Client-ID': process.env.VITE_IGDB_CLIENT_ID,
+                    'Client-ID': process.env.IGDB_CLIENT_ID,
                     'Authorization': `Bearer ${accessToken}`,
                     'Content-Type': 'text/plain',
                 },
@@ -78,7 +78,7 @@ async function getIgdbGameDetails(igdbId: number, accessToken: string) {
             query,
             {
                 headers: {
-                    'Client-ID': process.env.VITE_IGDB_CLIENT_ID,
+                    'Client-ID': process.env.IGDB_CLIENT_ID,
                     'Authorization': `Bearer ${accessToken}`,
                     'Content-Type': 'text/plain',
                 },

@@ -12,8 +12,8 @@ services:
       dockerfile: Dockerfile
       args:
         # These build args are baked into the built app
-        VITE_IGDB_CLIENT_ID: "${VITE_IGDB_CLIENT_ID}"
-        VITE_IGDB_CLIENT_SECRET: "${VITE_IGDB_CLIENT_SECRET}"
+        IGDB_CLIENT_ID: "${IGDB_CLIENT_ID}"
+        IGDB_CLIENT_SECRET: "${IGDB_CLIENT_SECRET}"
         VITE_PORT: "${VITE_PORT:-5173}"
     image: guessthegame
     container_name: guessthegame

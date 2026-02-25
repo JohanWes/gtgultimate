@@ -1,0 +1,10 @@
+node_modules/
+dist/
+storage/
+.vercel/
+.agent/
+scripts/cleanup_data/
+.env
+.env.local
+.env.production
+!.env.example

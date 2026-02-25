@@ -14,13 +14,13 @@ COPY . .
 
 # Build arguments with defaults (set via docker-compose or docker build --build-arg)
 # These are used during the build process and get baked into the built application
-ARG VITE_IGDB_CLIENT_ID=""
-ARG VITE_IGDB_CLIENT_SECRET=""
+ARG IGDB_CLIENT_ID=""
+ARG IGDB_CLIENT_SECRET=""
 ARG VITE_PORT=5173
 
 # Set environment variables for build
-ENV VITE_IGDB_CLIENT_ID=${VITE_IGDB_CLIENT_ID}
-ENV VITE_IGDB_CLIENT_SECRET=${VITE_IGDB_CLIENT_SECRET}
+ENV IGDB_CLIENT_ID=${IGDB_CLIENT_ID}
+ENV IGDB_CLIENT_SECRET=${IGDB_CLIENT_SECRET}
 ENV VITE_PORT=${VITE_PORT}
 
 # Build the application
