@@ -12,15 +12,13 @@ import { useEndlessStats } from './hooks/useEndlessStats';
 import { useSettings } from './hooks/useSettings';
 import { useFullscreen } from './hooks/useFullscreen';
 import type { GameMode } from './types';
-import { MobileTutorialModal } from './components/MobileTutorialModal';
-import { useIsMobile } from './hooks/useIsMobile';
+
 import { RunSummary } from './components/RunSummary';
 
 function App() {
   const [mode, setMode] = useState<GameMode>('standard');
   const [showHighScoreModal, setShowHighScoreModal] = useState(false);
   const [isStatsOpen, setIsStatsOpen] = useState(false);
-  const isMobile = useIsMobile();
   const { isFullscreen, toggleFullscreen } = useFullscreen();
 
   const gameState = useGameState();
@@ -219,25 +217,14 @@ function App() {
         )}
       </AnimatePresence>
 
-      {isMobile ? (
-        <MobileTutorialModal
-          isOpen={isTutorialOpen}
-          onClose={() => {
-            setIsTutorialOpen(false);
-            markTutorialSeen();
-          }}
-          onComplete={markTutorialSeen}
-        />
-      ) : (
-        <TutorialModal
-          isOpen={isTutorialOpen}
-          onClose={() => {
-            setIsTutorialOpen(false);
-            markTutorialSeen();
-          }}
-          onComplete={markTutorialSeen}
-        />
-      )}
+      <TutorialModal
+        isOpen={isTutorialOpen}
+        onClose={() => {
+          setIsTutorialOpen(false);
+          markTutorialSeen();
+        }}
+        onComplete={markTutorialSeen}
+      />
     </Layout>
   );
 }

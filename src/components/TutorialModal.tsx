@@ -1,27 +1,20 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
 import {
+    Eye,
+    SkipForward,
+    Shuffle,
+    HelpCircle,
     Gamepad2,
-    BookOpen,
-    Search,
-    Flame,
-    LifeBuoy,
-    ShoppingCart,
+    ZoomOut,
+    FileText,
     ChevronLeft,
     ChevronRight,
     X,
-    Sparkles,
-    Target,
-    Trophy,
-    HelpCircle,
-    Shuffle,
-    ZoomOut,
-    SkipForward,
-    Coins,
-    Eye,
-    FileText
 } from 'lucide-react';
 import { clsx } from 'clsx';
 import { TutorialSimulation } from './TutorialSimulation';
+import { useIsMobile } from '../hooks/useIsMobile';
 
 interface TutorialModalProps {
     isOpen: boolean;
@@ -29,375 +22,301 @@ interface TutorialModalProps {
     onComplete: () => void;
 }
 
-interface TutorialStep {
-    icon: React.ReactNode;
-    title: string;
-    content: React.ReactNode;
-    accentColor: string;
-}
+const TOTAL_STEPS = 4;
+const SWIPE_THRESHOLD = 50;
 
-const tutorialSteps: TutorialStep[] = [
-    {
-        icon: <Gamepad2 size={48} />,
-        title: "Welcome to Guess The Game Ultimate!",
-        accentColor: "from-purple-500 to-pink-500",
-        content: (
-            <div className="space-y-4">
-                <p className="text-lg text-gray-300">
-                    Test your gaming knowledge by identifying games from their screenshots.
-                </p>
-                <div className="flex items-center gap-3 p-4 bg-white/5 rounded-xl border border-white/10">
-                    <Sparkles className="text-yellow-400 flex-shrink-0" size={24} />
-                    <p className="text-sm text-gray-400">
-                        Over <span className="text-white font-bold">2600+ games</span> to discover across all genres and eras!
-                    </p>
-                </div>
-                <p className="text-gray-400 text-sm">
-                    This quick guide will show you how to play both game modes.
-                </p>
-            </div>
-        )
-    },
-    {
-        icon: <BookOpen size={48} />,
-        title: "Standard Mode",
-        accentColor: "from-blue-500 to-cyan-500",
-        content: (
-            <div className="space-y-4">
-                <p className="text-gray-300">
-                    The relaxed way to play – no pressure, just fun!
-                </p>
-                <div className="grid gap-3">
-                    <div className="flex items-start gap-3 p-3 bg-white/5 rounded-lg">
-                        <Target className="text-blue-400 flex-shrink-0 mt-0.5" size={20} />
-                        <div>
-                            <p className="text-white font-medium">Play at Your Own Pace</p>
-                            <p className="text-sm text-gray-400">No time limits, no penalties</p>
-                        </div>
-                    </div>
-                    <div className="flex items-start gap-3 p-3 bg-white/5 rounded-lg">
-                        <Trophy className="text-yellow-400 flex-shrink-0 mt-0.5" size={20} />
-                        <div>
-                            <p className="text-white font-medium">Progress Saved Automatically</p>
-                            <p className="text-sm text-gray-400">Come back anytime and continue</p>
-                        </div>
-                    </div>
-                    <div className="flex items-start gap-3 p-3 bg-white/5 rounded-lg">
-                        <Gamepad2 className="text-green-400 flex-shrink-0 mt-0.5" size={20} />
-                        <div>
-                            <p className="text-white font-medium">Jump to Any Level</p>
-                            <p className="text-sm text-gray-400">Use the sidebar to select levels</p>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        )
-    },
-    {
-        icon: <Search size={48} />,
-        title: "Progressive Reveal System",
-        accentColor: "from-green-500 to-emerald-500",
-        content: (
-            <div className="space-y-4">
-                <p className="text-gray-300 text-sm">
-                    Each game starts with a zoomed-in screenshot. Wrong guesses zoom out and reveal more of the image!
-                </p>
-
-                {/* New Simulation Component */}
-                <div className="mt-2 -mx-2">
-                    <TutorialSimulation />
-                </div>
-            </div>
-        )
-    },
-    {
-        icon: <Flame size={48} />,
-        title: "Endless Mode",
-        accentColor: "from-orange-500 to-red-500",
-        content: (
-            <div className="space-y-4">
-                <p className="text-gray-300">
-                    The ultimate challenge – roguelike stakes with permadeath!
-                </p>
-                <div className="p-4 bg-gradient-to-r from-red-500/10 to-orange-500/10 rounded-xl border border-red-500/20">
-                    <div className="flex items-center gap-3 mb-3">
-                        <div className="w-12 h-12 rounded-full bg-red-500/20 flex items-center justify-center">
-                            <span className="text-2xl">💀</span>
-                        </div>
-                        <div>
-                            <p className="text-white font-bold">5 Wrong Guesses = Game Over</p>
-                            <p className="text-sm text-red-400">Your run ends, but glory awaits...</p>
-                        </div>
-                    </div>
-                </div>
-                <div className="grid grid-cols-5 gap-2 text-center">
-                    {[5, 4, 3, 2, 1].map((pts, idx) => (
-                        <div key={pts} className="p-2 bg-white/5 rounded-lg">
-                            <p className="text-lg font-bold text-orange-400">+{pts}</p>
-                            <p className="text-[10px] text-gray-500">Guess {idx + 1}</p>
-                        </div>
-                    ))}
-                </div>
-                <p className="text-sm text-gray-400 text-center">
-                    Points earned based on which guess gets it right
-                </p>
-            </div>
-        )
-    },
-    {
-        icon: <LifeBuoy size={48} />,
-        title: "Lifelines",
-        accentColor: "from-cyan-500 to-blue-500",
-        content: (
-            <div className="space-y-3">
-                <p className="text-gray-300 text-sm">
-                    Powerful tools to help you survive in Endless Mode:
-                </p>
-                <div className="grid gap-2">
-                    <div className="flex items-center gap-3 p-2.5 bg-white/5 rounded-lg">
-                        <Eye className="text-purple-400 flex-shrink-0" size={18} />
-                        <div className="flex-1">
-                            <span className="text-white font-medium text-sm">Cover Peek</span>
-                            <span className="text-gray-500 text-xs ml-2">– Shows cover art briefly</span>
-                        </div>
-                    </div>
-                    <div className="flex items-center gap-3 p-2.5 bg-white/5 rounded-lg">
-                        <SkipForward className="text-red-400 flex-shrink-0" size={18} />
-                        <div className="flex-1">
-                            <span className="text-white font-medium text-sm">Skip</span>
-                            <span className="text-gray-500 text-xs ml-2">– Move to next (0 pts)</span>
-                        </div>
-                    </div>
-                    <div className="flex items-center gap-3 p-2.5 bg-white/5 rounded-lg">
-                        <Shuffle className="text-purple-400 flex-shrink-0" size={18} />
-                        <div className="flex-1">
-                            <span className="text-white font-medium text-sm">Anagram</span>
-                            <span className="text-gray-500 text-xs ml-2">– Scrambled title hint</span>
-                        </div>
-                    </div>
-                    <div className="flex items-center gap-3 p-2.5 bg-white/5 rounded-lg">
-                        <HelpCircle className="text-green-400 flex-shrink-0" size={18} />
-                        <div className="flex-1">
-                            <span className="text-white font-medium text-sm">Consultant</span>
-                            <span className="text-gray-500 text-xs ml-2">– Multiple choice (1 correct, 3 wrong)</span>
-                        </div>
-                    </div>
-                    <div className="flex items-center gap-3 p-2.5 bg-white/5 rounded-lg">
-                        <Gamepad2 className="text-yellow-400 flex-shrink-0" size={18} />
-                        <div className="flex-1">
-                            <span className="text-white font-medium text-sm">Double Trouble</span>
-                            <span className="text-gray-500 text-xs ml-2">– Blend 2 games, guess either</span>
-                        </div>
-                    </div>
-                    <div className="flex items-center gap-3 p-2.5 bg-white/5 rounded-lg">
-                        <ZoomOut className="text-blue-400 flex-shrink-0" size={18} />
-                        <div className="flex-1">
-                            <span className="text-white font-medium text-sm">Zoom Out</span>
-                            <span className="text-gray-500 text-xs ml-2">– Reveal full image</span>
-                        </div>
-                    </div>
-                    <div className="flex items-center gap-3 p-2.5 bg-white/5 rounded-lg">
-                        <FileText className="text-green-400 flex-shrink-0" size={18} />
-                        <div className="flex-1">
-                            <span className="text-white font-medium text-sm">Synopsis</span>
-                            <span className="text-gray-500 text-xs ml-2">– Read game summary</span>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        )
-    },
-    {
-        icon: <ShoppingCart size={48} />,
-        title: "The Shop",
-        accentColor: "from-yellow-500 to-amber-500",
-        content: (
-            <div className="space-y-4">
-                <p className="text-gray-300">
-                    Every <span className="text-yellow-400 font-bold">5 levels</span> in Endless Mode, the shop appears!
-                </p>
-                <div className="p-4 bg-gradient-to-r from-yellow-500/10 to-amber-500/10 rounded-xl border border-yellow-500/20">
-                    <div className="flex items-center gap-3 mb-3">
-                        <Coins className="text-yellow-400" size={28} />
-                        <div>
-                            <p className="text-white font-bold">Spend Points, Gain Power</p>
-                            <p className="text-sm text-gray-400">Refill lifelines to extend your run</p>
-                        </div>
-                    </div>
-                </div>
-                <div className="flex items-start gap-3 p-3 bg-orange-500/10 rounded-lg border border-orange-500/20">
-                    <span className="text-xl">⚠️</span>
-                    <div>
-                        <p className="text-orange-300 font-medium text-sm">Greed is Good</p>
-                        <p className="text-xs text-gray-400">
-                            Risky choice: Get +10 points immediately, but locks all other shop items!
-                        </p>
-                    </div>
-                </div>
-                <p className="text-sm text-gray-400 text-center">
-                    Manage your resources wisely – every point counts!
-                </p>
-            </div>
-        )
-    }
+const lifelines = [
+    { icon: Eye, name: 'Cover Peek', color: 'text-purple-400' },
+    { icon: SkipForward, name: 'Skip', color: 'text-red-400' },
+    { icon: Shuffle, name: 'Anagram', color: 'text-purple-400' },
+    { icon: HelpCircle, name: 'Consultant', color: 'text-green-400' },
+    { icon: Gamepad2, name: 'Double Trouble', color: 'text-yellow-400' },
+    { icon: ZoomOut, name: 'Zoom Out', color: 'text-blue-400' },
+    { icon: FileText, name: 'Synopsis', color: 'text-green-400' },
 ];
+
+const contentVariants = {
+    enter: { opacity: 0, y: 10 },
+    center: {
+        opacity: 1,
+        y: 0,
+        transition: { duration: 0.2, ease: [0.16, 1, 0.3, 1] },
+    },
+    exit: {
+        opacity: 0,
+        y: -6,
+        transition: { duration: 0.12 },
+    },
+};
 
 export function TutorialModal({ isOpen, onClose, onComplete }: TutorialModalProps) {
     const [currentStep, setCurrentStep] = useState(0);
-    const [direction, setDirection] = useState<'next' | 'prev'>('next');
-    const [isAnimating, setIsAnimating] = useState(false);
+    const isMobile = useIsMobile();
+    const touchStartX = useRef(0);
 
-    // Reset to first step when modal opens
     useEffect(() => {
-        if (isOpen) {
-            setCurrentStep(0);
-            setDirection('next');
-        }
+        if (isOpen) setCurrentStep(0);
     }, [isOpen]);
 
-    const handleNext = () => {
-        if (isAnimating) return;
-
-        if (currentStep < tutorialSteps.length - 1) {
-            setDirection('next');
-            setIsAnimating(true);
-            setTimeout(() => {
-                setCurrentStep(prev => prev + 1);
-                setIsAnimating(false);
-            }, 150);
+    const handleNext = useCallback(() => {
+        if (currentStep < TOTAL_STEPS - 1) {
+            setCurrentStep(s => s + 1);
         } else {
             onComplete();
             onClose();
         }
-    };
+    }, [currentStep, onComplete, onClose]);
 
-    const handlePrev = () => {
-        if (isAnimating || currentStep === 0) return;
+    const handlePrev = useCallback(() => {
+        if (currentStep > 0) setCurrentStep(s => s - 1);
+    }, [currentStep]);
 
-        setDirection('prev');
-        setIsAnimating(true);
-        setTimeout(() => {
-            setCurrentStep(prev => prev - 1);
-            setIsAnimating(false);
-        }, 150);
-    };
-
-    const handleStepClick = (index: number) => {
-        if (isAnimating || index === currentStep) return;
-
-        setDirection(index > currentStep ? 'next' : 'prev');
-        setIsAnimating(true);
-        setTimeout(() => {
-            setCurrentStep(index);
-            setIsAnimating(false);
-        }, 150);
-    };
+    // Keyboard: ArrowRight / ArrowLeft / Enter / Escape
+    useEffect(() => {
+        if (!isOpen) return;
+        const onKey = (e: KeyboardEvent) => {
+            switch (e.key) {
+                case 'ArrowRight':
+                case 'Enter':
+                    e.preventDefault();
+                    handleNext();
+                    break;
+                case 'ArrowLeft':
+                    e.preventDefault();
+                    handlePrev();
+                    break;
+                case 'Escape':
+                    e.preventDefault();
+                    onClose();
+                    break;
+            }
+        };
+        window.addEventListener('keydown', onKey);
+        return () => window.removeEventListener('keydown', onKey);
+    }, [isOpen, handleNext, handlePrev, onClose]);
 
     if (!isOpen) return null;
 
-    const step = tutorialSteps[currentStep];
-    const isLastStep = currentStep === tutorialSteps.length - 1;
+    const isLastStep = currentStep === TOTAL_STEPS - 1;
+
+    // Mobile swipe handlers (content zone)
+    const handleTouchStart = (e: React.TouchEvent) => {
+        touchStartX.current = e.touches[0].clientX;
+    };
+    const handleTouchEnd = (e: React.TouchEvent) => {
+        const diff = e.changedTouches[0].clientX - touchStartX.current;
+        if (diff < -SWIPE_THRESHOLD) handleNext();
+        else if (diff > SWIPE_THRESHOLD) handlePrev();
+    };
 
     return (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 animate-in fade-in duration-300">
+        <div className="fixed inset-0 z-[100] flex items-center justify-center md:p-4 animate-in fade-in duration-200">
             {/* Backdrop */}
             <div
                 className="absolute inset-0 bg-black/85 backdrop-blur-md"
                 onClick={onClose}
             />
 
-            {/* Modal */}
-            <div className="relative w-full max-w-lg bg-surface border border-white/10 rounded-2xl shadow-2xl overflow-hidden animate-in zoom-in-95 duration-300 max-h-[90vh] flex flex-col">
-                {/* Accent gradient bar */}
-                <div className={clsx(
-                    "absolute top-0 left-0 right-0 h-1 bg-gradient-to-r transition-all duration-500",
-                    step.accentColor
-                )} />
-
-                {/* Close button */}
+            {/* ── Cinema Frame ── */}
+            <div
+                className={clsx(
+                    'relative w-full flex flex-col overflow-hidden bg-background',
+                    // Mobile: full-screen
+                    'h-full',
+                    // Desktop: fixed cinema dimensions
+                    'md:h-[520px] md:max-w-2xl md:rounded-2xl md:border md:border-white/10 md:shadow-2xl'
+                )}
+            >
+                {/* Close */}
                 <button
                     onClick={onClose}
-                    className="absolute top-4 right-4 z-10 p-2 text-muted hover:text-text hover:bg-white/10 rounded-lg transition-all"
+                    className="absolute top-3 right-3 z-20 p-2 text-white/40 hover:text-white hover:bg-white/10 rounded-lg transition-colors"
+                    aria-label="Close tutorial"
                 >
-                    <X size={20} />
+                    <X size={18} />
                 </button>
 
-                {/* Content */}
-                <div className="p-4 sm:p-6 pt-12 sm:pt-8 overflow-y-auto custom-scrollbar">
-                    {/* Icon and Title */}
-                    <div className={clsx(
-                        "flex flex-col items-center text-center mb-6 transition-all duration-300",
-                        isAnimating && (direction === 'next' ? "opacity-0 -translate-x-4" : "opacity-0 translate-x-4")
-                    )}>
-                        <div className={clsx(
-                            "w-20 h-20 rounded-2xl bg-gradient-to-br flex items-center justify-center text-white mb-4 shadow-lg",
-                            step.accentColor
-                        )}>
-                            {step.icon}
-                        </div>
-                        <h2 className="text-2xl font-bold text-white">{step.title}</h2>
-                    </div>
+                {/* ── Simulation Zone ── */}
+                <div className="relative flex-none basis-[60%] md:flex-1 md:basis-0 overflow-hidden bg-black">
+                    <TutorialSimulation
+                        className="!rounded-none !border-0 !shadow-none !min-h-0 !h-full"
+                    />
 
-                    {/* Step Content */}
-                    <div className={clsx(
-                        "min-h-[240px] transition-all duration-300",
-                        isAnimating && (direction === 'next' ? "opacity-0 translate-x-8" : "opacity-0 -translate-x-8")
-                    )}>
-                        {step.content}
-                    </div>
+                    {/* Dim overlay on steps 1-3 */}
+                    <AnimatePresence>
+                        {currentStep > 0 && (
+                            <motion.div
+                                initial={{ opacity: 0 }}
+                                animate={{ opacity: 1 }}
+                                exit={{ opacity: 0 }}
+                                transition={{ duration: 0.3 }}
+                                className="absolute inset-0 bg-black/35 backdrop-blur-[2px] pointer-events-none"
+                            />
+                        )}
+                    </AnimatePresence>
 
-                    {/* Step Indicators */}
-                    <div className="flex justify-center gap-2 mt-6 mb-4">
-                        {tutorialSteps.map((_, index) => (
-                            <button
-                                key={index}
-                                onClick={() => handleStepClick(index)}
+                    {/* Bottom fade into content zone */}
+                    <div className="absolute inset-x-0 bottom-0 h-16 bg-gradient-to-t from-background to-transparent pointer-events-none" />
+                </div>
+
+                {/* ── Content Zone ── */}
+                <div
+                    className="flex-1 md:flex-none md:h-[170px] overflow-hidden bg-background"
+                    onTouchStart={isMobile ? handleTouchStart : undefined}
+                    onTouchEnd={isMobile ? handleTouchEnd : undefined}
+                >
+                    <AnimatePresence mode="wait">
+                        <motion.div
+                            key={currentStep}
+                            variants={contentVariants}
+                            initial="enter"
+                            animate="center"
+                            exit="exit"
+                            className="h-full"
+                        >
+                            {currentStep === 0 && <WelcomeStep />}
+                            {currentStep === 1 && <TwoModesStep />}
+                            {currentStep === 2 && <LifelinesStep />}
+                            {currentStep === 3 && <ShopStep />}
+                        </motion.div>
+                    </AnimatePresence>
+                </div>
+
+                {/* ── Nav Bar (pinned) ── */}
+                <div className="flex-none h-[52px] flex items-center justify-between px-4 md:px-6 border-t border-white/5 bg-background">
+                    {/* Back — always rendered, invisible on step 0 */}
+                    <button
+                        onClick={handlePrev}
+                        className={clsx(
+                            'flex items-center gap-1 px-3 h-[36px] rounded-lg text-sm font-medium transition-all',
+                            currentStep === 0
+                                ? 'opacity-0 pointer-events-none'
+                                : 'text-muted hover:text-text hover:bg-white/5'
+                        )}
+                        aria-label="Previous step"
+                    >
+                        <ChevronLeft size={16} />
+                        Back
+                    </button>
+
+                    {/* Step dots */}
+                    <div className="flex gap-1.5">
+                        {Array.from({ length: TOTAL_STEPS }).map((_, i) => (
+                            <div
+                                key={i}
                                 className={clsx(
-                                    "w-2.5 h-2.5 rounded-full transition-all duration-300",
-                                    index === currentStep
-                                        ? "bg-white scale-125"
-                                        : "bg-white/30 hover:bg-white/50"
+                                    'rounded-full transition-all duration-300',
+                                    i === currentStep
+                                        ? 'w-5 h-1.5 bg-primary'
+                                        : 'w-1.5 h-1.5 bg-white/20'
                                 )}
                             />
                         ))}
                     </div>
 
-                    {/* Navigation */}
-                    <div className="flex items-center justify-between gap-4 mt-4">
-                        <button
-                            onClick={handlePrev}
-                            disabled={currentStep === 0}
-                            className={clsx(
-                                "flex items-center gap-2 px-4 py-2.5 rounded-xl font-medium transition-all",
-                                currentStep === 0
-                                    ? "text-gray-600 cursor-not-allowed"
-                                    : "text-gray-300 hover:text-white hover:bg-white/10"
-                            )}
-                        >
-                            <ChevronLeft size={20} />
-                            <span>Back</span>
-                        </button>
-
-                        <span className="text-sm text-gray-500">
-                            {currentStep + 1} / {tutorialSteps.length}
-                        </span>
-
-                        <button
-                            onClick={handleNext}
-                            className={clsx(
-                                "flex items-center gap-2 px-5 py-2.5 rounded-xl font-bold transition-all",
-                                isLastStep
-                                    ? "bg-gradient-to-r from-green-500 to-emerald-500 text-white hover:scale-105 shadow-lg shadow-green-500/25"
-                                    : "bg-white text-black hover:scale-105"
-                            )}
-                        >
-                            <span>{isLastStep ? "Let's Play!" : "Next"}</span>
-                            {!isLastStep && <ChevronRight size={20} />}
-                            {isLastStep && <Sparkles size={20} />}
-                        </button>
-                    </div>
+                    {/* Next / Let's Play — fixed size, never moves */}
+                    <button
+                        onClick={handleNext}
+                        className={clsx(
+                            'w-[120px] h-[44px] rounded-xl font-bold text-sm flex items-center justify-center gap-1.5 transition-all',
+                            isLastStep
+                                ? 'bg-primary text-white hover:brightness-110'
+                                : 'bg-white/10 text-text hover:bg-white/15 border border-white/10'
+                        )}
+                    >
+                        {isLastStep ? "Let's Play!" : 'Next'}
+                        {!isLastStep && <ChevronRight size={16} />}
+                    </button>
                 </div>
             </div>
+        </div>
+    );
+}
+
+/* ── Step 0: Welcome ── */
+function WelcomeStep() {
+    return (
+        <div className="h-full flex flex-col items-center justify-center text-center px-6">
+            <h1
+                className="text-3xl md:text-4xl font-black tracking-wider uppercase text-text"
+                style={{ fontFamily: 'var(--font-display)' }}
+            >
+                Guess The Game
+            </h1>
+            <p className="text-muted text-sm md:text-base mt-2 max-w-xs">
+                4000+ games. Wrong guesses reveal more.
+            </p>
+        </div>
+    );
+}
+
+/* ── Step 1: Two Modes ── */
+function TwoModesStep() {
+    return (
+        <div className="h-full flex flex-col justify-center px-5 md:px-8">
+            <h2
+                className="text-lg md:text-xl font-bold tracking-wide uppercase text-text mb-4"
+                style={{ fontFamily: 'var(--font-display)' }}
+            >
+                Two Ways to Play
+            </h2>
+            <div className="flex gap-3">
+                <div className="flex-1 glass-panel-soft rounded-xl p-3 md:p-4">
+                    <div className="text-base md:text-lg font-bold text-primary">Standard</div>
+                    <p className="text-xs text-muted mt-1 leading-relaxed">
+                        Relaxed. No penalties. Play at your own pace, progress saved automatically.
+                    </p>
+                </div>
+                <div className="flex-1 glass-panel-soft rounded-xl p-3 md:p-4">
+                    <div className="text-base md:text-lg font-bold text-accent">Endless</div>
+                    <p className="text-xs text-muted mt-1 leading-relaxed">
+                        Roguelike. 5 lives. Score 5/4/3/2/1 points by guess number.
+                    </p>
+                </div>
+            </div>
+        </div>
+    );
+}
+
+/* ── Step 2: Lifelines ── */
+function LifelinesStep() {
+    return (
+        <div className="h-full flex flex-col justify-center px-5 md:px-8">
+            <h2
+                className="text-lg md:text-xl font-bold tracking-wide uppercase text-text mb-4 text-center"
+                style={{ fontFamily: 'var(--font-display)' }}
+            >
+                Lifelines
+            </h2>
+            <div className="flex flex-wrap gap-x-4 gap-y-2.5 justify-center">
+                {lifelines.map((l) => (
+                    <div key={l.name} className="flex items-center gap-1.5">
+                        <l.icon size={16} className={l.color} />
+                        <span className="text-xs text-muted font-medium">{l.name}</span>
+                    </div>
+                ))}
+            </div>
+            <p className="text-[11px] text-white/30 text-center mt-3">
+                Use lifelines in Endless Mode to survive tough rounds
+            </p>
+        </div>
+    );
+}
+
+/* ── Step 3: Shop + Go ── */
+function ShopStep() {
+    return (
+        <div className="h-full flex flex-col items-center justify-center text-center px-6">
+            <h2
+                className="text-lg md:text-xl font-bold tracking-wide uppercase text-text mb-3"
+                style={{ fontFamily: 'var(--font-display)' }}
+            >
+                The Shop
+            </h2>
+            <p className="text-sm text-muted max-w-sm leading-relaxed">
+                Every <span className="text-primary font-semibold">5 levels</span> in Endless Mode,
+                spend points on power-ups to extend your run.
+            </p>
         </div>
     );
 }

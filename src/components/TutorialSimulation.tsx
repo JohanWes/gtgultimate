@@ -24,7 +24,12 @@ interface SimulationState {
     imageIndex: number; // 0, 1, 2
 }
 
-export function TutorialSimulation() {
+interface TutorialSimulationProps {
+    className?: string;
+    overlay?: React.ReactNode;
+}
+
+export function TutorialSimulation({ className, overlay }: TutorialSimulationProps) {
     const [state, setState] = useState<SimulationState>({
         step: 'start',
         text: '',
@@ -147,7 +152,7 @@ export function TutorialSimulation() {
 
 
     return (
-        <div className="w-full h-full md:h-auto bg-black/40 rounded-xl overflow-hidden border border-white/10 shadow-xl flex flex-col md:flex-row md:min-h-[280px]">
+        <div className={clsx("w-full h-full md:h-auto bg-black/40 rounded-xl overflow-hidden border border-white/10 shadow-xl flex flex-col md:flex-row md:min-h-[280px]", className)}>
             {/* Image Area - flex-1 on mobile, fixed on desktop */}
             <div className="relative flex-1 md:flex-1 bg-black/50 overflow-hidden group min-h-[120px] md:h-auto">
                 {/* Background Image with Zoom/Crop */}
@@ -180,6 +185,9 @@ export function TutorialSimulation() {
                 {(state.step === 'reveal1' || state.step === 'reveal2') && (
                     <div className="absolute inset-0 bg-white/10 animate-pulse pointer-events-none" />
                 )}
+
+                {/* Optional overlay (e.g. glass panel with content) */}
+                {overlay}
             </div>
 
             {/* UI Simulation - compact on mobile, larger on desktop */}
