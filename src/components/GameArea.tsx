@@ -17,11 +17,12 @@ interface GameAreaProps {
     onGuess: (name: string) => void;
     onSkip: () => void;
     onNextLevel: () => void;
+    onHorseTrigger?: () => void;
     isLoading?: boolean;
     isFullscreen?: boolean;
 }
 
-export function GameArea({ game, allGames, guesses, status, allProgress, onGuess, onSkip, onNextLevel, isLoading = false, isFullscreen = false }: GameAreaProps) {
+export function GameArea({ game, allGames, guesses, status, allProgress, onGuess, onSkip, onNextLevel, onHorseTrigger, isLoading = false, isFullscreen = false }: GameAreaProps) {
     const revealedCount = status === 'playing' ? guesses.length + 1 : 5;
     const [errorMessage, setErrorMessage] = useState<string | null>(null);
     const [similarNameMessage, setSimilarNameMessage] = useState<boolean>(false);
@@ -250,6 +251,7 @@ export function GameArea({ game, allGames, guesses, status, allProgress, onGuess
                     disabled={status !== 'playing' || isLoading}
                     autoFocus={true}
                     correctAnswers={game ? [game.name] : []}
+                    onHorseTrigger={onHorseTrigger}
                 />
             </div>
 

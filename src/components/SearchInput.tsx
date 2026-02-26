@@ -12,9 +12,14 @@ interface SearchInputProps {
     readonly autoFocus?: boolean;
     readonly correctAnswers?: string[];
     readonly hideResults?: boolean;
+    readonly onHorseTrigger?: () => void;
 }
 
-export function SearchInput({ games, onGuess, disabled, autoFocus, correctAnswers, hideResults }: SearchInputProps) {
+type SearchResultItem =
+    | { type: 'game'; game: Game }
+    | { type: 'special'; label: string; value: 'Horse' };
+
+export function SearchInput({ games, onGuess, disabled, autoFocus, correctAnswers, hideResults, onHorseTrigger }: SearchInputProps) {
     const [searchQuery, setSearchQuery] = useState('');
     const [displayValue, setDisplayValue] = useState('');
     const [isOpen, setIsOpen] = useState(false);
@@ -43,6 +48,8 @@ export function SearchInput({ games, onGuess, disabled, autoFocus, correctAnswer
         initializeSearchIndex(games);
     }, [games]);
 
+    const correctAnswerSet = useMemo(() => new Set(correctAnswers ?? []), [correctAnswers]);
+
     const results = useMemo(() => {
         if (!searchQuery) return [];
         const allResults = search(searchQuery);
@@ -59,12 +66,12 @@ export function SearchInput({ games, onGuess, disabled, autoFocus, correctAnswer
         });
 
         // Prioritize correct answers if they exist in the results
-        if (correctAnswers && correctAnswers.length > 0) {
+        if (correctAnswerSet.size > 0) {
             const correctMatches: typeof uniqueResults = [];
             const otherMatches: typeof uniqueResults = [];
 
             uniqueResults.forEach(result => {
-                if (correctAnswers.includes(result.name)) {
+                if (correctAnswerSet.has(result.name)) {
                     correctMatches.push(result);
                 } else {
                     otherMatches.push(result);
@@ -88,12 +95,23 @@ export function SearchInput({ games, onGuess, disabled, autoFocus, correctAnswer
                     [topPool[i], topPool[j]] = [topPool[j], topPool[i]];
                 }
 
-                return [...topPool, ...remainingOthers];
+                const gameResults = [...topPool, ...remainingOthers].map(result => ({ type: 'game', game: result } as SearchResultItem));
+
+                if (onHorseTrigger && searchQuery.toLowerCase().includes('horse')) {
+                    gameResults.unshift({ type: 'special', label: 'Horse', value: 'Horse' });
+                }
+
+                return gameResults;
             }
         }
 
-        return uniqueResults;
-    }, [searchQuery, correctAnswers?.join(',')]);
+        const gameResults = uniqueResults.map(result => ({ type: 'game', game: result } as SearchResultItem));
+        if (onHorseTrigger && searchQuery.toLowerCase().includes('horse')) {
+            gameResults.unshift({ type: 'special', label: 'Horse', value: 'Horse' });
+        }
+
+        return gameResults;
+    }, [searchQuery, correctAnswerSet, onHorseTrigger]);
 
     useEffect(() => {
         setSelectedIndex(0);
@@ -113,8 +131,16 @@ export function SearchInput({ games, onGuess, disabled, autoFocus, correctAnswer
         if (disabled) return;
 
         if (results.length > 0 && isOpen) {
-            submitGuess(results[selectedIndex].name);
+            submitResult(results[selectedIndex]);
         } else if (displayValue) {
+            if (onHorseTrigger && displayValue.trim().toLowerCase() === 'horse') {
+                onHorseTrigger();
+                setSearchQuery('');
+                setDisplayValue('');
+                setIsOpen(false);
+                return;
+            }
+
             // If exact match exists in database, allow it
             const potentialMatches = search(displayValue);
             const exactMatch = potentialMatches.find(g => g.name.toLowerCase() === displayValue.toLowerCase());
@@ -142,22 +168,40 @@ export function SearchInput({ games, onGuess, disabled, autoFocus, correctAnswer
 
     const handleKeyDown = (e: React.KeyboardEvent) => {
         if (e.key === 'ArrowDown') {
+            if (results.length === 0) return;
             e.preventDefault();
             const nextIndex = (selectedIndex + 1) % results.length;
             setSelectedIndex(nextIndex);
-            if (results[nextIndex]) {
-                setDisplayValue(results[nextIndex].name);
+            if (results[nextIndex]?.type === 'game') {
+                setDisplayValue(results[nextIndex].game.name);
+            } else if (results[nextIndex]?.type === 'special') {
+                setDisplayValue(results[nextIndex].label);
             }
         } else if (e.key === 'ArrowUp') {
+            if (results.length === 0) return;
             e.preventDefault();
             const prevIndex = (selectedIndex - 1 + results.length) % results.length;
             setSelectedIndex(prevIndex);
-            if (results[prevIndex]) {
-                setDisplayValue(results[prevIndex].name);
+            if (results[prevIndex]?.type === 'game') {
+                setDisplayValue(results[prevIndex].game.name);
+            } else if (results[prevIndex]?.type === 'special') {
+                setDisplayValue(results[prevIndex].label);
             }
         } else if (e.key === 'Escape') {
             setIsOpen(false);
         }
+    };
+
+    const submitResult = (result: SearchResultItem) => {
+        if (result.type === 'game') {
+            submitGuess(result.game.name);
+            return;
+        }
+
+        onHorseTrigger?.();
+        setSearchQuery('');
+        setDisplayValue('');
+        setIsOpen(false);
     };
 
     const containerRef = useRef<HTMLDivElement>(null);
@@ -221,22 +265,26 @@ export function SearchInput({ games, onGuess, disabled, autoFocus, correctAnswer
                     ref={listRef}
                     className="search-results-panel absolute w-full mt-2 glass-panel-strong backdrop-blur-xl border border-white/10 rounded-xl shadow-2xl overflow-hidden max-h-48 overflow-y-auto custom-scrollbar animate-in fade-in slide-in-from-top-2"
                 >
-                    {results.map((game, idx) => {
+                    {results.map((result, idx) => {
                         const isSelected = idx === selectedIndex;
                         const buttonClass = isSelected
                             ? "bg-primary/25 text-white border-l-2 border-primary"
                             : "text-muted hover:bg-white/8 hover:text-white";
+                        const label = result.type === 'game' ? result.game.name : result.label;
 
                         return (
-                            <li key={game.id}>
+                            <li key={result.type === 'game' ? result.game.id : result.value}>
                                 <button
-                                    onClick={() => fillQuery(game.name)}
+                                    onClick={() => result.type === 'game' ? fillQuery(result.game.name) : submitResult(result)}
                                     className={clsx(
                                         "w-full text-left px-3 py-2 flex items-center justify-between transition-colors text-sm",
                                         buttonClass
                                     )}
                                 >
-                                    <span className="font-medium">{game.name}</span>
+                                    <span className="font-medium">{label}</span>
+                                    {result.type === 'special' && (
+                                        <span className="text-[10px] uppercase tracking-wider text-warning font-bold">Secret</span>
+                                    )}
                                 </button>
                             </li>
                         );

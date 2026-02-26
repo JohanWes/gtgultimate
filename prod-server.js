@@ -8,6 +8,7 @@ import dotenv from 'dotenv';
 import axios from 'axios';
 import Fuse from 'fuse.js';
 import crypto from 'crypto';
+import { MongoClient } from 'mongodb';
 
 dotenv.config();
 
@@ -51,6 +52,25 @@ const writeJson = (filePath, data) => {
         console.error(`Error writing ${filePath}:`, err);
         return false;
     }
+};
+
+let mongoClientPromise = null;
+const getMongoClient = async () => {
+    const uri = process.env.MONGODB_URI;
+    if (!uri) {
+        throw new Error('MONGODB_URI is required for horse games');
+    }
+
+    if (!mongoClientPromise) {
+        const client = new MongoClient(uri, {
+            maxPoolSize: 10,
+            minPoolSize: 1,
+            maxIdleTimeMS: 30000
+        });
+        mongoClientPromise = client.connect();
+    }
+
+    return mongoClientPromise;
 };
 
 // --- IGDB HELPERS ---
@@ -136,9 +156,31 @@ const requireAdmin = (req, res, next) => {
 // --- ROUTES ---
 
 // Games
-app.get('/api/games', (req, res) => {
-    const games = readJson(GAMES_DB);
-    res.json(games);
+app.get('/api/games', async (req, res) => {
+    const pool = req.query.pool ?? 'default';
+
+    if (pool !== 'default' && pool !== 'horse') {
+        return res.status(400).json({ error: 'Invalid pool value' });
+    }
+
+    if (pool === 'default') {
+        const games = readJson(GAMES_DB);
+        return res.json(games);
+    }
+
+    try {
+        const client = await getMongoClient();
+        const db = client.db('guessthegame');
+        const games = await db.collection('horse_games').find({}).toArray();
+        const cleanGames = games.map(game => {
+            const { _id, ...rest } = game;
+            return rest;
+        });
+        return res.json(cleanGames);
+    } catch (err) {
+        console.error('Failed to load horse games:', err);
+        return res.status(503).json({ error: 'Horse games unavailable in local mode without MongoDB.' });
+    }
 });
 
 // Highscores

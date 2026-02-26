@@ -11,7 +11,8 @@ import { useEndlessState } from './hooks/useEndlessState';
 import { useEndlessStats } from './hooks/useEndlessStats';
 import { useSettings } from './hooks/useSettings';
 import { useFullscreen } from './hooks/useFullscreen';
-import type { GameMode } from './types';
+import { useHorseGameState } from './hooks/useHorseGameState';
+import type { Game, GameMode } from './types';
 
 import { RunSummary } from './components/RunSummary';
 
@@ -19,10 +20,15 @@ function App() {
   const [mode, setMode] = useState<GameMode>('standard');
   const [showHighScoreModal, setShowHighScoreModal] = useState(false);
   const [isStatsOpen, setIsStatsOpen] = useState(false);
+  const [isHorseMode, setIsHorseMode] = useState(false);
+  const [isHorseLoading, setIsHorseLoading] = useState(false);
+  const [horseGames, setHorseGames] = useState<Game[]>([]);
+  const [horseSessionKey, setHorseSessionKey] = useState(0);
   const { isFullscreen, toggleFullscreen } = useFullscreen();
 
   const gameState = useGameState();
-  const { currentGame, currentProgress, games, submitGuess, nextLevel, isLoading, error } = gameState;
+  const { games, isLoading, error } = gameState;
+  const horseGameState = useHorseGameState(horseGames, horseSessionKey);
 
   const endlessState = useEndlessState(games);
   const endlessStats = useEndlessStats();
@@ -63,7 +69,45 @@ function App() {
     document.body.dataset.theme = settings.theme;
   }, [settings.theme]);
 
+  const activateHorseMode = async () => {
+    if (isHorseLoading) return;
+
+    const confirmed = window.confirm('Are you sure? This will end the round');
+    if (!confirmed) return;
+
+    try {
+      setIsHorseLoading(true);
+      const response = await fetch('/api/games?pool=horse');
+      if (!response.ok) {
+        throw new Error('Failed to load horse games');
+      }
+
+      const data = await response.json();
+      if (!Array.isArray(data) || data.length === 0) {
+        throw new Error('No horse games found');
+      }
+
+      setHorseGames(data as Game[]);
+      setHorseSessionKey(prev => prev + 1);
+      setMode('standard');
+      setIsHorseMode(true);
+      setIsStatsOpen(false);
+      setShowHighScoreModal(false);
+    } catch (err) {
+      console.error('Failed to activate horse mode:', err);
+      alert('Horse mode is unavailable right now.');
+    } finally {
+      setIsHorseLoading(false);
+    }
+  };
+
   const handleModeSwitch = (newMode: GameMode) => {
+    if (isHorseMode) {
+      setIsHorseMode(false);
+      setMode(newMode);
+      return;
+    }
+
     if (mode === newMode) return;
     setMode(newMode);
   };
@@ -110,6 +154,27 @@ function App() {
     setMode('standard'); // Or endless if preferred, but standard is default landing
   };
 
+  const previousHorseStatusRef = useRef<'playing' | 'won' | 'lost'>('playing');
+  useEffect(() => {
+    if (!isHorseMode) {
+      previousHorseStatusRef.current = 'playing';
+      return;
+    }
+
+    const status = horseGameState.currentProgress?.status ?? 'playing';
+    if (status === 'won' && previousHorseStatusRef.current !== 'won') {
+      const audio = new Audio('/sounds/horse-neighing-sound-effect.mp3');
+      audio.volume = 0.3;
+      audio.play().catch(() => null);
+    }
+    previousHorseStatusRef.current = status;
+  }, [isHorseMode, horseGameState.currentProgress?.status]);
+
+  const activeStandardState = isHorseMode ? horseGameState : gameState;
+  const activeStandardLoading = isHorseMode
+    ? (isHorseLoading || horseGameState.totalLevels === 0)
+    : isLoading;
+
   if (shareId) {
     if (isLoading) {
       return (
@@ -124,7 +189,7 @@ function App() {
   // Removed global loading check to allow inline loading
   // if (isLoading) { ... }
 
-  if (error) {
+  if (!isHorseMode && error) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-background text-error">
         <div className="text-center">
@@ -143,9 +208,10 @@ function App() {
 
   return (
     <Layout
-      gameState={gameState}
+      gameState={activeStandardState}
       currentMode={mode}
       onModeSwitch={handleModeSwitch}
+      isHorseMode={isHorseMode}
       isFullscreen={isFullscreen}
       onToggleFullscreen={toggleFullscreen}
       isStatsOpen={isStatsOpen}
@@ -161,18 +227,19 @@ function App() {
 
       <AnimatePresence mode="wait">
         {mode === 'standard' ? (
-          (currentGame || isLoading) && (
+          (activeStandardState.currentGame || activeStandardLoading) && (
             <PageTransition key="standard" className="h-full">
               <GameArea
-                game={currentGame || null}
-                allGames={games}
-                guesses={currentProgress?.guesses || []}
-                status={currentProgress?.status || 'playing'}
-                allProgress={gameState.allProgress}
-                onGuess={submitGuess}
-                onSkip={gameState.skipGuess}
-                onNextLevel={nextLevel}
-                isLoading={isLoading}
+                game={activeStandardState.currentGame || null}
+                allGames={activeStandardState.games}
+                guesses={activeStandardState.currentProgress?.guesses || []}
+                status={activeStandardState.currentProgress?.status || 'playing'}
+                allProgress={activeStandardState.allProgress}
+                onGuess={activeStandardState.submitGuess}
+                onSkip={activeStandardState.skipGuess}
+                onNextLevel={activeStandardState.nextLevel}
+                onHorseTrigger={isHorseMode ? undefined : activateHorseMode}
+                isLoading={activeStandardLoading}
                 isFullscreen={isFullscreen}
               />
             </PageTransition>
@@ -194,6 +261,7 @@ function App() {
                 isHighScoreModalOpen={showHighScoreModal}
                 onMarkShopVisited={endlessState.markShopVisited}
                 isStatsOpen={isStatsOpen}
+                onHorseTrigger={activateHorseMode}
                 isLoading={isLoading}
                 isFullscreen={isFullscreen}
               />

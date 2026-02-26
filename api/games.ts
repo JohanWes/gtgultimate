@@ -8,10 +8,19 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     }
 
     try {
+        const poolParam = Array.isArray(req.query.pool) ? req.query.pool[0] : req.query.pool;
+        const pool = poolParam ?? 'default';
+
+        if (pool !== 'default' && pool !== 'horse') {
+            return res.status(400).json({ error: 'Invalid pool value' });
+        }
+
+        const collectionName = pool === 'horse' ? 'horse_games' : 'games';
+
         const client = await clientPromise;
         const db = client.db('guessthegame');
 
-        const games = await db.collection('games').find({}).toArray();
+        const games = await db.collection(collectionName).find({}).toArray();
 
         // Remove MongoDB internal _id field to keep client cleaner
         const cleanGames = games.map(game => {

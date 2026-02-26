@@ -36,6 +36,7 @@ interface EndlessGameAreaProps {
     isHighScoreModalOpen: boolean;
     onMarkShopVisited: () => void;
     isStatsOpen: boolean;
+    onHorseTrigger?: () => void;
     isLoading?: boolean;
     isFullscreen?: boolean;
 }
@@ -55,6 +56,7 @@ export function EndlessGameArea({
     isHighScoreModalOpen,
     onMarkShopVisited,
     isStatsOpen,
+    onHorseTrigger,
     isLoading = false,
     isFullscreen = false
 }: EndlessGameAreaProps) {
@@ -723,6 +725,7 @@ export function EndlessGameArea({
                                 autoFocus={true}
                                 correctAnswers={game ? (doubleTroubleGame ? [game.name, doubleTroubleGame.name] : [game.name]) : []}
                                 hideResults={showCoverPeek}
+                                onHorseTrigger={onHorseTrigger}
                             />
                         )}
                     </div>

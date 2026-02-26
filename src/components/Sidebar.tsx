@@ -3,6 +3,7 @@ import { clsx } from 'clsx';
 import gtgLogo from '../assets/gtgultimate.jpg';
 import retroLogo from '../assets/logo-retro.png';
 import midnightBlackLogo from '../assets/midnightblack.jpg';
+import horseLogo from '../assets/gtghorse.png';
 import type { LevelProgress, GameMode } from '../types';
 import { useSettings } from '../hooks/useSettings';
 
@@ -15,13 +16,16 @@ interface SidebarProps {
     onClose: () => void;
     currentMode: GameMode;
     onModeSwitch: (mode: GameMode) => void;
+    isHorseMode?: boolean;
     collapsed?: boolean;
 }
 
-export function Sidebar({ totalLevels, currentLevel, progress, onSelectLevel, isOpen, onClose, currentMode, onModeSwitch, collapsed = false }: SidebarProps) {
+export function Sidebar({ totalLevels, currentLevel, progress, onSelectLevel, isOpen, onClose, currentMode, onModeSwitch, isHorseMode = false, collapsed = false }: SidebarProps) {
     const { settings } = useSettings();
     const logoSrc =
-        settings.theme === 'retro'
+        isHorseMode
+            ? horseLogo
+            : settings.theme === 'retro'
             ? retroLogo
             : settings.theme === 'midnight-black'
                 ? midnightBlackLogo
@@ -62,7 +66,9 @@ export function Sidebar({ totalLevels, currentLevel, progress, onSelectLevel, is
                             }}
                             className={clsx(
                                 "flex-1 py-1.5 text-xs font-bold rounded-md transition-all ui-focus-ring",
-                                currentMode === 'standard'
+                                isHorseMode
+                                    ? "text-gray-300 bg-white/5 hover:bg-white/10"
+                                    : currentMode === 'standard'
                                     ? "bg-primary text-onPrimary shadow-sm"
                                     : "text-muted hover:text-white hover:bg-white/5"
                             )}
@@ -76,7 +82,9 @@ export function Sidebar({ totalLevels, currentLevel, progress, onSelectLevel, is
                             }}
                             className={clsx(
                                 "flex-1 py-1.5 text-xs font-bold rounded-md transition-all ui-focus-ring",
-                                currentMode === 'endless'
+                                isHorseMode
+                                    ? "text-gray-300 bg-white/5 hover:bg-white/10"
+                                    : currentMode === 'endless'
                                     ? "bg-accent text-onAccent shadow-sm"
                                     : "text-muted hover:text-white hover:bg-white/5"
                             )}
@@ -88,8 +96,17 @@ export function Sidebar({ totalLevels, currentLevel, progress, onSelectLevel, is
                     <div className="flex items-center gap-2 text-xs text-muted">
                         {currentMode === 'standard' ? (
                             <>
-                                <Trophy size={14} className="text-yellow-500" />
-                                <span>{completedCount} / {totalLevels} Completed</span>
+                                {isHorseMode ? (
+                                    <>
+                                        <span className="text-sm leading-none" aria-hidden="true">🐎</span>
+                                        <span>{completedCount} / {totalLevels} Completed</span>
+                                    </>
+                                ) : (
+                                    <>
+                                        <Trophy size={14} className="text-yellow-500" />
+                                        <span>{completedCount} / {totalLevels} Completed</span>
+                                    </>
+                                )}
                             </>
                         ) : (
                             <span className="font-bold uppercase tracking-wider text-accent">Lifelines</span>

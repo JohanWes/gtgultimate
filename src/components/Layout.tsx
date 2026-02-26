@@ -16,6 +16,7 @@ interface LayoutProps {
     gameState: ReturnType<typeof useGameState>;
     currentMode: GameMode;
     onModeSwitch: (mode: GameMode) => void;
+    isHorseMode?: boolean;
     isFullscreen: boolean;
     onToggleFullscreen: () => void;
     // Stats props (optional, only needed for endless mode)
@@ -30,7 +31,7 @@ interface LayoutProps {
     onStatsOpenChange?: (isOpen: boolean) => void;
 }
 
-export function Layout({ children, gameState, currentMode, onModeSwitch, isFullscreen, onToggleFullscreen, endlessStats, isStatsOpen, onStatsOpenChange }: LayoutProps) {
+export function Layout({ children, gameState, currentMode, onModeSwitch, isHorseMode = false, isFullscreen, onToggleFullscreen, endlessStats, isStatsOpen, onStatsOpenChange }: LayoutProps) {
     const [isSidebarOpen, setIsSidebarOpen] = useState(false);
     const { isSettingsOpen, setIsSettingsOpen } = useSettings();
     const isMobile = useIsMobile();
@@ -49,6 +50,7 @@ export function Layout({ children, gameState, currentMode, onModeSwitch, isFulls
                 onClose={() => setIsSidebarOpen(false)}
                 currentMode={currentMode}
                 onModeSwitch={onModeSwitch}
+                isHorseMode={isHorseMode}
                 collapsed={isSidebarCollapsed}
             />
 
