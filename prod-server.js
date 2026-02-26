@@ -67,7 +67,15 @@ const getMongoClient = async () => {
             minPoolSize: 1,
             maxIdleTimeMS: 30000
         });
-        mongoClientPromise = client.connect();
+        mongoClientPromise = client.connect().catch(async (err) => {
+            mongoClientPromise = null;
+            try {
+                await client.close();
+            } catch {
+                // Ignore close errors after failed connect.
+            }
+            throw err;
+        });
     }
 
     return mongoClientPromise;
