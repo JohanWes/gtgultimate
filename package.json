@@ -16,7 +16,8 @@
     "test:coverage": "vitest run --coverage",
     "analyze-platforms": "npx tsx scripts/analyze_platforms.ts",
     "analyze-platforms:context": "npx tsx scripts/analyze_platforms.ts --context",
-    "db:check": "npx tsx scripts/db_check.ts"
+    "db:check": "npx tsx scripts/db_check.ts",
+    "auto-fetch": "npx tsx scripts/auto_fetch_new_games.ts"
   },
   "dependencies": {
     "@types/canvas-confetti": "^1.9.0",
