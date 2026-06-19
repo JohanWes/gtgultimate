@@ -173,7 +173,14 @@ app.get('/api/games', async (req, res) => {
 
     if (pool === 'default') {
         const games = readJson(GAMES_DB);
-        return res.json(games);
+        // Filter out games without usable screenshots (default pool only).
+        // Horse pool is left untouched to preserve its curated set.
+        const filtered = games.filter(g =>
+            Array.isArray(g.screenshots) &&
+            g.screenshots.length >= 5 &&
+            g.screenshots.every(s => typeof s === 'string' && s.length > 0)
+        );
+        return res.json(filtered);
     }
 
     try {

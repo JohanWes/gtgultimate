@@ -22,8 +22,17 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
         const games = await db.collection(collectionName).find({}).toArray();
 
+        const hasValidScreenshots = (g: Record<string, unknown>): boolean =>
+            Array.isArray(g.screenshots) &&
+            g.screenshots.length >= 5 &&
+            (g.screenshots as unknown[]).every(s => typeof s === 'string' && s.length > 0);
+
+        // Filter out games without usable screenshots (default pool only).
+        // Horse pool is left untouched to preserve its curated set.
+        const filtered = pool === 'default' ? games.filter(hasValidScreenshots) : games;
+
         // Remove MongoDB internal _id field to keep client cleaner
-        const cleanGames = games.map(game => {
+        const cleanGames = filtered.map(game => {
             // eslint-disable-next-line @typescript-eslint/no-unused-vars
             const { _id, ...rest } = game;
             return rest;
