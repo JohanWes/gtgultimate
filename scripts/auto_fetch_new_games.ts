@@ -5,12 +5,15 @@ import {
 
 // --- Config ---
 const MIN_SCREENSHOTS = 5;
+const MIN_SCREENSHOTS_REFRESH = 1; // relaxed threshold when refreshing incomplete entries
+const PLAYABLE_SCREENSHOTS = 5;    // api/games.ts filters out games with <5 screenshots
 const MIN_RATING_COUNT = 15;       // enough votes to indicate recognizability
 const MIN_AGGREGATED_RATING = 82;  // quality gate — critic score lower bound
 const MAX_AGGREGATED_RATING = 98;  // cap — filter out suspicious 100s
 const BATCH_SIZE = 500;        // IGDB max per request
 const IGDB_DELAY = 300;        // ms between IGDB requests
 const LOOKBACK_MONTHS = 12;
+const REFRESH_BATCH_SIZE = 100; // IGDB id-list queries cap at 500; use 100 to keep payloads small
 
 interface IgdbGame {
     id: number;
@@ -97,9 +100,9 @@ function generateCropPositions(): { x: number; y: number }[] {
     }));
 }
 
-function igdbGameToDoc(g: IgdbGame): GameDoc | null {
+function igdbGameToDoc(g: IgdbGame, minScreenshots = MIN_SCREENSHOTS, createdAt: Date = new Date()): GameDoc | null {
     const screenshots = g.screenshots || [];
-    if (screenshots.length < MIN_SCREENSHOTS) return null;
+    if (screenshots.length < minScreenshots) return null;
 
     const year = g.first_release_date
         ? new Date(g.first_release_date * 1000).getFullYear()
@@ -126,8 +129,21 @@ function igdbGameToDoc(g: IgdbGame): GameDoc | null {
         cover,
         cropPositions: generateCropPositions(),
         synopsis: g.summary || '',
-        createdAt: new Date(),
+        createdAt,
     };
+}
+
+// --- Incomplete-entry detection ---
+// An existing DB entry is "incomplete" if its screenshots field is missing,
+// not an array, or has fewer than the playable minimum of valid string URLs.
+// The production games API (api/games.ts) silently drops such entries, so they
+// are effectively invisible to players — safe candidates for a refresh.
+function isEntryIncomplete(g: { screenshots?: unknown }): boolean {
+    const shots = g.screenshots;
+    if (!Array.isArray(shots)) return true;
+    if (shots.length < PLAYABLE_SCREENSHOTS) return true;
+    if (!shots.every(s => typeof s === 'string' && s.length > 0)) return true;
+    return false;
 }
 
 async function main() {
@@ -142,13 +158,26 @@ async function main() {
         const currentCount = await col.countDocuments();
         console.log(`Current DB count: ${currentCount}`);
 
-        // Build dedup sets from existing games
-        const existing = await col.find({}, { projection: { _id: 0, id: 1, name: 1 } }).toArray();
+        // Build dedup sets from existing games (also detect incomplete entries
+        // eligible for a refresh, e.g. Pokopia which shipped without screenshots).
+        const existing = await col.find(
+            {},
+            { projection: { _id: 0, id: 1, name: 1, screenshots: 1, createdAt: 1 } }
+        ).toArray();
         const existingIds = new Set(existing.map(g => g.id));
         const existingNamesRaw = new Set(existing.map(g => (g.name as string).toLowerCase()));
         const existingNamesNorm = new Set(existing.map(g => normalizeName(g.name as string)));
 
+        // Incomplete entries: missing/<5 screenshots → invisible in the app, safe to refresh.
+        const incompleteIds = new Set<number>();
+        const createdAtById = new Map<number, Date>();
+        for (const g of existing) {
+            if (isEntryIncomplete(g)) incompleteIds.add(g.id);
+            if (g.createdAt instanceof Date) createdAtById.set(g.id, g.createdAt);
+        }
+
         console.log(`Existing games: ${existingIds.size} IDs, ${existingNamesRaw.size} unique names`);
+        console.log(`Incomplete entries (refresh candidates): ${incompleteIds.size}`);
 
         // Calculate lookback window
         const now = Math.floor(Date.now() / 1000);
@@ -159,9 +188,12 @@ async function main() {
 
         const token = await getIgdbToken();
         const candidates: GameDoc[] = [];
+        const refreshes: GameDoc[] = [];
+        const refreshedIds = new Set<number>();
         const skippedReasons: Record<string, number> = {
             category: 0, dupeId: 0, dupeName: 0, dupeNorm: 0,
             dlcName: 0, screenshots: 0, yearRange: 0,
+            refreshScreenshots: 0, refreshYearRange: 0,
         };
 
         console.log('Querying IGDB for recent popular games...');
@@ -204,7 +236,37 @@ async function main() {
             emptyBatches = 0;
 
             let batchAdded = 0;
+            let batchRefreshed = 0;
             for (const g of results) {
+                // Refresh path takes priority: if this IGDB game's id matches an
+                // existing incomplete DB entry, refresh it instead of skipping as
+                // a dupe. Bypass category/DLC/name filters since the entry is
+                // already curated and present in the DB.
+                if (incompleteIds.has(g.id) && !refreshedIds.has(g.id)) {
+                    const doc = igdbGameToDoc(
+                        g,
+                        MIN_SCREENSHOTS_REFRESH,
+                        createdAtById.get(g.id) ?? new Date(),
+                    );
+                    if (!doc) {
+                        if ((g.screenshots || []).length < MIN_SCREENSHOTS_REFRESH) skippedReasons.refreshScreenshots++;
+                        else skippedReasons.refreshYearRange++;
+                        console.log(`  Refresh skip: ${g.name} (id ${g.id}) — ${
+                            (g.screenshots || []).length < MIN_SCREENSHOTS_REFRESH
+                                ? `only ${(g.screenshots || []).length} screenshots`
+                                : 'year out of range'
+                        }`);
+                        continue;
+                    }
+                    refreshes.push(doc);
+                    refreshedIds.add(g.id);
+                    if (doc.screenshots.length < PLAYABLE_SCREENSHOTS) {
+                        console.log(`  Refresh WARN: ${g.name} (id ${g.id}) refreshed with only ${doc.screenshots.length} screenshots — still unplayable until IGDB has >= ${PLAYABLE_SCREENSHOTS}`);
+                    }
+                    batchRefreshed++;
+                    continue;
+                }
+
                 // Category filter: 0=main, 8=remake, 9=remaster
                 const cat = g.category;
                 if (cat !== undefined && cat !== 0 && cat !== 8 && cat !== 9) {
@@ -248,13 +310,65 @@ async function main() {
                 batchAdded++;
             }
 
-            console.log(`  Offset ${offset}: ${results.length} results, ${batchAdded} new candidates (total: ${candidates.length})`);
+            console.log(`  Offset ${offset}: ${results.length} results, ${batchAdded} new, ${batchRefreshed} refreshed (total new: ${candidates.length}, refreshed: ${refreshes.length})`);
 
             offset += BATCH_SIZE;
             await sleep(IGDB_DELAY);
         }
 
-        console.log(`\nFound ${candidates.length} new games to add`);
+        // --- Targeted refresh pass for incomplete entries not surfaced by the
+        // lookback query (e.g. older games or titles outside the rating window).
+        // Fetches each remaining incomplete id directly from IGDB.
+        const remainingIncomplete = [...incompleteIds].filter(id => !refreshedIds.has(id));
+        if (remainingIncomplete.length > 0) {
+            console.log(`\nRefreshing ${remainingIncomplete.length} incomplete entries by id (not covered by lookback)...`);
+            for (let i = 0; i < remainingIncomplete.length; i += REFRESH_BATCH_SIZE) {
+                const slice = remainingIncomplete.slice(i, i + REFRESH_BATCH_SIZE);
+                const idList = slice.join(',');
+                const query = `
+                    fields id, name, first_release_date, platforms.name, genres.name, summary,
+                           aggregated_rating, rating, rating_count, screenshots.url, cover.url,
+                           category, version_parent, parent_game;
+                    where id = (${idList});
+                    limit ${REFRESH_BATCH_SIZE};
+                `;
+                let results: IgdbGame[];
+                try {
+                    results = await igdbPost('games', query, token);
+                } catch (err: any) {
+                    console.error(`  IGDB error refreshing ids [${slice[0]}..${slice[slice.length - 1]}]:`, err.response?.data || err.message);
+                    continue;
+                }
+                let batchRefreshed = 0;
+                for (const g of results) {
+                    const doc = igdbGameToDoc(
+                        g,
+                        MIN_SCREENSHOTS_REFRESH,
+                        createdAtById.get(g.id) ?? new Date(),
+                    );
+                    if (!doc) {
+                        if ((g.screenshots || []).length < MIN_SCREENSHOTS_REFRESH) skippedReasons.refreshScreenshots++;
+                        else skippedReasons.refreshYearRange++;
+                        console.log(`  Refresh skip: ${g.name} (id ${g.id}) — ${
+                            (g.screenshots || []).length < MIN_SCREENSHOTS_REFRESH
+                                ? `only ${(g.screenshots || []).length} screenshots`
+                                : 'year out of range'
+                        }`);
+                        continue;
+                    }
+                    refreshes.push(doc);
+                    refreshedIds.add(g.id);
+                    if (doc.screenshots.length < PLAYABLE_SCREENSHOTS) {
+                        console.log(`  Refresh WARN: ${g.name} (id ${g.id}) refreshed with only ${doc.screenshots.length} screenshots — still unplayable until IGDB has >= ${PLAYABLE_SCREENSHOTS}`);
+                    }
+                    batchRefreshed++;
+                }
+                console.log(`  ids ${slice[0]}..${slice[slice.length - 1]}: ${results.length} results, ${batchRefreshed} refreshed`);
+                await sleep(IGDB_DELAY);
+            }
+        }
+
+        console.log(`\nFound ${candidates.length} new games to add, ${refreshes.length} incomplete entries to refresh`);
 
         // Skip reasons
         console.log('\n=== Skip reasons ===');
@@ -281,20 +395,46 @@ async function main() {
             }
         }
 
+        // Show refresh candidates
+        if (refreshes.length > 0) {
+            console.log('\n=== Incomplete entries to refresh (replace by id) ===');
+            for (let i = 0; i < refreshes.length; i++) {
+                const g = refreshes[i];
+                const playable = g.screenshots.length >= PLAYABLE_SCREENSHOTS ? 'playable' : `WARN only ${g.screenshots.length} screenshots`;
+                console.log(`  ${String(i + 1).padStart(3)}. ${g.name} (id ${g.id}, ${g.year}) — ${g.screenshots.length} screenshots — ${playable}`);
+            }
+        }
+
         if (dryRun) {
-            console.log('\n=== DRY RUN — no changes made. Pass --confirm to insert. ===');
+            console.log('\n=== DRY RUN — no changes made. Pass --confirm to insert/refresh. ===');
             return;
         }
 
-        if (candidates.length === 0) {
-            console.log('\nNo new games to insert.');
+        if (candidates.length === 0 && refreshes.length === 0) {
+            console.log('\nNo new games to insert and no entries to refresh.');
             return;
         }
 
-        // Insert into MongoDB
-        console.log(`\nInserting ${candidates.length} games into MongoDB...`);
-        const result = await col.insertMany(candidates);
-        console.log(`Inserted: ${result.insertedCount} games`);
+        // Insert new games into MongoDB
+        if (candidates.length > 0) {
+            console.log(`\nInserting ${candidates.length} new games into MongoDB...`);
+            const result = await col.insertMany(candidates);
+            console.log(`Inserted: ${result.insertedCount} games`);
+        }
+
+        // Refresh incomplete entries via id-keyed replaceOne (upsert safety net)
+        if (refreshes.length > 0) {
+            console.log(`\nRefreshing ${refreshes.length} incomplete entries (replaceOne by id)...`);
+            const bulkOps = refreshes.map(doc => ({
+                replaceOne: {
+                    filter: { id: doc.id },
+                    replacement: doc,
+                    upsert: true,
+                },
+            }));
+            const refreshResult = await col.bulkWrite(bulkOps);
+            console.log(`Refreshed: ${refreshResult.modifiedCount} replaced, ${refreshResult.upsertedCount} upserted`);
+        }
 
         const finalCount = await col.countDocuments();
         console.log(`Final DB count: ${finalCount}`);
