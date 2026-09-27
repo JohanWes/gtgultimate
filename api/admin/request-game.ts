@@ -1,14 +1,31 @@
 
-import clientPromise from '../_lib/mongodb.js';
+import { getClient } from '../_lib/mongodb.js';
 import crypto from 'crypto';
 import type { VercelRequest, VercelResponse } from '@vercel/node';
-import axios from 'axios';
 
 // --- IGDB HELPER FUNCTIONS ---
 // Note: In a serverless environment, local variables like token check might not persist between cold starts,
 // but it's acceptable to re-authenticate occasionally.
 let igdbToken: string | null = null;
 let tokenExpiry = 0;
+
+// POST and parse JSON; non-2xx throws with the response body in the message.
+async function postJson(url: string, init: RequestInit = {}) {
+    const response = await fetch(url, { method: 'POST', ...init });
+    if (!response.ok) throw new Error(`HTTP ${response.status}: ${await response.text()}`);
+    return response.json();
+}
+
+function igdbPost(query: string, accessToken: string) {
+    return postJson('https://api.igdb.com/v4/games', {
+        headers: {
+            'Client-ID': process.env.IGDB_CLIENT_ID ?? '',
+            'Authorization': `Bearer ${accessToken}`,
+            'Content-Type': 'text/plain',
+        },
+        body: query,
+    });
+}
 
 async function getIgdbAccessToken(): Promise<string> {
     if (igdbToken && Date.now() < tokenExpiry) {
@@ -17,22 +34,21 @@ async function getIgdbAccessToken(): Promise<string> {
 
     console.log('Authenticating with IGDB...');
     try {
-        const response = await axios.post('https://id.twitch.tv/oauth2/token', null, {
-            params: {
-                client_id: process.env.IGDB_CLIENT_ID,
-                client_secret: process.env.IGDB_CLIENT_SECRET,
-                grant_type: 'client_credentials',
-            },
+        const params = new URLSearchParams({
+            client_id: process.env.IGDB_CLIENT_ID ?? '',
+            client_secret: process.env.IGDB_CLIENT_SECRET ?? '',
+            grant_type: 'client_credentials',
         });
-        if (response.data.access_token) {
-            igdbToken = response.data.access_token;
-            tokenExpiry = Date.now() + (response.data.expires_in * 1000) - 60000; // Buffer of 1 min
+        const data = await postJson(`https://id.twitch.tv/oauth2/token?${params}`);
+        if (data.access_token) {
+            igdbToken = data.access_token;
+            tokenExpiry = Date.now() + (data.expires_in * 1000) - 60000; // Buffer of 1 min
             return igdbToken!;
         } else {
             throw new Error('No access token in response');
         }
     } catch (error: any) {
-        console.error('Error getting access token:', error.response?.data || error.message);
+        console.error('Error getting access token:', error.message);
         throw new Error('Failed to authenticate with IGDB');
     }
 }
@@ -47,20 +63,10 @@ async function searchIgdbGamesList(name: string, accessToken: string) {
     `;
 
     try {
-        const response = await axios.post(
-            'https://api.igdb.com/v4/games',
-            query,
-            {
-                headers: {
-                    'Client-ID': process.env.IGDB_CLIENT_ID,
-                    'Authorization': `Bearer ${accessToken}`,
-                    'Content-Type': 'text/plain',
-                },
-            }
-        );
-        return response.data || [];
+        const data = await igdbPost(query, accessToken);
+        return data || [];
     } catch (error: any) {
-        console.error(`Error searching for ${name}:`, error.response?.data || error.message);
+        console.error(`Error searching for ${name}:`, error.message);
         return [];
     }
 }
@@ -73,20 +79,10 @@ async function getIgdbGameDetails(igdbId: number, accessToken: string) {
     `;
 
     try {
-        const response = await axios.post(
-            'https://api.igdb.com/v4/games',
-            query,
-            {
-                headers: {
-                    'Client-ID': process.env.IGDB_CLIENT_ID,
-                    'Authorization': `Bearer ${accessToken}`,
-                    'Content-Type': 'text/plain',
-                },
-            }
-        );
-        return response.data && response.data.length > 0 ? response.data[0] : null;
+        const data = await igdbPost(query, accessToken);
+        return data && data.length > 0 ? data[0] : null;
     } catch (error: any) {
-        console.error(`Error getting details for ${igdbId}:`, error.response?.data || error.message);
+        console.error(`Error getting details for ${igdbId}:`, error.message);
         return null;
     }
 }
@@ -145,7 +141,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         }
 
         else if (requestMode === 'details') {
-            if (!igdbId) return res.status(400).json({ error: 'Missing igdbId for details' });
+            if (!Number.isInteger(igdbId)) return res.status(400).json({ error: 'Missing or invalid igdbId for details' });
 
             const gameData = await getIgdbGameDetails(igdbId, token);
 
@@ -155,7 +151,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
             // Duplicate Check (only when saving/requesting detailed view to import)
             if (!skipCheck) {
-                const client = await clientPromise;
+                const client = await getClient();
                 const db = client.db('guessthegame');
 
                 // Use MongoDB regex for case-insensitive exact match instead of loading all games into memory
@@ -203,6 +199,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
             return res.json(responseData);
         }
 
+        return res.status(400).json({ error: 'Invalid mode' });
     } catch (err) {
         console.error('Error requesting game:', err);
         res.status(500).json({ error: 'Internal server error' });

@@ -9,11 +9,15 @@ const sharpMocks = vi.hoisted(() => {
   return { metadata, extract, toBuffer, sharpFn };
 });
 
-const axiosMock = vi.hoisted(() => vi.fn());
+const fetchMock = vi.fn();
+vi.stubGlobal('fetch', fetchMock);
 
-vi.mock('axios', () => ({
-  default: axiosMock,
-}));
+const imageResponse = (bytes: number[], contentType: string) => ({
+  ok: true,
+  status: 200,
+  headers: new Headers({ 'content-type': contentType }),
+  arrayBuffer: async () => Uint8Array.from(bytes).buffer,
+});
 
 vi.mock('sharp', () => ({
   default: sharpMocks.sharpFn,
@@ -35,26 +39,23 @@ describe('/api/image-proxy', () => {
   it('returns 403 for non-allowlisted hosts', async () => {
     const { req, res } = createMocks({
       method: 'GET',
-      query: { url: encodeURIComponent('https://example.com/img.jpg') },
+      query: { url: 'https://example.com/img.jpg' },
     });
     await handler(req as any, res as any);
     expect(res._getStatusCode()).toBe(403);
   });
 
   it('returns original image when crop params are missing', async () => {
-    axiosMock.mockResolvedValueOnce({
-      data: Uint8Array.from([1, 2, 3]),
-      headers: { 'content-type': 'image/jpeg' },
-    });
+    fetchMock.mockResolvedValueOnce(imageResponse([1, 2, 3], 'image/jpeg'));
 
     const { req, res } = createMocks({
       method: 'GET',
-      query: { url: encodeURIComponent('https://images.igdb.com/image/upload/foo.jpg') },
+      query: { url: 'https://images.igdb.com/image/upload/foo.jpg' },
     });
 
     await handler(req as any, res as any);
 
-    expect(axiosMock).toHaveBeenCalledTimes(1);
+    expect(fetchMock).toHaveBeenCalledTimes(1);
     expect(res._getStatusCode()).toBe(200);
     expect(res.getHeader('Content-Type')).toBe('image/jpeg');
     expect(res.getHeader('Cache-Control')).toBe('public, max-age=31536000');
@@ -63,17 +64,14 @@ describe('/api/image-proxy', () => {
   });
 
   it('crops image when x, y, and zoom are provided', async () => {
-    axiosMock.mockResolvedValueOnce({
-      data: Uint8Array.from([1, 2, 3, 4]),
-      headers: { 'content-type': 'image/png' },
-    });
+    fetchMock.mockResolvedValueOnce(imageResponse([1, 2, 3, 4], 'image/png'));
     sharpMocks.metadata.mockResolvedValueOnce({ width: 1000, height: 800 });
     sharpMocks.toBuffer.mockResolvedValueOnce(Buffer.from([9, 9, 9]));
 
     const { req, res } = createMocks({
       method: 'GET',
       query: {
-        url: encodeURIComponent('https://images.igdb.com/image/upload/foo.png'),
+        url: 'https://images.igdb.com/image/upload/foo.png',
         x: '25',
         y: '75',
         zoom: '200',
@@ -94,12 +92,38 @@ describe('/api/image-proxy', () => {
     expect(Buffer.isBuffer(res._getData())).toBe(true);
   });
 
-  it('returns 500 when upstream processing fails', async () => {
-    axiosMock.mockRejectedValueOnce(new Error('boom'));
+  it('clamps out-of-range crop params', async () => {
+    fetchMock.mockResolvedValueOnce(imageResponse([1, 2, 3, 4], 'image/png'));
+    sharpMocks.metadata.mockResolvedValueOnce({ width: 1000, height: 800 });
+    sharpMocks.toBuffer.mockResolvedValueOnce(Buffer.from([9]));
 
     const { req, res } = createMocks({
       method: 'GET',
-      query: { url: encodeURIComponent('https://images.igdb.com/image/upload/foo.jpg') },
+      query: {
+        url: 'https://images.igdb.com/image/upload/foo.png',
+        x: '-50',
+        y: '500',
+        zoom: '99999',
+      },
+    });
+
+    await handler(req as any, res as any);
+
+    expect(sharpMocks.extract).toHaveBeenCalledWith({
+      left: 0,
+      top: 720,
+      width: 100,
+      height: 80,
+    });
+    expect(res._getStatusCode()).toBe(200);
+  });
+
+  it('returns 500 when upstream processing fails', async () => {
+    fetchMock.mockRejectedValueOnce(new Error('boom'));
+
+    const { req, res } = createMocks({
+      method: 'GET',
+      query: { url: 'https://images.igdb.com/image/upload/foo.jpg' },
     });
 
     await handler(req as any, res as any);

@@ -10,7 +10,7 @@ const mongoMocks = vi.hoisted(() => {
 });
 
 vi.mock('../../../api/_lib/mongodb.js', () => ({
-  default: Promise.resolve(mongoMocks.client),
+  getClient: async () => mongoMocks.client,
 }));
 
 import handler from '../../../api/run/[id]';

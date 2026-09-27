@@ -2,11 +2,6 @@
     "regions": [
         "arn1"
     ],
-    "functions": {
-        "api/games.ts": {
-            "includeFiles": "data/games_db.json"
-        }
-    },
     "rewrites": [
         {
             "source": "/((?!api/.*).*)",
@@ -26,8 +21,8 @@
                     "value": "nosniff"
                 },
                 {
-                    "key": "X-XSS-Protection",
-                    "value": "1; mode=block"
+                    "key": "Referrer-Policy",
+                    "value": "strict-origin-when-cross-origin"
                 }
             ]
         }

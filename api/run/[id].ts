@@ -1,4 +1,4 @@
-import clientPromise from '../_lib/mongodb.js';
+import { getClient } from '../_lib/mongodb.js';
 
 export default async function handler(req: any, res: any) {
     if (req.method !== 'GET') {
@@ -10,9 +10,12 @@ export default async function handler(req: any, res: any) {
     if (!id || typeof id !== 'string') {
         return res.status(400).json({ error: 'Invalid ID' });
     }
+    if (!/^[0-9a-f]{8}$/.test(id)) {
+        return res.status(404).json({ error: 'Run not found' });
+    }
 
     try {
-        const client = await clientPromise;
+        const client = await getClient();
         const db = client.db('guessthegame');
         const collection = db.collection('runs');
 

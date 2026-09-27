@@ -12,17 +12,6 @@ RUN npm ci
 # Copy source code
 COPY . .
 
-# Build arguments with defaults (set via docker-compose or docker build --build-arg)
-# These are used during the build process and get baked into the built application
-ARG IGDB_CLIENT_ID=""
-ARG IGDB_CLIENT_SECRET=""
-ARG VITE_PORT=5173
-
-# Set environment variables for build
-ENV IGDB_CLIENT_ID=${IGDB_CLIENT_ID}
-ENV IGDB_CLIENT_SECRET=${IGDB_CLIENT_SECRET}
-ENV VITE_PORT=${VITE_PORT}
-
 # Build the application
 RUN npm run build
 
@@ -35,7 +24,7 @@ WORKDIR /app
 COPY package*.json ./
 
 # Install production dependencies only
-RUN npm ci --only=production
+RUN npm ci --omit=dev
 
 # Copy built assets from builder stage
 COPY --from=builder /app/dist ./dist

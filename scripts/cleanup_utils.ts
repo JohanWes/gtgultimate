@@ -1,6 +1,5 @@
 import dotenv from 'dotenv';
 import { MongoClient } from 'mongodb';
-import axios from 'axios';
 import { promises as fs } from 'fs';
 import path from 'path';
 
@@ -34,25 +33,29 @@ export async function getIgdbToken(): Promise<string> {
         throw new Error('IGDB_CLIENT_ID and IGDB_CLIENT_SECRET are required');
     }
 
-    const res = await axios.post('https://id.twitch.tv/oauth2/token', null, {
-        params: { client_id: clientId, client_secret: clientSecret, grant_type: 'client_credentials' },
-    });
+    const params = new URLSearchParams({ client_id: clientId, client_secret: clientSecret, grant_type: 'client_credentials' });
+    const res = await fetch(`https://id.twitch.tv/oauth2/token?${params}`, { method: 'POST' });
+    if (!res.ok) throw new Error(`IGDB auth failed: HTTP ${res.status} ${await res.text()}`);
+    const data = await res.json();
 
-    if (!res.data.access_token) throw new Error('No access token in IGDB response');
-    igdbToken = res.data.access_token;
-    tokenExpiry = Date.now() + (res.data.expires_in * 1000) - 60000;
+    if (!data.access_token) throw new Error('No access token in IGDB response');
+    igdbToken = data.access_token;
+    tokenExpiry = Date.now() + (data.expires_in * 1000) - 60000;
     return igdbToken!;
 }
 
 export async function igdbPost(endpoint: string, body: string, token: string): Promise<any[]> {
-    const res = await axios.post(`https://api.igdb.com/v4/${endpoint}`, body, {
+    const res = await fetch(`https://api.igdb.com/v4/${endpoint}`, {
+        method: 'POST',
         headers: {
             'Client-ID': process.env.IGDB_CLIENT_ID!,
             'Authorization': `Bearer ${token}`,
             'Content-Type': 'text/plain',
         },
+        body,
     });
-    return res.data || [];
+    if (!res.ok) throw new Error(`IGDB ${endpoint} failed: HTTP ${res.status} ${await res.text()}`);
+    return (await res.json()) || [];
 }
 
 // --- Helpers ---

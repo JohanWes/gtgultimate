@@ -1,9 +1,9 @@
 
-import clientPromise from './_lib/mongodb.js';
+import { getClient } from './_lib/mongodb.js';
 
 export default async function handler(req, res) {
     try {
-        const client = await clientPromise;
+        const client = await getClient();
         const db = client.db('guessthegame');
         const collection = db.collection('highscores');
 
@@ -16,14 +16,18 @@ export default async function handler(req, res) {
                 .toArray();
 
             // Cache for 60 seconds, serve stale for background update
-            res.setHeader('Cache-Control', 's-maxage=60, stale-while-revalidate');
+            res.setHeader('Cache-Control', 'public, s-maxage=10, stale-while-revalidate=60');
             return res.status(200).json(scores);
         }
 
         if (req.method === 'POST') {
             const { name, score, runId } = req.body;
 
-            if (!name || typeof score !== 'number') {
+            if (
+                typeof name !== 'string' || !name.trim() ||
+                !Number.isInteger(score) || score < 0 || score > 10000 ||
+                (runId !== undefined && (typeof runId !== 'string' || !/^[0-9a-f]{8}$/.test(runId)))
+            ) {
                 return res.status(400).json({ error: 'Invalid input' });
             }
 

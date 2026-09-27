@@ -1,4 +1,3 @@
-
 import { MongoClient } from 'mongodb';
 
 if (!process.env.MONGODB_URI) {
@@ -12,21 +11,14 @@ const options = {
     maxIdleTimeMS: 30000,
 };
 
-let client;
-let clientPromise: Promise<MongoClient>;
+// Cache on the global object so the connection survives module reloads in development (HMR).
+const cache = globalThis as unknown as { _mongoClientPromise?: Promise<MongoClient> | null };
 
-if (process.env.NODE_ENV === 'development') {
-    // In development mode, use a global variable so that the value
-    // is preserved across module reloads caused by HMR (Hot Module Replacement).
-    if (!(global as any)._mongoClientPromise) {
-        client = new MongoClient(uri, options);
-        (global as any)._mongoClientPromise = client.connect();
-    }
-    clientPromise = (global as any)._mongoClientPromise;
-} else {
-    // In production mode, it's best to not use a global variable.
-    client = new MongoClient(uri, options);
-    clientPromise = client.connect();
+export async function getClient(): Promise<MongoClient> {
+    // Reset on failure so a warm instance retries instead of reusing a rejected promise.
+    cache._mongoClientPromise ??= new MongoClient(uri, options).connect().catch((err) => {
+        cache._mongoClientPromise = null;
+        throw err;
+    });
+    return cache._mongoClientPromise;
 }
-
-export default clientPromise;

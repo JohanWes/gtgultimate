@@ -19,7 +19,7 @@ const mongoMocks = vi.hoisted(() => {
 });
 
 vi.mock('../../api/_lib/mongodb.js', () => ({
-  default: Promise.resolve(mongoMocks.client),
+  getClient: async () => mongoMocks.client,
 }));
 
 import handler from '../../api/highscores';
@@ -36,7 +36,7 @@ describe('/api/highscores', () => {
     await handler(req as any, res as any);
 
     expect(res._getStatusCode()).toBe(200);
-    expect(res.getHeader('Cache-Control')).toBe('s-maxage=60, stale-while-revalidate');
+    expect(res.getHeader('Cache-Control')).toBe('public, s-maxage=10, stale-while-revalidate=60');
     expect(res._getJSONData()).toEqual([{ name: 'AAA', score: 42 }]);
   });
 
@@ -45,6 +45,21 @@ describe('/api/highscores', () => {
       method: 'POST',
       body: { name: '', score: 'nope' },
     });
+
+    await handler(req as any, res as any);
+
+    expect(res._getStatusCode()).toBe(400);
+    expect(mongoMocks.insertOne).not.toHaveBeenCalled();
+  });
+
+  it.each([
+    { name: 'AAA', score: 1.5 },
+    { name: 'AAA', score: -1 },
+    { name: 'AAA', score: 10001 },
+    { name: '   ', score: 5 },
+    { name: 'AAA', score: 5, runId: '../../x' },
+  ])('returns 400 for out-of-range or malformed payload %o', async (body) => {
+    const { req, res } = createMocks({ method: 'POST', body });
 
     await handler(req as any, res as any);
 

@@ -1,5 +1,5 @@
 
-import clientPromise from '../_lib/mongodb.js';
+import { getClient } from '../_lib/mongodb.js';
 import crypto from 'crypto';
 import type { VercelRequest, VercelResponse } from '@vercel/node';
 
@@ -29,7 +29,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     const { query } = req.body;
 
     try {
-        const client = await clientPromise;
+        const client = await getClient();
         const db = client.db('guessthegame');
 
         if (!query) {
@@ -45,7 +45,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         // Note: For large DBs, text index is better, but regex is fine for ~2600 items
         const games = await db.collection('games')
             .find(
-                { name: { $regex: query, $options: 'i' } },
+                { name: { $regex: String(query).replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), $options: 'i' } },
                 { projection: { id: 1, name: 1, year: 1, platform: 1, genre: 1, rating: 1, screenshots: 1, redactedRegions: 1 } }
             )
             .limit(50)

@@ -1,9 +1,9 @@
 
 import type { VercelRequest, VercelResponse } from '@vercel/node';
 import sharp from 'sharp';
-import axios from 'axios';
 
 const ALLOWED_IMAGE_HOSTS = ['images.igdb.com'];
+const MAX_BYTES = 10 * 1024 * 1024;
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
     const { url, x, y, zoom } = req.query;
@@ -12,12 +12,12 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         return res.status(400).json({ error: 'Missing or invalid url parameter' });
     }
 
-    const decodedUrl = decodeURIComponent(url as string);
+    // req.query is already URL-decoded (the client encodes the url once), so no extra decodeURIComponent.
 
     // SSRF Protection: Validate Host
     try {
-        const parsedUrl = new URL(decodedUrl);
-        if (!ALLOWED_IMAGE_HOSTS.includes(parsedUrl.hostname)) {
+        const parsedUrl = new URL(url);
+        if (parsedUrl.protocol !== 'https:' || !ALLOWED_IMAGE_HOSTS.includes(parsedUrl.hostname)) {
             return res.status(403).json({ error: 'Domain not allowed' });
         }
     } catch {
@@ -25,16 +25,23 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     }
 
     try {
-        const response = await axios({
-            url: decodedUrl,
-            responseType: 'arraybuffer'
-        });
+        const response = await fetch(url, { redirect: 'manual', signal: AbortSignal.timeout(10000) });
+        if (!response.ok) throw new Error(`Upstream responded ${response.status}`);
+        if (Number(response.headers.get('content-length')) > MAX_BYTES) throw new Error('Image too large');
+        const buffer = Buffer.from(await response.arrayBuffer());
+        if (buffer.length > MAX_BYTES) throw new Error('Image too large');
+        const contentType = response.headers.get('content-type') ?? '';
+        if (!contentType.startsWith('image/')) return res.status(400).json({ error: 'Not an image' });
 
-        const buffer = Buffer.from(response.data);
+        // x/y are percentages (0..100), zoom is a percentage (100 = full image)
+        const clampInt = (v: unknown, min: number, max: number) => Math.min(max, Math.max(min, Math.round(Number(v) || 0)));
+        const zoomVal = clampInt(zoom, 100, 1000);
+        const xPos = clampInt(x, 0, 100);
+        const yPos = clampInt(y, 0, 100);
 
         // If no crop parameters, return original image
-        if (!x || !y || !zoom || parseFloat(zoom as string) <= 100) {
-            res.setHeader('Content-Type', response.headers['content-type']);
+        if (!x || !y || !zoom || zoomVal <= 100) {
+            res.setHeader('Content-Type', contentType);
             res.setHeader('Cache-Control', 'public, max-age=31536000'); // Cache for 1 year
             return res.send(buffer);
         }
@@ -45,14 +52,10 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         const width = metadata.width || 0;
         const height = metadata.height || 0;
 
-        const zoomVal = parseFloat(zoom as string);
-        const xPos = parseFloat(x as string);
-        const yPos = parseFloat(y as string);
-
         // Calculation for crop logic
         const scale = zoomVal / 100;
-        const cropWidth = Math.round(width / scale);
-        const cropHeight = Math.round(height / scale);
+        const cropWidth = Math.max(1, Math.round(width / scale));
+        const cropHeight = Math.max(1, Math.round(height / scale));
 
         const maxScrollX = width - cropWidth;
         const maxScrollY = height - cropHeight;
@@ -68,7 +71,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
             .extract({ left: cropX, top: cropY, width: cropWidth, height: cropHeight })
             .toBuffer();
 
-        res.setHeader('Content-Type', response.headers['content-type']);
+        res.setHeader('Content-Type', contentType);
         res.setHeader('Cache-Control', 'public, max-age=86400'); // 1 day
         res.send(croppedImage);
 

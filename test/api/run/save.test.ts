@@ -10,7 +10,7 @@ const mongoMocks = vi.hoisted(() => {
 });
 
 vi.mock('../../../api/_lib/mongodb.js', () => ({
-  default: Promise.resolve(mongoMocks.client),
+  getClient: async () => mongoMocks.client,
 }));
 
 vi.mock('crypto', async (importOriginal) => {
@@ -38,6 +38,18 @@ describe('/api/run/save', () => {
     const { req, res } = createMocks({
       method: 'POST',
       body: { history: null, totalScore: 12, totalGames: 3 },
+    });
+
+    await handler(req as any, res as any);
+
+    expect(res._getStatusCode()).toBe(400);
+    expect(mongoMocks.insertOne).not.toHaveBeenCalled();
+  });
+
+  it('returns 400 when history is too long', async () => {
+    const { req, res } = createMocks({
+      method: 'POST',
+      body: { history: new Array(501).fill({}), totalScore: 1, totalGames: 501 },
     });
 
     await handler(req as any, res as any);

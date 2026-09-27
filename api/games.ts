@@ -1,6 +1,11 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
 
-import clientPromise from './_lib/mongodb.js';
+import { getClient } from './_lib/mongodb.js';
+
+const PROJECTION = {
+    _id: 0, id: 1, name: 1, year: 1, platform: 1, genre: 1, rating: 1,
+    screenshots: 1, cover: 1, cropPositions: 1, synopsis: 1, redactedRegions: 1,
+};
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
     if (req.method !== 'GET') {
@@ -17,10 +22,16 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
         const collectionName = pool === 'horse' ? 'horse_games' : 'games';
 
-        const client = await clientPromise;
+        const client = await getClient();
         const db = client.db('guessthegame');
 
-        const games = await db.collection(collectionName).find({}).toArray();
+        // Only the fields the client uses. Natural order is what clients have always seen (Standard mode maps level -> index);
+        // it does NOT match _id order in this collection, so do not sort by _id.
+        const filter = pool === 'default' ? { 'screenshots.4': { $exists: true } } : {};
+        const games = await db.collection(collectionName)
+            .find(filter, { projection: PROJECTION })
+            .sort({ $natural: 1 })
+            .toArray();
 
         const hasValidScreenshots = (g: Record<string, unknown>): boolean =>
             Array.isArray(g.screenshots) &&
@@ -31,15 +42,8 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         // Horse pool is left untouched to preserve its curated set.
         const filtered = pool === 'default' ? games.filter(hasValidScreenshots) : games;
 
-        // Remove MongoDB internal _id field to keep client cleaner
-        const cleanGames = filtered.map(game => {
-            // eslint-disable-next-line @typescript-eslint/no-unused-vars
-            const { _id, ...rest } = game;
-            return rest;
-        });
-
-        res.setHeader('Cache-Control', 'public, s-maxage=30');
-        res.status(200).json(cleanGames);
+        res.setHeader('Cache-Control', 'public, s-maxage=300, stale-while-revalidate=86400');
+        res.status(200).json(filtered);
     } catch (error) {
         console.error('API Error:', error);
         res.status(500).json({ error: 'Internal Server Error' });

@@ -1,4 +1,4 @@
-import clientPromise from '../_lib/mongodb.js';
+import { getClient } from '../_lib/mongodb.js';
 import { randomUUID } from 'crypto';
 
 export default async function handler(req: any, res: any) {
@@ -9,11 +9,11 @@ export default async function handler(req: any, res: any) {
     try {
         const { history, totalScore, totalGames } = req.body;
 
-        if (!history || !Array.isArray(history)) {
+        if (!Array.isArray(history) || history.length > 500) {
             return res.status(400).json({ error: 'Invalid data' });
         }
 
-        const client = await clientPromise;
+        const client = await getClient();
         const db = client.db('guessthegame');
         const collection = db.collection('runs');
 
@@ -22,8 +22,8 @@ export default async function handler(req: any, res: any) {
         const runData: any = {
             _id: runId, // Use custom short ID as _id
             history,
-            totalScore,
-            totalGames,
+            totalScore: Number(totalScore) || 0,
+            totalGames: Number(totalGames) || history.length,
             createdAt: new Date().toISOString()
         };
 
