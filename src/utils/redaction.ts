@@ -44,10 +44,11 @@ export const redactGameName = (synopsis: string, gameName: string): string => {
 
     // 4. Token-based generation (Aggressive)
     // Split the game name into individual words
+    // Unicode-aware so accented words survive; possessive 's is dropped ("Luigi's" -> "luigi")
     const tokens = gameName
         .toLowerCase()
-        .replace(/[^\w\s]/g, '') // Remove punctuation
-        .split(/\s+/);
+        .split(/[^\p{L}\p{N}'’]+/u)
+        .map(t => t.replace(/['’]s$|^['’]+|['’]+$/g, ''));
 
     tokens.forEach(token => {
         // Only add if it's NOT a stop word and has decent length
@@ -57,7 +58,9 @@ export const redactGameName = (synopsis: string, gameName: string): string => {
     });
 
     // 5. Clean up variations
-    const cleanVariations = [...new Set(variations)]
+    // Also add an accent-free copy of each variant ("Pokémon" -> "Pokemon")
+    const withPlain = variations.flatMap(v => [v, v.normalize('NFD').replace(/\p{M}/gu, '')]);
+    const cleanVariations = [...new Set(withPlain)]
         .map(v => v.trim())
         .filter(v => v.length >= 3) // Minimum length check
         .sort((a, b) => b.length - a.length); // Longest first to avoid partial replacement issues
@@ -66,15 +69,11 @@ export const redactGameName = (synopsis: string, gameName: string): string => {
     for (const variant of cleanVariations) {
         // Escape regex special characters
         const escaped = variant.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-        // Use word boundary for short words to avoid replacing parts of other words
-        // But for longer words/phrases, we might be more aggressive? 
-        // Let's try standard regex first.
-
-        // If it's a single word, use word boundaries
+        // Single words get Unicode-aware word boundaries (\b is ASCII-only and fails on "Ōkami")
         const isSingleWord = !variant.includes(' ');
-        const pattern = isSingleWord ? `\\b${escaped}\\b` : escaped;
+        const pattern = isSingleWord ? `(?<![\\p{L}\\p{N}])${escaped}(?![\\p{L}\\p{N}])` : escaped;
 
-        const regex = new RegExp(pattern, 'gi');
+        const regex = new RegExp(pattern, 'giu');
         redacted = redacted.replace(regex, '[REDACTED]');
     }
 

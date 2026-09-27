@@ -11,19 +11,6 @@ export const calculateScore = (guessCount: number): number => {
     }
 };
 
-export const generateRandomCrop = (): { x: number, y: number } => {
-    // This is a placeholder. In a real implementation, we'd need the actual image dimensions.
-    // For now, we'll return a percentage-based position (0-100).
-    // As difficulty increases, the crop might become more obscure or smaller (if we controlled zoom).
-    // Since we only control position here based on the requirement "randomize the visible portion",
-    // we'll just randomize the center point of the crop.
-
-    return {
-        x: Math.random() * 100,
-        y: Math.random() * 100
-    };
-};
-
 export const getDifficultyZoomBonus = (levelIndex: number): number => {
     // Every 10 levels, add 10% more zoom
     // Level 0-9 (tier 0): +0%
@@ -103,6 +90,6 @@ export const shuffleString = (str: string): string => {
 };
 
 export const generateAnagram = (gameName: string): string => {
-    const cleanName = gameName.replace(/[^a-zA-Z0-9]/g, '').toUpperCase();
+    const cleanName = gameName.replace(/[^\p{L}\p{N}]/gu, '').toUpperCase();
     return shuffleString(cleanName);
 };

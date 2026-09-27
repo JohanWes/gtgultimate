@@ -161,42 +161,6 @@ function haveSignificantOverlap(name1: string, name2: string): boolean {
 }
 
 /**
- * Get the first significant word from a game name
- * This is crucial for series like "Metro 2033" vs "Metro Exodus"
- */
-function getFirstSignificantWord(name: string): string | null {
-    const tokens = tokenize(name);
-
-    // Return the first token that's at least 3 characters
-    // This avoids matching on short words like "of", "the", etc. that slipped through
-    for (const token of tokens) {
-        if (token.length >= 3) {
-            return token;
-        }
-    }
-
-    return null;
-}
-
-/**
- * Check if two games have the same first significant word
- * This is a strong indicator of the same series (Metro, Fallout, Dark Souls, etc.)
- */
-function haveSameFirstWord(name1: string, name2: string): boolean {
-    const first1 = getFirstSignificantWord(name1);
-    const first2 = getFirstSignificantWord(name2);
-
-    if (!first1 || !first2) {
-        return false;
-    }
-
-    // Match if the first significant word is the same AND it's at least 4 characters
-    // This avoids false positives like "Call of Duty" vs "Call of Juarez"
-    // but catches "Metro 2033" vs "Metro Exodus", "Fallout 3" vs "Fallout New Vegas"
-    return first1 === first2 && first1.length >= 4;
-}
-
-/**
  * Check if one normalized name is a substring of the other
  * This catches "Super Metroid" vs "Metroid", "The Legend of Zelda" vs "Zelda"
  * Enforces word boundaries to avoid "Metro" matching "Metroid"
@@ -274,18 +238,12 @@ export function areSimilarNames(gameName1: string, gameName2: string): boolean {
         return true;
     }
 
-    // Strategy 2: Check if the first significant word matches
-    // This catches "Metro 2033" vs "Metro Exodus", "Fallout 3" vs "Fallout 4"
-    if (haveSameFirstWord(gameName1, gameName2)) {
-        return true;
-    }
-
-    // Strategy 3: Check for significant token overlap
+    // Strategy 2: Check for significant token overlap
     if (haveSignificantOverlap(gameName1, gameName2)) {
         return true;
     }
 
-    // Strategy 4: Substring match (Aggressive)
+    // Strategy 3: Substring match (Aggressive)
     // Catches "Super Metroid" vs "Metroid"
     if (haveSubstringMatch(gameName1, gameName2)) {
         return true;

@@ -38,12 +38,6 @@ export interface LevelProgress {
     guesses: GuessWithResult[]; // List of guessed games with their results
 }
 
-
-export interface GameState {
-    currentLevel: number; // 1-100
-    progress: Record<number, LevelProgress>; // Map level number to progress
-}
-
 export type LifelineType = 'skip' | 'anagram' | 'consultant' | 'double_trouble' | 'zoom_out' | 'cover_peek' | 'synopsis';
 
 export interface Lifelines {
@@ -79,7 +73,6 @@ export interface EndlessState {
     currentLevelLifelinesUsed: LifelineType[];
     doubleTroubleGameId: number | null;
     zoomOutActive: boolean; // Whether Zoom Out lifeline is active for current round
-    cropPositions: Array<{ x: number; y: number }>; // Persisted crop positions for the current level
     hotStreakCount: number; // Number of consecutive "Close to Perfect" guesses (1st or 2nd image)
     isHotStreakActive: boolean; // Whether the hot streak effect is currently active (>= 3 hotStreakCount)
     lastShopStreak: number; // The streak count at which the shop was last visited

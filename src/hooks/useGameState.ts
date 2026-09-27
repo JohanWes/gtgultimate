@@ -9,10 +9,8 @@ const STORAGE_KEY = 'guessthegame_unlimited_progress';
 function loadInitialState() {
     try {
         const saved = localStorage.getItem(STORAGE_KEY);
-        console.log('🔍 Loading initial state from localStorage:', saved);
         if (saved) {
             const parsed = JSON.parse(saved);
-            console.log('✅ Parsed initial state:', parsed);
             return {
                 currentLevel: parsed.currentLevel || 1,
                 progress: parsed.progress || {}
@@ -30,8 +28,9 @@ export function useGameState() {
     const [error, setError] = useState<string | null>(null);
 
     // Use lazy initialization to load from localStorage only once
-    const [currentLevel, setCurrentLevel] = useState<number>(() => loadInitialState().currentLevel);
-    const [progress, setProgress] = useState<Record<number, LevelProgress>>(() => loadInitialState().progress);
+    const [initialState] = useState(loadInitialState);
+    const [currentLevel, setCurrentLevel] = useState<number>(initialState.currentLevel);
+    const [progress, setProgress] = useState<Record<number, LevelProgress>>(initialState.progress);
 
     useEffect(() => {
         fetch('/api/games')
@@ -41,6 +40,8 @@ export function useGameState() {
             })
             .then(data => {
                 setGames(data);
+                // Clamp a saved level that is past the end (games can be removed from the DB)
+                setCurrentLevel(level => Math.min(level, Math.max(1, data.length)));
                 setIsLoading(false);
             })
             .catch(err => {
@@ -53,7 +54,6 @@ export function useGameState() {
 
     useEffect(() => {
         const dataToSave = { currentLevel, progress };
-        console.log('💾 Saving to localStorage:', dataToSave);
         localStorage.setItem(STORAGE_KEY, JSON.stringify(dataToSave));
     }, [currentLevel, progress]);
 

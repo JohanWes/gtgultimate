@@ -46,4 +46,8 @@ describe('generateAnagram', () => {
     const anagram = generateAnagram('Halo: CE!');
     expect(anagram.replaceAll(' ', '').split('').sort().join('')).toBe('ACEHLO');
   });
+
+  it('keeps accented letters', () => {
+    expect(generateAnagram('Pokémon').replaceAll(' ', '')).toHaveLength(7);
+  });
 });

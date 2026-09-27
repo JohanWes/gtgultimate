@@ -30,4 +30,20 @@ describe('redactGameName', () => {
     expect(result).toContain('creative mechanics');
     expect(result).toContain('physics');
   });
+
+  it('redacts the possessive base word', () => {
+    const result = redactGameName("Luigi explores a haunted house.", "Luigi's Mansion");
+    expect(result).not.toContain('Luigi');
+  });
+
+  it('redacts accented and plain spellings', () => {
+    const result = redactGameName('Pokémon Red, the first Pokemon game.', 'Pokémon Red');
+    expect(result).not.toMatch(/Pok[eé]mon/);
+  });
+
+  it('redacts words starting with an accented letter', () => {
+    const result = redactGameName('Ōkami stars the sun goddess.', 'Ōkami');
+    expect(result).not.toContain('Ō');
+    expect(result).not.toContain('kami');
+  });
 });

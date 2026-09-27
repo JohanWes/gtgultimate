@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import type { Game, EndlessState, LifelineType, GuessResult } from '../types';
-import { calculateScore, getShopItems, generateRandomCrop } from '../utils/endlessUtils';
+import { calculateScore, getShopItems } from '../utils/endlessUtils';
 import { areSimilarNames } from '../utils/seriesDetection';
 
 
@@ -122,13 +122,18 @@ const INITIAL_STATE: EndlessState = {
     currentLevelLifelinesUsed: [],
     doubleTroubleGameId: null,
     zoomOutActive: false,
-    cropPositions: [],
     hotStreakCount: 0,
     isHotStreakActive: false,
     lastShopStreak: 0,
     hasBonusRoundOccurredInCurrentBlock: false,
     bonusRound: undefined
 };
+
+// A guess only applies while the level it was made against is still being played.
+// Checked on `prev` because a delayed call (Consultant pick) may carry a stale closure.
+const isStillPlaying = (prev: EndlessState, gameId: number) =>
+    !prev.isGameOver && prev.status === 'playing' && !prev.bonusRound?.active &&
+    prev.gameOrder[prev.currentLevelIndex] === gameId;
 
 export const useEndlessState = (allGames: Game[]) => {
     const [state, setState] = useState<EndlessState>(() => {
@@ -141,10 +146,8 @@ export const useEndlessState = (allGames: Game[]) => {
             parsedState.highScore = Math.max(parsedState.highScore, Number.parseInt(savedHighScore, 10));
         }
 
-        // Ensure crop positions exist (for legacy state or fresh start)
-        if (!parsedState.cropPositions || parsedState.cropPositions.length === 0) {
-            parsedState.cropPositions = Array(5).fill(0).map(() => generateRandomCrop());
-        }
+        // Drop the legacy per-level random crops (history now stores the game's own crops)
+        delete parsedState.cropPositions;
 
         // Ensure lastShopStreak exists (for legacy state)
         if (parsedState.lastShopStreak === undefined) {
@@ -164,15 +167,6 @@ export const useEndlessState = (allGames: Game[]) => {
         return parsedState;
     });
 
-    // Initialize game order if empty
-    useEffect(() => {
-        if (state.gameOrder.length === 0 && allGames.length > 0) {
-            const weightedIds = generateWeightedGameOrder(allGames);
-            setState(prev => ({ ...prev, gameOrder: weightedIds }));
-        }
-    }, [allGames, state.gameOrder.length]);
-
-
     useEffect(() => {
         localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
         if (state.score > state.highScore) {
@@ -183,90 +177,116 @@ export const useEndlessState = (allGames: Game[]) => {
     const currentGameId = state.gameOrder[state.currentLevelIndex];
     const currentGame = allGames.find(g => g.id === currentGameId);
 
+    // Build the game order when it is empty, and repair a saved order whose current game
+    // no longer exists (removed from the DB): drop missing ids from the current index onward
+    // (played positions stay put) and append a fresh order if nothing valid is left.
+    useEffect(() => {
+        if (allGames.length === 0 || currentGame) return;
+        const validIds = new Set(allGames.map(g => g.id));
+        setState(prev => {
+            const idx = prev.currentLevelIndex;
+            if (validIds.has(prev.gameOrder[idx])) return prev;
+            const upcoming = prev.gameOrder.slice(idx).filter(id => validIds.has(id));
+            return {
+                ...prev,
+                gameOrder: [
+                    ...prev.gameOrder.slice(0, idx),
+                    ...(upcoming.length > 0 ? upcoming : generateWeightedGameOrder(allGames))
+                ]
+            };
+        });
+    }, [allGames, currentGame]);
+
     const submitGuess = useCallback((game: Game, isFatal: boolean = false) => {
-        if (state.isGameOver || state.status !== 'playing' || !currentGame) return;
+        if (!currentGame) return;
 
         let result: GuessResult = 'wrong';
         if (game.id === currentGame.id) {
             result = 'correct';
-        } else {
-            if (areSimilarNames(game.name, currentGame.name)) {
-                result = 'similar-name';
-            }
+        } else if (areSimilarNames(game.name, currentGame.name)) {
+            result = 'similar-name';
         }
 
-        const newGuesses = [...state.guesses, { name: game.name, result }];
+        setState(prev => {
+            if (!isStillPlaying(prev, currentGame.id)) return prev;
 
-        if (result === 'correct') {
-            const isCloseToPerfect = newGuesses.length <= 2;
-            const newHotStreakCount = isCloseToPerfect ? state.hotStreakCount + 1 : 0;
-            const isHotStreakActive = newHotStreakCount >= 3;
+            const newGuesses = [...prev.guesses, { name: game.name, result }];
 
-            let points = calculateScore(newGuesses.length);
+            if (result === 'correct') {
+                const isCloseToPerfect = newGuesses.length <= 2;
+                const newHotStreakCount = isCloseToPerfect ? prev.hotStreakCount + 1 : 0;
+                const isHotStreakActive = newHotStreakCount >= 3;
 
-            // Progressive difficulty bonus: +1 flat score every 5 levels
-            const difficultyBonus = Math.floor(state.streak / 5);
-            points += difficultyBonus;
+                let points = calculateScore(newGuesses.length);
 
-            if (isHotStreakActive) {
-                points *= 2;
-            }
+                // Progressive difficulty bonus: +1 flat score every 5 levels
+                points += Math.floor(prev.streak / 5);
 
-            setState(prev => ({
-                ...prev,
-                score: prev.score + points,
-                streak: prev.streak + 1,
-                status: 'won',
-                guesses: newGuesses,
-                highScore: Math.max(prev.highScore, prev.score + points),
-                history: [...prev.history, {
-                    gameId: currentGame.id,
-                    score: points,
+                if (isHotStreakActive) {
+                    points *= 2;
+                }
+
+                return {
+                    ...prev,
+                    score: prev.score + points,
+                    streak: prev.streak + 1,
                     status: 'won',
                     guesses: newGuesses,
-                    lifelinesUsed: prev.currentLevelLifelinesUsed,
-                    correctAnswer: currentGame.name,
-                    cropPositions: prev.cropPositions
-                }],
-                hotStreakCount: newHotStreakCount,
-                isHotStreakActive: isHotStreakActive
-            }));
-        } else if (newGuesses.length >= 5 || isFatal) {
-            // Permadeath or Fatal Error (Consultant wrong guess)
-            setState(prev => ({
-                ...prev,
-                isGameOver: true,
-                highScoreModalShown: false, // Reset when game over happens
-                status: 'lost',
-                guesses: newGuesses,
-                history: [...prev.history, {
-                    gameId: currentGame.id,
-                    score: 0,
+                    highScore: Math.max(prev.highScore, prev.score + points),
+                    history: [...prev.history, {
+                        gameId: currentGame.id,
+                        score: points,
+                        status: 'won',
+                        guesses: newGuesses,
+                        lifelinesUsed: prev.currentLevelLifelinesUsed,
+                        correctAnswer: currentGame.name,
+                        cropPositions: currentGame.cropPositions
+                    }],
+                    hotStreakCount: newHotStreakCount,
+                    isHotStreakActive: isHotStreakActive
+                };
+            }
+
+            if (newGuesses.length >= 5 || isFatal) {
+                // Permadeath or Fatal Error (Consultant wrong guess)
+                return {
+                    ...prev,
+                    isGameOver: true,
+                    highScoreModalShown: false, // Reset when game over happens
                     status: 'lost',
                     guesses: newGuesses,
-                    lifelinesUsed: prev.currentLevelLifelinesUsed,
-                    correctAnswer: currentGame.name,
-                    cropPositions: prev.cropPositions
-                }],
-                hotStreakCount: 0,
-                isHotStreakActive: false
-            }));
-        } else {
-            setState(prev => ({
-                ...prev,
-                guesses: newGuesses
-            }));
-        }
-    }, [state.isGameOver, state.status, currentGame, state.guesses]);
+                    history: [...prev.history, {
+                        gameId: currentGame.id,
+                        score: 0,
+                        status: 'lost',
+                        guesses: newGuesses,
+                        lifelinesUsed: prev.currentLevelLifelinesUsed,
+                        correctAnswer: currentGame.name,
+                        cropPositions: currentGame.cropPositions
+                    }],
+                    hotStreakCount: 0,
+                    isHotStreakActive: false
+                };
+            }
+
+            return { ...prev, guesses: newGuesses };
+        });
+    }, [currentGame]);
 
     const skipGuess = useCallback(() => {
-        if (state.isGameOver || state.status !== 'playing' || !currentGame) return;
+        if (!currentGame) return;
 
-        const newGuesses = [...state.guesses, { name: "Skipped", result: 'skipped' as GuessResult }];
+        setState(prev => {
+            if (!isStillPlaying(prev, currentGame.id)) return prev;
 
-        if (newGuesses.length >= 5) {
+            const newGuesses = [...prev.guesses, { name: "Skipped", result: 'skipped' as GuessResult }];
+
+            if (newGuesses.length < 5) {
+                return { ...prev, guesses: newGuesses };
+            }
+
             // Permadeath
-            setState(prev => ({
+            return {
                 ...prev,
                 isGameOver: true,
                 highScoreModalShown: false, // Reset when game over happens
@@ -279,18 +299,13 @@ export const useEndlessState = (allGames: Game[]) => {
                     guesses: newGuesses,
                     lifelinesUsed: prev.currentLevelLifelinesUsed,
                     correctAnswer: currentGame.name,
-                    cropPositions: prev.cropPositions
+                    cropPositions: currentGame.cropPositions
                 }],
                 hotStreakCount: 0,
                 isHotStreakActive: false
-            }));
-        } else {
-            setState(prev => ({
-                ...prev,
-                guesses: newGuesses
-            }));
-        }
-    }, [state.isGameOver, state.status, currentGame, state.guesses]);
+            };
+        });
+    }, [currentGame]);
 
     const submitBonusGuess = useCallback((gameId: number) => {
         if (!state.bonusRound || !state.bonusRound.active) return;
@@ -335,7 +350,6 @@ export const useEndlessState = (allGames: Game[]) => {
                 currentLevelLifelinesUsed: [],
                 doubleTroubleGameId: null,
                 zoomOutActive: false,
-                cropPositions: Array(5).fill(0).map(() => generateRandomCrop()),
                 currentLevelIndex: prev.currentLevelIndex + 1,
                 bonusRound: undefined, // Close bonus round
                 hasBonusRoundOccurredInCurrentBlock: newStreak % 5 === 0 ? false : prev.hasBonusRoundOccurredInCurrentBlock, // If we completed a block (e.g. 4->5), reset? user says "reset after shop".
@@ -375,7 +389,6 @@ export const useEndlessState = (allGames: Game[]) => {
                 currentLevelLifelinesUsed: [],
                 doubleTroubleGameId: null,
                 zoomOutActive: false,
-                cropPositions: Array(5).fill(0).map(() => generateRandomCrop()),
                 currentLevelIndex: prev.currentLevelIndex + 1,
                 bonusRound: undefined,
                 hasBonusRoundOccurredInCurrentBlock: newStreak % 5 === 0 ? false : prev.hasBonusRoundOccurredInCurrentBlock,
@@ -401,8 +414,7 @@ export const useEndlessState = (allGames: Game[]) => {
                 ...INITIAL_STATE,
                 highScore: state.highScore,
                 highScoreModalShown: false, // Reset for new game
-                gameOrder: weightedIds,
-                cropPositions: Array(5).fill(0).map(() => generateRandomCrop())
+                gameOrder: weightedIds
             });
         } else {
             // Check for Bonus Round Trigger
@@ -544,7 +556,6 @@ export const useEndlessState = (allGames: Game[]) => {
                 currentLevelLifelinesUsed: [], // Reset for new level
                 doubleTroubleGameId: null,
                 zoomOutActive: false,
-                cropPositions: Array(5).fill(0).map(() => generateRandomCrop()),
                 hasBonusRoundOccurredInCurrentBlock: shouldResetBonusFlag ? false : prev.hasBonusRoundOccurredInCurrentBlock
             }));
         }
@@ -569,7 +580,7 @@ export const useEndlessState = (allGames: Game[]) => {
                         guesses: [...prev.guesses], // Current guesses at time of skip
                         lifelinesUsed: newLifelinesUsed,
                         correctAnswer: currentGame?.name || 'Unknown',
-                        cropPositions: prev.cropPositions
+                        cropPositions: currentGame?.cropPositions ?? []
                     }],
                     currentLevelLifelinesUsed: newLifelinesUsed,
                     hotStreakCount: 0,
@@ -600,9 +611,9 @@ export const useEndlessState = (allGames: Game[]) => {
 
         const finalCost = cost !== undefined ? cost : item.cost;
 
-        if (state.score < finalCost) return; // Should be handled by UI too
-
         setState(prev => {
+            if (prev.score < finalCost) return prev; // Should be handled by UI too
+
             const newLifelines = { ...prev.lifelines };
             if (item.type === 'refill_skip') newLifelines.skip += 1;
             if (item.type === 'refill_anagram') newLifelines.anagram += 1;
@@ -615,10 +626,12 @@ export const useEndlessState = (allGames: Game[]) => {
             return {
                 ...prev,
                 score: prev.score - finalCost, // finalCost is negative for bonus points (if bonus points could adhere to this, but they likely won't be discounted), so this works
-                lifelines: newLifelines
+                lifelines: newLifelines,
+                // Buying marks the shop as visited so a reload cannot reopen it and allow re-buying
+                lastShopStreak: prev.streak
             };
         });
-    }, [state.score]);
+    }, []);
 
     const markHighScoreModalShown = useCallback(() => {
         setState(prev => ({ ...prev, highScoreModalShown: true }));
