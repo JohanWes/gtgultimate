@@ -1,5 +1,5 @@
-import { useState, useEffect, useCallback, useRef } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { Fragment, useState, useEffect, useCallback, useRef } from 'react';
+import { motion, AnimatePresence, useReducedMotion } from 'framer-motion';
 import {
     Eye,
     SkipForward,
@@ -234,15 +234,49 @@ export function TutorialModal({ isOpen, onClose, onComplete }: TutorialModalProp
 }
 
 /* ── Step 0: Welcome ── */
+const TITLE = 'Guess The Game';
+
+// Letters snap into focus one by one, like a lens finding the subject
+const titleVariants = {
+    hidden: {},
+    shown: { transition: { staggerChildren: 0.03, delayChildren: 0.1 } },
+};
+const letterVariants = {
+    hidden: { opacity: 0, filter: 'blur(8px)', scale: 1.15 },
+    shown: {
+        opacity: 1,
+        filter: 'blur(0px)',
+        scale: 1,
+        transition: { duration: 0.35, ease: [0.16, 1, 0.3, 1] as const },
+    },
+};
+
 function WelcomeStep() {
+    const reduceMotion = useReducedMotion();
     return (
         <div className="h-full flex flex-col items-center justify-center text-center px-6">
-            <h1
+            <motion.h1
                 className="text-3xl md:text-4xl font-black tracking-wider uppercase text-text"
                 style={{ fontFamily: 'var(--font-display)' }}
+                aria-label={TITLE}
+                variants={titleVariants}
+                initial={reduceMotion ? false : 'hidden'}
+                animate="shown"
             >
-                Guess The Game
-            </h1>
+                {TITLE.split(' ').map((word, w) => (
+                    // Words stay unbreakable so the title only wraps between them
+                    <Fragment key={w}>
+                        {w > 0 && ' '}
+                        <span aria-hidden className="inline-block whitespace-nowrap">
+                            {word.split('').map((letter, i) => (
+                                <motion.span key={i} variants={letterVariants} className="inline-block">
+                                    {letter}
+                                </motion.span>
+                            ))}
+                        </span>
+                    </Fragment>
+                ))}
+            </motion.h1>
             <p className="text-muted text-sm md:text-base mt-2 max-w-xs">
                 4000+ games. Wrong guesses reveal more.
             </p>
