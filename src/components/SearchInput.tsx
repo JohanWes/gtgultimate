@@ -1,5 +1,5 @@
 
-import React, { useState, useMemo, useRef, useEffect } from 'react';
+import React, { useState, useMemo, useRef, useEffect, useDeferredValue } from 'react';
 import { Search, Send } from 'lucide-react';
 import { clsx } from 'clsx';
 import type { Game } from '../types';
@@ -27,6 +27,10 @@ export function SearchInput({ games, onGuess, disabled, autoFocus, correctAnswer
     const inputRef = useRef<HTMLInputElement>(null);
     const listRef = useRef<HTMLUListElement>(null);
     const skipNextFocus = useRef(false);
+    // Per-mount seed for the stable pseudo-random order of the top results (keeps render pure)
+    const [shuffleSeed] = useState(() => Math.floor(Math.random() * 2 ** 31));
+    // Search runs on the deferred query so typing never waits on Fuse
+    const deferredQuery = useDeferredValue(searchQuery);
 
     // Auto-focus when enabled, but check for touch devices to avoid keyboard popping up
     useEffect(() => {
@@ -51,12 +55,12 @@ export function SearchInput({ games, onGuess, disabled, autoFocus, correctAnswer
     const correctAnswerSet = useMemo(() => new Set(correctAnswers ?? []), [correctAnswers]);
 
     const results = useMemo(() => {
-        if (!searchQuery) return [];
-        const allResults = search(searchQuery);
+        if (!deferredQuery) return [];
+        const allResults = search(deferredQuery);
 
         // Deduplicate by name (case-insensitive)
         const seen = new Set<string>();
-        const uniqueResults = allResults.filter(result => {
+        let ordered = allResults.filter(result => {
             const lowerName = result.name.toLowerCase();
             if (seen.has(lowerName)) {
                 return false;
@@ -65,57 +69,43 @@ export function SearchInput({ games, onGuess, disabled, autoFocus, correctAnswer
             return true;
         });
 
-        // Prioritize correct answers if they exist in the results
+        // If correct answers are in the results, mix them into the top 5 so they are not always first
         if (correctAnswerSet.size > 0) {
-            const correctMatches: typeof uniqueResults = [];
-            const otherMatches: typeof uniqueResults = [];
-
-            uniqueResults.forEach(result => {
-                if (correctAnswerSet.has(result.name)) {
-                    correctMatches.push(result);
-                } else {
-                    otherMatches.push(result);
-                }
-            });
-
-            // If we found correct matches, shuffle them into the top 5
+            const correctMatches = ordered.filter(result => correctAnswerSet.has(result.name));
             if (correctMatches.length > 0) {
+                const otherMatches = ordered.filter(result => !correctAnswerSet.has(result.name));
                 // Take enough other matches to fill up to 5 slots (or less if not enough results)
-                const poolSize = 5;
-                const slotsNeeded = Math.max(0, poolSize - correctMatches.length);
-                const topOthers = otherMatches.slice(0, slotsNeeded);
-                const remainingOthers = otherMatches.slice(slotsNeeded);
+                const slotsNeeded = Math.max(0, 5 - correctMatches.length);
+                const topPool = [...correctMatches, ...otherMatches.slice(0, slotsNeeded)];
 
-                // Combine and shuffle the top pool
-                const topPool = [...correctMatches, ...topOthers];
+                // Order the top pool by a seeded hash of the name (unpredictable, but stable per mount)
+                const rank = (name: string) => {
+                    let h = shuffleSeed;
+                    for (let i = 0; i < name.length; i++) h = Math.imul(h ^ name.charCodeAt(i), 2654435761);
+                    return h;
+                };
+                topPool.sort((a, b) => rank(a.name) - rank(b.name));
 
-                // Fisher-Yates shuffle for the top pool
-                for (let i = topPool.length - 1; i > 0; i--) {
-                    const j = Math.floor(Math.random() * (i + 1));
-                    [topPool[i], topPool[j]] = [topPool[j], topPool[i]];
-                }
-
-                const gameResults = [...topPool, ...remainingOthers].map(result => ({ type: 'game', game: result } as SearchResultItem));
-
-                if (onHorseTrigger && searchQuery.toLowerCase().includes('horse')) {
-                    gameResults.unshift({ type: 'special', label: 'Horse', value: 'Horse' });
-                }
-
-                return gameResults;
+                ordered = [...topPool, ...otherMatches.slice(slotsNeeded)];
             }
         }
 
-        const gameResults = uniqueResults.map(result => ({ type: 'game', game: result } as SearchResultItem));
-        if (onHorseTrigger && searchQuery.toLowerCase().includes('horse')) {
+        // An exact match of the typed text always comes first, so Enter submits what was typed
+        const typed = deferredQuery.trim().toLowerCase();
+        const exactIndex = ordered.findIndex(result => result.name.toLowerCase() === typed);
+        if (exactIndex > 0) {
+            ordered = [ordered[exactIndex], ...ordered.slice(0, exactIndex), ...ordered.slice(exactIndex + 1)];
+        }
+
+        const gameResults = ordered.map(result => ({ type: 'game', game: result } as SearchResultItem));
+        if (onHorseTrigger && deferredQuery.toLowerCase().includes('horse')) {
             gameResults.unshift({ type: 'special', label: 'Horse', value: 'Horse' });
         }
 
         return gameResults;
-    }, [searchQuery, correctAnswerSet, onHorseTrigger]);
+    }, [deferredQuery, correctAnswerSet, onHorseTrigger, shuffleSeed]);
 
-    useEffect(() => {
-        setSelectedIndex(0);
-    }, [results]);
+    const showResults = isOpen && !hideResults && results.length > 0;
 
     useEffect(() => {
         if (isOpen && listRef.current) {
@@ -130,8 +120,11 @@ export function SearchInput({ games, onGuess, disabled, autoFocus, correctAnswer
         e?.preventDefault();
         if (disabled) return;
 
-        if (results.length > 0 && isOpen) {
-            submitResult(results[selectedIndex]);
+        // Only pick from the list when it is visible and up to date with the input
+        if (showResults && deferredQuery === searchQuery) {
+            const typed = displayValue.trim().toLowerCase();
+            const exact = results.find(r => (r.type === 'game' ? r.game.name : r.label).toLowerCase() === typed);
+            submitResult(exact ?? results[selectedIndex] ?? results[0]);
         } else if (displayValue) {
             if (onHorseTrigger && displayValue.trim().toLowerCase() === 'horse') {
                 onHorseTrigger();
@@ -143,7 +136,7 @@ export function SearchInput({ games, onGuess, disabled, autoFocus, correctAnswer
 
             // If exact match exists in database, allow it
             const potentialMatches = search(displayValue);
-            const exactMatch = potentialMatches.find(g => g.name.toLowerCase() === displayValue.toLowerCase());
+            const exactMatch = potentialMatches.find(g => g.name.toLowerCase() === displayValue.trim().toLowerCase());
 
             if (exactMatch) {
                 submitGuess(exactMatch.name);
@@ -161,6 +154,7 @@ export function SearchInput({ games, onGuess, disabled, autoFocus, correctAnswer
     const fillQuery = (name: string) => {
         setSearchQuery(name);
         setDisplayValue(name);
+        setSelectedIndex(0);
         setIsOpen(false);
         skipNextFocus.current = true;
         inputRef.current?.focus();
@@ -188,7 +182,11 @@ export function SearchInput({ games, onGuess, disabled, autoFocus, correctAnswer
                 setDisplayValue(results[prevIndex].label);
             }
         } else if (e.key === 'Escape') {
-            setIsOpen(false);
+            if (showResults) {
+                // Only close the dropdown; don't let the global Esc-to-skip fire too
+                e.stopPropagation();
+                setIsOpen(false);
+            }
         }
     };
 
@@ -235,6 +233,7 @@ export function SearchInput({ games, onGuess, disabled, autoFocus, correctAnswer
                             const val = e.target.value;
                             setSearchQuery(val);
                             setDisplayValue(val);
+                            setSelectedIndex(0);
                             setIsOpen(true);
                         }}
                         onFocus={() => {
@@ -260,7 +259,7 @@ export function SearchInput({ games, onGuess, disabled, autoFocus, correctAnswer
                 </div>
             </form>
 
-            {isOpen && !hideResults && results.length > 0 && (
+            {showResults && (
                 <ul
                     ref={listRef}
                     className="search-results-panel absolute w-full mt-2 glass-panel-strong backdrop-blur-xl border border-white/10 rounded-xl shadow-2xl overflow-hidden max-h-48 overflow-y-auto custom-scrollbar animate-in fade-in slide-in-from-top-2"

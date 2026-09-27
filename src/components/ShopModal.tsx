@@ -1,5 +1,4 @@
 import React, { useState, useEffect } from 'react';
-import confetti from 'canvas-confetti';
 import { motion, useReducedMotion } from 'framer-motion';
 import { clsx } from 'clsx';
 import { getShopItems } from '../utils/endlessUtils';
@@ -50,41 +49,43 @@ export const ShopModal: React.FC<ShopModalProps> = ({ score, onBuy, onContinue }
             };
         };
 
-        // 1. Central explosion
-        confetti({
-            particleCount: 75,
-            spread: 100,
-            origin: { y: 0.6 },
-            colors: ['#FFD700', '#FFA500', '#FFFFFF', '#FF0000'],
-            zIndex: 55
+        import('canvas-confetti').then(({ default: confetti }) => {
+            // 1. Central explosion
+            confetti({
+                particleCount: 75,
+                spread: 100,
+                origin: { y: 0.6 },
+                colors: ['#FFD700', '#FFA500', '#FFFFFF', '#FF0000'],
+                zIndex: 55
+            });
+
+            // 2. Side cannons
+            (function frame() {
+                const origins = getOrigins();
+
+                confetti({
+                    particleCount: 2,
+                    angle: 135, // Angle pointing slightly up and out from right side of modal (relative to origin)
+                    spread: 55,
+                    origin: { x: origins.left, y: origins.top }, // Left side of modal
+                    colors: ['#FFD700', '#FFA500'],
+                    zIndex: 55
+                });
+
+                confetti({
+                    particleCount: 2,
+                    angle: 40,
+                    spread: 55,
+                    origin: { x: origins.right, y: origins.top },
+                    colors: ['#FFD700', '#FFA500'],
+                    zIndex: 55
+                });
+
+                if (Date.now() < end) {
+                    requestAnimationFrame(frame);
+                }
+            }());
         });
-
-        // 2. Side cannons
-        (function frame() {
-            const origins = getOrigins();
-
-            confetti({
-                particleCount: 2,
-                angle: 135, // Angle pointing slightly up and out from right side of modal (relative to origin)
-                spread: 55,
-                origin: { x: origins.left, y: origins.top }, // Left side of modal
-                colors: ['#FFD700', '#FFA500'],
-                zIndex: 55
-            });
-
-            confetti({
-                particleCount: 2,
-                angle: 40,
-                spread: 55,
-                origin: { x: origins.right, y: origins.top },
-                colors: ['#FFD700', '#FFA500'],
-                zIndex: 55
-            });
-
-            if (Date.now() < end) {
-                requestAnimationFrame(frame);
-            }
-        }());
     }, []);
 
     // Check if "Greed is Good" has been purchased

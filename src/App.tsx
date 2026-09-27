@@ -1,11 +1,10 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, lazy, Suspense } from 'react';
 import { AnimatePresence } from 'framer-motion';
 import { PageTransition } from './components/PageTransition';
 import { Layout } from './components/Layout';
 import { GameArea } from './components/GameArea';
 import { EndlessGameArea } from './components/EndlessGameArea';
 import { HighScoreModal } from './components/HighScoreModal';
-import { TutorialModal } from './components/TutorialModal';
 import { useGameState } from './hooks/useGameState';
 import { useEndlessState } from './hooks/useEndlessState';
 import { useEndlessStats } from './hooks/useEndlessStats';
@@ -14,7 +13,9 @@ import { useFullscreen } from './hooks/useFullscreen';
 import { useHorseGameState } from './hooks/useHorseGameState';
 import type { Game, GameMode } from './types';
 
-import { RunSummary } from './components/RunSummary';
+// Only needed on the share page / when the tutorial is open, so split them out of the main bundle
+const RunSummary = lazy(() => import('./components/RunSummary').then(m => ({ default: m.RunSummary })));
+const TutorialModal = lazy(() => import('./components/TutorialModal').then(m => ({ default: m.TutorialModal })));
 
 function App() {
   const [mode, setMode] = useState<GameMode>('standard');
@@ -41,21 +42,9 @@ function App() {
       // New entry added
       const lastEntry = history[history.length - 1];
       const game = games.find(g => g.id === lastEntry.gameId);
-      if (game) {
-        const wasCorrect = lastEntry.status === 'won';
-        // Guess count: for 'won', it's the score divided by points (approximation)
-        // Better: count guesses from the result. For skipped/lost, we don't count guess distribution.
-        // The score tells us: 5pts= 1 guess, 4= 2, 3= 3, 2= 4, 1= 5
-        // But with hot streak it doubles. Let's just use a rough estimate.
-        // Actually, let's find the guess count from the current state's guesses at time of win.
-        // Since the history entry is added at the moment of result, we can approximate:
-        // Score 5 = guess 1, 4 = guess 2, 3 = guess 3, 2 = guess 4, 1 = guess 5 (ignoring hot streak)
-        let guessCount = 5;
-        if (wasCorrect && lastEntry.score > 0) {
-          const baseScore = lastEntry.score <= 5 ? lastEntry.score : Math.ceil(lastEntry.score / 2);
-          guessCount = Math.max(1, 6 - baseScore);
-        }
-        endlessStats.recordResult(game, wasCorrect, guessCount);
+      // Bonus rounds have no guesses, and a Skip lifeline is neither a win nor a loss
+      if (game && lastEntry.guesses.length > 0 && lastEntry.status !== 'skipped') {
+        endlessStats.recordResult(game, lastEntry.status === 'won', lastEntry.guesses.length);
       }
     }
     prevHistoryLength.current = history.length;
@@ -183,7 +172,11 @@ function App() {
         </div>
       );
     }
-    return <RunSummary runId={shareId} allGames={games} onPlay={handleExitShareMode} />;
+    return (
+      <Suspense fallback={null}>
+        <RunSummary runId={shareId} allGames={games} onPlay={handleExitShareMode} />
+      </Suspense>
+    );
   }
 
   // Removed global loading check to allow inline loading
@@ -225,50 +218,49 @@ function App() {
       }}
     >
 
-      <AnimatePresence mode="wait">
-        {mode === 'standard' ? (
-          (activeStandardState.currentGame || activeStandardLoading) && (
-            <PageTransition key="standard" className="h-full">
-              <GameArea
-                game={activeStandardState.currentGame || null}
-                allGames={activeStandardState.games}
-                guesses={activeStandardState.currentProgress?.guesses || []}
-                status={activeStandardState.currentProgress?.status || 'playing'}
-                allProgress={activeStandardState.allProgress}
-                onGuess={activeStandardState.submitGuess}
-                onSkip={activeStandardState.skipGuess}
-                onNextLevel={activeStandardState.nextLevel}
-                onHorseTrigger={isHorseMode ? undefined : activateHorseMode}
-                isLoading={activeStandardLoading}
-                isFullscreen={isFullscreen}
-              />
-            </PageTransition>
-          )
-        ) : (
-          (endlessState.currentGame || isLoading) && (
-            <PageTransition key="endless" className="h-full">
-              <EndlessGameArea
-                game={endlessState.currentGame || null}
-                allGames={games}
-                state={endlessState.state}
-                onGuess={endlessState.submitGuess}
-                onSkip={endlessState.skipGuess}
-                onNextLevel={endlessState.nextLevel}
-                onUseLifeline={endlessState.useLifeline}
-                onBuyShopItem={endlessState.buyShopItem}
-                onBonusGuess={endlessState.submitBonusGuess}
-                onRequestHighScore={handleRequestHighScore}
-                isHighScoreModalOpen={showHighScoreModal}
-                onMarkShopVisited={endlessState.markShopVisited}
-                isStatsOpen={isStatsOpen}
-                onHorseTrigger={activateHorseMode}
-                isLoading={isLoading}
-                isFullscreen={isFullscreen}
-              />
-            </PageTransition>
-          )
-        )}
-      </AnimatePresence>
+      {/* Keyed PageTransitions remount on mode switch and fade in; no exit wait. */}
+      {mode === 'standard' ? (
+        (activeStandardState.currentGame || activeStandardLoading) && (
+          <PageTransition key="standard" className="h-full">
+            <GameArea
+              game={activeStandardState.currentGame || null}
+              allGames={activeStandardState.games}
+              guesses={activeStandardState.currentProgress?.guesses || []}
+              status={activeStandardState.currentProgress?.status || 'playing'}
+              allProgress={activeStandardState.allProgress}
+              onGuess={activeStandardState.submitGuess}
+              onSkip={activeStandardState.skipGuess}
+              onNextLevel={activeStandardState.nextLevel}
+              onHorseTrigger={isHorseMode ? undefined : activateHorseMode}
+              isLoading={activeStandardLoading}
+              isFullscreen={isFullscreen}
+            />
+          </PageTransition>
+        )
+      ) : (
+        (endlessState.currentGame || isLoading) && (
+          <PageTransition key="endless" className="h-full">
+            <EndlessGameArea
+              game={endlessState.currentGame || null}
+              allGames={games}
+              state={endlessState.state}
+              onGuess={endlessState.submitGuess}
+              onSkip={endlessState.skipGuess}
+              onNextLevel={endlessState.nextLevel}
+              onUseLifeline={endlessState.useLifeline}
+              onBuyShopItem={endlessState.buyShopItem}
+              onBonusGuess={endlessState.submitBonusGuess}
+              onRequestHighScore={handleRequestHighScore}
+              isHighScoreModalOpen={showHighScoreModal}
+              onMarkShopVisited={endlessState.markShopVisited}
+              isStatsOpen={isStatsOpen}
+              onHorseTrigger={activateHorseMode}
+              isLoading={isLoading}
+              isFullscreen={isFullscreen}
+            />
+          </PageTransition>
+        )
+      )}
 
       <AnimatePresence>
         {showHighScoreModal && (
@@ -285,14 +277,18 @@ function App() {
         )}
       </AnimatePresence>
 
-      <TutorialModal
-        isOpen={isTutorialOpen}
-        onClose={() => {
-          setIsTutorialOpen(false);
-          markTutorialSeen();
-        }}
-        onComplete={markTutorialSeen}
-      />
+      {isTutorialOpen && (
+        <Suspense fallback={null}>
+          <TutorialModal
+            isOpen
+            onClose={() => {
+              setIsTutorialOpen(false);
+              markTutorialSeen();
+            }}
+            onComplete={markTutorialSeen}
+          />
+        </Suspense>
+      )}
     </Layout>
   );
 }

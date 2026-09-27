@@ -6,33 +6,14 @@ interface PageTransitionProps {
     className?: string;
 }
 
-const pageVariants = {
-    initial: {
-        opacity: 0,
-        filter: "blur(10px)"
-    },
-    in: {
-        opacity: 1,
-        filter: "blur(0px)"
-    },
-    out: {
-        opacity: 0,
-        filter: "blur(10px)"
-    }
-};
-
+// Opacity-only fade-in on mount. No exit animation: the outgoing page unmounts
+// immediately so a mode switch never waits on it.
 export const PageTransition = ({ children, className }: PageTransitionProps) => {
     return (
         <motion.div
-            initial="initial"
-            animate="in"
-            exit="out"
-            variants={pageVariants}
-            transition={{
-                type: "tween",
-                ease: "easeInOut",
-                duration: 0.2
-            }}
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ duration: 0.12, ease: 'easeOut' }}
             className={className}
         >
             {children}

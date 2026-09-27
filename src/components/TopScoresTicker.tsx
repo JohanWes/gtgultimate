@@ -26,10 +26,13 @@ export const TopScoresTicker: React.FC = () => {
         return () => clearInterval(interval);
     }, []);
 
-    if (loading || topScores.length === 0) return null;
+    if (!loading && topScores.length === 0) return null;
+
+    // While loading, render same-height placeholders so the panel doesn't push content down later.
+    const rows: (HighScore | null)[] = loading ? [null, null, null] : topScores;
 
     return (
-        <div className="glass-panel rounded-xl border border-white/10 shadow-lg overflow-hidden">
+        <div className={clsx("glass-panel rounded-xl border border-white/10 shadow-lg overflow-hidden", loading && "animate-pulse")} aria-busy={loading}>
             {/* Header */}
             <div className="bg-surface/60 px-4 py-2 border-b border-white/10 flex items-center justify-center gap-2">
                 <Trophy className="text-yellow-500" size={14} />
@@ -38,7 +41,7 @@ export const TopScoresTicker: React.FC = () => {
 
             {/* Grid */}
             <div className="grid grid-cols-3 gap-2 p-4 text-center">
-                {topScores.map((score, idx) => (
+                {rows.map((score, idx) => (
                     <div key={idx} className="flex flex-col">
                         <div className={clsx(
                             "w-6 h-6 mx-auto mb-1.5 flex items-center justify-center rounded-full text-[11px] font-bold",
@@ -48,11 +51,11 @@ export const TopScoresTicker: React.FC = () => {
                         )}>
                             {idx + 1}
                         </div>
-                        <span className="text-muted text-xs font-medium truncate" title={score.name}>
-                            {score.name}
+                        <span className="text-muted text-xs font-medium truncate" title={score?.name}>
+                            {score?.name ?? '\u00a0'}
                         </span>
                         <span className="text-white font-mono text-sm font-bold mt-0.5">
-                            {score.score}
+                            {score?.score ?? '\u00a0'}
                         </span>
                     </div>
                 ))}

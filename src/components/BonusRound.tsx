@@ -2,7 +2,6 @@ import { useState, useEffect, useRef, useCallback } from 'react';
 import type { Game } from '../types';
 import { clsx } from 'clsx';
 import { ArrowRight } from 'lucide-react';
-import confetti from 'canvas-confetti';
 import { useSettings } from '../hooks/useSettings';
 
 interface BonusRoundProps {
@@ -51,23 +50,25 @@ export function BonusRound({ games, targetId, onGuess }: BonusRoundProps) {
 
             // Trigger Confetti if correct
             if (isCorrect) {
-                confetti({
-                    particleCount: 150,
-                    spread: 70,
-                    origin: { y: 0.6 },
-                    colors: ['#FFD700', '#FFA500', '#FFFFFF', '#00FF00'],
-                    zIndex: 2000
-                });
-                // Second burst
-                confettiTimerRef.current = setTimeout(() => {
+                import('canvas-confetti').then(({ default: confetti }) => {
                     confetti({
-                        particleCount: 80,
-                        spread: 100,
+                        particleCount: 150,
+                        spread: 70,
                         origin: { y: 0.6 },
-                        startVelocity: 45,
+                        colors: ['#FFD700', '#FFA500', '#FFFFFF', '#00FF00'],
                         zIndex: 2000
                     });
-                }, 300);
+                    // Second burst
+                    confettiTimerRef.current = setTimeout(() => {
+                        confetti({
+                            particleCount: 80,
+                            spread: 100,
+                            origin: { y: 0.6 },
+                            startVelocity: 45,
+                            zIndex: 2000
+                        });
+                    }, 300);
+                });
             }
 
         }, 3000);

@@ -6,7 +6,7 @@ export const motionDurations = {
     emphasis: 0.3
 } as const;
 
-export const motionEasing = {
+const motionEasing = {
     standard: [0.16, 1, 0.3, 1] as const,
     emphasis: [0.22, 1, 0.36, 1] as const
 };

@@ -5,7 +5,7 @@ import { Lock, Maximize2, Minimize2, ArrowRight } from 'lucide-react';
 import { motion, useReducedMotion } from 'framer-motion';
 import type { Game } from '../types';
 import { getDifficultyZoomBonus } from '../utils/endlessUtils';
-import { useObfuscatedImages } from '../hooks/useObfuscatedImages';
+import { useObfuscatedImages, prefetchImages, isImageReady } from '../hooks/useObfuscatedImages';
 import { useSettings } from '../hooks/useSettings';
 import { buildTransition, motionDurations } from '../utils/motion';
 
@@ -20,9 +20,25 @@ interface ScreenshotViewerProps {
     miniaturesInPicture?: boolean;
     isLoading?: boolean;
     redactedRegions?: Record<number, Array<{ x: number; y: number; width: number; height: number }>>;
+    nextGame?: Game; // Preloaded once the current images are in
 }
 
-export function ScreenshotViewer({ screenshots, revealedCount, status, cropPositions, doubleTroubleGame, currentLevelIndex = 0, zoomOutActive = false, miniaturesInPicture = false, isLoading = false, redactedRegions }: ScreenshotViewerProps) {
+// In-play zoom per screenshot: 500/400/300/200/100% plus the difficulty bonus
+const BASE_ZOOMS = [500, 400, 300, 200, 100];
+const getPlayZoom = (index: number, levelIndex: number) => (BASE_ZOOMS[index] ?? 100) + getDifficultyZoomBonus(levelIndex);
+
+// Proxy URL for one screenshot (server crops around position at the given zoom)
+const buildProxyUrl = (url: string, position: { x: number; y: number } | undefined, zoom: number) => {
+    const params = new URLSearchParams({
+        url: url,
+        x: (position?.x || 50).toString(),
+        y: (position?.y || 50).toString(),
+        zoom: zoom.toString()
+    });
+    return `/api/image-proxy?${params.toString()}`;
+};
+
+export function ScreenshotViewer({ screenshots, revealedCount, status, cropPositions, doubleTroubleGame, currentLevelIndex = 0, zoomOutActive = false, miniaturesInPicture = false, isLoading = false, redactedRegions, nextGame }: ScreenshotViewerProps) {
     const [selectedIndex, setSelectedIndex] = useState(0);
     const [showCropped, setShowCropped] = useState(false);
     const { settings, updateSetting, hasSeenLockTip, markLockTipSeen } = useSettings();
@@ -32,71 +48,36 @@ export function ScreenshotViewer({ screenshots, revealedCount, status, cropPosit
 
     const getZoomScale = (index: number) => {
         // If Zoom Out lifeline is active, return 100% for all images
-        if (zoomOutActive && status === 'playing') {
-            return 100;
-        }
-
-        // If game is over and user wants to see cropped version
-        if (status !== 'playing' && showCropped) {
-            // Calculate difficulty bonus: +10% every 10 levels
-            const difficultyBonus = getDifficultyZoomBonus(currentLevelIndex);
-
-            // Use the same zoom levels as during gameplay
-            switch (index) {
-                case 0: return 500 + difficultyBonus;
-                case 1: return 400 + difficultyBonus;
-                case 2: return 300 + difficultyBonus;
-                case 3: return 200 + difficultyBonus;
-                default: return 100; // 5th image always shows full uncropped view
-            }
-        }
-
-        if (status !== 'playing') return 100; // 100% - full image
-
-        // Calculate difficulty bonus: +10% every 10 levels
-        const difficultyBonus = getDifficultyZoomBonus(currentLevelIndex);
-
-        // Base zoom levels with difficulty scaling
-        switch (index) {
-            case 0: return 500 + difficultyBonus; // 500% -> 510% -> 520% etc.
-            case 1: return 400 + difficultyBonus; // 400% -> 410% -> 420% etc.
-            case 2: return 300 + difficultyBonus; // 300% -> 310% -> 320% etc.
-            case 3: return 200 + difficultyBonus; // 200% -> 210% -> 220% etc.
-            default: return 100 + difficultyBonus; // 100% -> 110% -> 120% etc.
-        }
-    };
-
-    // Helper to construct proxy URL
-    const getProxyUrl = (url: string, index: number, positions: Array<{ x: number; y: number }>) => {
-        const zoom = getZoomScale(index);
-
-        // Host relative URL for the proxy
-        const baseUrl = '/api/image-proxy';
-
-        // If we want the full image (zoom <= 100 or specific conditions)
-        // Note: getZoomScale returns 100 when zoomOutActive or game over (unless showCropped).
-        // If zoom is 100, the server will return the full image anyway.
-
-        const params = new URLSearchParams({
-            url: url,
-            x: (positions[index]?.x || 50).toString(),
-            y: (positions[index]?.y || 50).toString(),
-            zoom: zoom.toString()
-        });
-
-        return `${baseUrl}?${params.toString()}`;
+        if (zoomOutActive && status === 'playing') return 100;
+        if (status === 'playing') return getPlayZoom(index, currentLevelIndex);
+        // Game over: cropped view uses the gameplay zoom, except the 5th image which shows the full view
+        if (showCropped && index < 4) return getPlayZoom(index, currentLevelIndex);
+        return 100; // 100% - full image
     };
 
     // Generate effective URLs using the proxy
-    const effectiveScreenshots = screenshots.map((url, idx) => getProxyUrl(url, idx, cropPositions));
+    const effectiveScreenshots = screenshots.map((url, idx) => buildProxyUrl(url, cropPositions[idx], getZoomScale(idx)));
     const effectiveDoubleTrouble = doubleTroubleGame
-        ? doubleTroubleGame.screenshots.map((url, idx) => getProxyUrl(url, idx, doubleTroubleGame.cropPositions))
+        ? doubleTroubleGame.screenshots.map((url, idx) => buildProxyUrl(url, doubleTroubleGame.cropPositions[idx], getZoomScale(idx)))
         : undefined;
 
     // Obfuscate images to prevent inspecting source
-    const obfuscatedScreenshots = useObfuscatedImages(effectiveScreenshots);
+    const obfuscatedScreenshots = useObfuscatedImages(effectiveScreenshots, selectedIndex);
     const obfuscatedDoubleTrouble = useObfuscatedImages(effectiveDoubleTrouble);
     const levelTransitionKey = `${screenshots[0] ?? 'none'}:${currentLevelIndex}`;
+
+    // Once the current images are in, warm the cache with this level's full-size reveal
+    // and the next level's cropped screenshots, so neither shows a loading gap.
+    const currentReady = !isLoading && effectiveScreenshots.length > 0 && effectiveScreenshots.every(isImageReady);
+    const prefetchKey = currentReady
+        ? [
+            ...screenshots.map((url, idx) => buildProxyUrl(url, cropPositions[idx], 100)),
+            ...(nextGame?.screenshots ?? []).map((url, idx) => buildProxyUrl(url, nextGame?.cropPositions?.[idx], getPlayZoom(idx, currentLevelIndex + 1)))
+        ].join('\n')
+        : '';
+    useEffect(() => {
+        if (prefetchKey) prefetchImages(prefetchKey.split('\n'));
+    }, [prefetchKey]);
 
     // Auto-select the newly revealed screenshot
     useEffect(() => {
@@ -195,6 +176,11 @@ export function ScreenshotViewer({ screenshots, revealedCount, status, cropPosit
                                 }}
                                 className="absolute inset-0 w-full h-full transition-opacity duration-300"
                             />
+                            {!obfuscatedScreenshots[selectedIndex] && (
+                                <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+                                    <div className="w-8 h-8 border-2 border-white/20 border-t-primary rounded-full animate-spin" />
+                                </div>
+                            )}
 
                             {/* Redaction Overlay - Only for main image */}
                             {redactedRegions && redactedRegions[selectedIndex] && redactedRegions[selectedIndex].map((region, idx) => (

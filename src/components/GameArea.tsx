@@ -1,12 +1,14 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo, useRef, lazy, Suspense } from 'react';
 import { InfoPanel } from './InfoPanel';
 import { SearchInput } from './SearchInput';
 import { ScreenshotViewer } from './ScreenshotViewer';
-import { AdminGameEditor } from './AdminGameEditor';
 import type { Game, GameStatus, GuessWithResult, LevelProgress } from '../types';
 import { clsx } from 'clsx';
 import { X, ArrowRight, AlertCircle } from 'lucide-react';
 import { useSettings } from '../hooks/useSettings';
+
+// Admin-only, so keep it (and RedactionModal) out of the main bundle
+const AdminGameEditor = lazy(() => import('./AdminGameEditor').then(m => ({ default: m.AdminGameEditor })));
 
 interface GameAreaProps {
     game: Game | null;
@@ -26,6 +28,8 @@ export function GameArea({ game, allGames, guesses, status, allProgress, onGuess
     const revealedCount = status === 'playing' ? guesses.length + 1 : 5;
     const [errorMessage, setErrorMessage] = useState<string | null>(null);
     const [similarNameMessage, setSimilarNameMessage] = useState<boolean>(false);
+    const correctAnswers = useMemo(() => game ? [game.name] : [], [game]);
+    const nextGame = useMemo(() => game ? allGames[allGames.indexOf(game) + 1] : undefined, [game, allGames]);
 
     // Admin Mode State
     const [adminModalOpen, setAdminModalOpen] = useState(false);
@@ -87,13 +91,11 @@ export function GameArea({ game, allGames, guesses, status, allProgress, onGuess
     }, [status]);
 
     // Detect similar name guess
-    // eslint-disable-next-line
     useEffect(() => {
         if (guesses.length > 0) {
             const lastGuess = guesses[guesses.length - 1];
             if (lastGuess.result === 'similar-name') {
                 setSimilarNameMessage(true);
-                // eslint-disable-next-line
                 setTimeout(() => setSimilarNameMessage(false), 2000);
             }
         }
@@ -150,24 +152,32 @@ export function GameArea({ game, allGames, guesses, status, allProgress, onGuess
         return () => window.removeEventListener('keydown', handleKeyDown);
     }, [status, onNextLevel, onSkip, settings, adminModalOpen, isSettingsOpen]);
 
+    // Keyboard flow: once the round ends, move focus from the disabled input to Next Level
+    const nextLevelButtonRef = useRef<HTMLButtonElement>(null);
+    useEffect(() => {
+        if (status !== 'playing') nextLevelButtonRef.current?.focus({ preventScroll: true });
+    }, [status]);
+
     return (
         <div className={clsx(
             "mx-auto space-y-2 pb-8 game-container standard-game transition-all duration-500",
             containerWidthClass
         )}>
-            {game && (
-                <AdminGameEditor
-                    isOpen={adminModalOpen}
-                    onClose={() => setAdminModalOpen(false)}
-                    game={game}
-                    onUpdate={(newName) => {
-                        setDisplayGameName(newName);
-                        // We don't mutate game.name directly here as it's a prop
-                    }}
-                    onDelete={() => {
-                        onSkip();
-                    }}
-                />
+            {game && adminModalOpen && (
+                <Suspense fallback={null}>
+                    <AdminGameEditor
+                        isOpen={adminModalOpen}
+                        onClose={() => setAdminModalOpen(false)}
+                        game={game}
+                        onUpdate={(newName) => {
+                            setDisplayGameName(newName);
+                            // We don't mutate game.name directly here as it's a prop
+                        }}
+                        onDelete={() => {
+                            onSkip();
+                        }}
+                    />
+                </Suspense>
             )}
 
             {/* Main Layout: Image + Metadata Side by Side */}
@@ -183,6 +193,7 @@ export function GameArea({ game, allGames, guesses, status, allProgress, onGuess
                             miniaturesInPicture={settings.miniaturesInPicture}
                             isLoading={isLoading}
                             redactedRegions={game?.redactedRegions}
+                            nextGame={nextGame}
                         />
                         {status === 'playing' && !isLoading && (
                             <button
@@ -228,6 +239,7 @@ export function GameArea({ game, allGames, guesses, status, allProgress, onGuess
                         The game was <span className="font-bold">{displayGameName}</span>
                     </p>
                     <button
+                        ref={nextLevelButtonRef}
                         onClick={onNextLevel}
                         className="inline-flex items-center gap-2 px-5 py-2 bg-white text-black font-bold rounded-full hover:scale-105 transition-transform text-sm ui-focus-ring"
                     >
@@ -250,7 +262,7 @@ export function GameArea({ game, allGames, guesses, status, allProgress, onGuess
                     onGuess={handleGuess}
                     disabled={status !== 'playing' || isLoading}
                     autoFocus={true}
-                    correctAnswers={game ? [game.name] : []}
+                    correctAnswers={correctAnswers}
                     onHorseTrigger={onHorseTrigger}
                 />
             </div>
@@ -266,6 +278,7 @@ export function GameArea({ game, allGames, guesses, status, allProgress, onGuess
                             .reverse()
                             .map((guess, idx, arr) => {
                                 const originalIdx = arr.length - 1 - idx;
+                                // Key by position in the original list so the enter animation plays on the new (top) row
                                 const isSimilar = guess.result === 'similar-name';
                                 const isSkipped = guess.result === 'skipped';
 
@@ -289,7 +302,7 @@ export function GameArea({ game, allGames, guesses, status, allProgress, onGuess
 
                                 return (
                                     <div
-                                        key={idx}
+                                        key={originalIdx}
                                         className={`flex items-center justify-between p-2 rounded-lg bg-surface/50 border ${borderClass} text-muted animate-in slide-in-from-bottom-2 fade-in text-sm`}
                                         style={{ animationDelay: `${idx * 50}ms` }}
                                     >

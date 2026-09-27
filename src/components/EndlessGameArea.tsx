@@ -1,5 +1,4 @@
-/* eslint-disable react-refresh/only-export-components */
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useEffectEvent, useRef, useMemo, lazy, Suspense } from 'react';
 import { createPortal } from 'react-dom';
 import { AnimatePresence } from 'framer-motion';
 import type { Game, EndlessState, LifelineType, ConsultantOption } from '../types';
@@ -14,12 +13,16 @@ import { ConsultantOptions } from './ConsultantOptions';
 import { Lifelines } from './Lifelines';
 import type { ConsultantOptionsHandle } from '../types';
 import { TopScoresTicker } from './TopScoresTicker';
-import { AdminGameEditor } from './AdminGameEditor';
 import { BonusRound } from './BonusRound'; // Import BonusRound
 import { clsx } from 'clsx';
 import { AlertCircle, X, ArrowRight, Flame } from 'lucide-react';
 import { useSettings } from '../hooks/useSettings';
-import synopsisData from '../assets/synopsis.json';
+import { useIsMobile } from '../hooks/useIsMobile';
+import { prefetchImages, useObfuscatedImages } from '../hooks/useObfuscatedImages';
+import { loadSynopsis } from '../utils/synopsis';
+
+// Admin-only, so keep it (and RedactionModal) out of the main bundle
+const AdminGameEditor = lazy(() => import('./AdminGameEditor').then(m => ({ default: m.AdminGameEditor })));
 
 
 interface EndlessGameAreaProps {
@@ -41,7 +44,6 @@ interface EndlessGameAreaProps {
     isFullscreen?: boolean;
 }
 
-// eslint-disable-next-line react-refresh/only-export-components
 export function EndlessGameArea({
     game,
     allGames,
@@ -63,8 +65,14 @@ export function EndlessGameArea({
     const [showShop, setShowShop] = useState(false);
     const [anagramHint, setAnagramHint] = useState<string | null>(null);
     const [consultantOptions, setConsultantOptions] = useState<ConsultantOption[] | null>(null);
+    // A Consultant pick resolves after a delay; block skipping until it does
+    const [consultantPicked, setConsultantPicked] = useState(false);
+    const isConsultantPending = consultantPicked && state.status === 'playing';
     const [doubleTroubleGame, setDoubleTroubleGame] = useState<Game | null>(null);
     const consultantRef = useRef<ConsultantOptionsHandle>(null);
+    const correctAnswers = useMemo(() => game ? (doubleTroubleGame ? [game.name, doubleTroubleGame.name] : [game.name]) : [], [game, doubleTroubleGame]);
+    const nextGameId = state.gameOrder[state.currentLevelIndex + 1];
+    const nextGame = useMemo(() => allGames.find(g => g.id === nextGameId), [allGames, nextGameId]);
 
     // Animation states
     const [animatingButton, setAnimatingButton] = useState<LifelineType | null>(null);
@@ -77,21 +85,42 @@ export function EndlessGameArea({
 
     // Cover Peek State
     const [showCoverPeek, setShowCoverPeek] = useState(false);
-    const [coverPeekTimeLeft, setCoverPeekTimeLeft] = useState(5);
+    const coverPeekTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+    const coverPeekBarRef = useRef<HTMLDivElement>(null);
+    const coverProxyUrl = game?.cover ? `/api/image-proxy?url=${encodeURIComponent(game.cover)}` : null;
+    const [coverImageSrc] = useObfuscatedImages(showCoverPeek && coverProxyUrl ? [coverProxyUrl] : undefined);
+    const hasCoverPeek = state.lifelines.cover_peek > 0;
 
     // Synopsis State
     const [showSynopsis, setShowSynopsis] = useState(false);
     const [synopsisText, setSynopsisText] = useState<string | null>(null);
+    const [synopsisMap, setSynopsisMap] = useState<Record<string, string> | null>(null);
+    const gameSynopsis = game ? (game.synopsis || synopsisMap?.[String(game.id)]) : undefined;
+    // The two ticker placements follow the layout's `lg` breakpoint
+    const isBelowLg = useIsMobile(1024);
 
     // Admin Mode State
     const [adminModalOpen, setAdminModalOpen] = useState(false);
     const [, setBackspaceCount] = useState(0);
     const [displayGameName, setDisplayGameName] = useState(game?.name || '');
 
-    // Obfuscate cover image for Cover Peek
-    // REMOVED: const [obfuscatedCover] = useObfuscatedImages(game.cover ? [game.cover] : undefined);
-    const [coverImageSrc, setCoverImageSrc] = useState<string | null>(null);
-    const [isLoadingCover, setIsLoadingCover] = useState(false);
+    // Fallback synopses live in a separate chunk; the lifeline stays disabled until it arrives.
+    // Delayed so the large chunk doesn't compete with the first screenshots.
+    useEffect(() => {
+        const timer = setTimeout(() => {
+            loadSynopsis().then(setSynopsisMap, err => console.error('Failed to load synopses', err));
+        }, 2000);
+        return () => clearTimeout(timer);
+    }, []);
+
+    // Warm the cover at level start so Cover Peek shows it immediately
+    useEffect(() => {
+        if (coverProxyUrl && hasCoverPeek) prefetchImages([coverProxyUrl]);
+    }, [coverProxyUrl, hasCoverPeek]);
+
+    useEffect(() => () => {
+        if (coverPeekTimerRef.current) clearTimeout(coverPeekTimerRef.current);
+    }, []);
 
     useEffect(() => {
         if (game) {
@@ -99,8 +128,8 @@ export function EndlessGameArea({
         }
         // Safety Reset for UI states when level changes
         setConsultantOptions(null);
+        setConsultantPicked(false);
         setDoubleTroubleGame(null);
-        setCoverImageSrc(null);
         setShowSynopsis(false);
         setErrorMessage(null);
         setShowCoverPeek(false);
@@ -204,24 +233,25 @@ export function EndlessGameArea({
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [state.score]);
 
-    // Handle Cover Peek Timer
-    useEffect(() => {
-        if (showCoverPeek && coverPeekTimeLeft > 0) {
-            const timer = setInterval(() => {
-                setCoverPeekTimeLeft(prev => {
-                    if (prev <= 0.1) {
-                        setShowCoverPeek(false);
-                        return 5;
-                    }
-                    return prev - 0.1;
-                });
-            }, 100);
-            return () => clearInterval(timer);
-        }
-    }, [showCoverPeek, coverPeekTimeLeft]);
+    // Cover Peek: close after `ms` (replaces any pending close)
+    const closeCoverPeekIn = (ms: number) => {
+        if (coverPeekTimerRef.current) clearTimeout(coverPeekTimerRef.current);
+        coverPeekTimerRef.current = setTimeout(() => {
+            coverPeekTimerRef.current = null;
+            setShowCoverPeek(false);
+        }, ms);
+    };
+
+    // The 5 s countdown starts once the cover is on screen; the bar drains on the compositor
+    const startCoverPeekCountdown = () => {
+        closeCoverPeekIn(5000);
+        coverPeekBarRef.current?.animate(
+            [{ transform: 'scaleX(1)' }, { transform: 'scaleX(0)' }],
+            { duration: 5000, easing: 'linear', fill: 'forwards' }
+        );
+    };
 
     // Detect similar name guess
-    // eslint-disable-next-line
     useEffect(() => {
         if (state.guesses.length > 0) {
             const lastGuess = state.guesses[state.guesses.length - 1];
@@ -248,28 +278,8 @@ export function EndlessGameArea({
 
         if (type === 'cover_peek') {
             setShowCoverPeek(true);
-            setCoverPeekTimeLeft(5);
-
-            // Lazy load the cover image if not already loaded
-            if (!coverImageSrc && game?.cover) {
-                setIsLoadingCover(true);
-                // Use the proxy endpoint directly
-                // We default to a decent quality/size if needed, but standard proxy without params returns full image
-                const proxyUrl = `/api/image-proxy?url=${encodeURIComponent(game.cover)}`;
-
-                fetch(proxyUrl)
-                    .then(res => res.blob())
-                    .then(blob => {
-                        const objectUrl = URL.createObjectURL(blob);
-                        setCoverImageSrc(objectUrl);
-                        setIsLoadingCover(false);
-                    })
-                    .catch(err => {
-                        console.error("Failed to load cover:", err);
-                        setIsLoadingCover(false);
-                        setErrorMessage("Failed to load cover image");
-                    });
-            }
+            // Safety net if the cover never loads; replaced by the 5 s countdown on load
+            closeCoverPeekIn(10000);
         } else if (type === 'anagram' && game) {
             setAnagramHint(generateAnagram(game.name));
         } else if (type === 'consultant' && game) {
@@ -298,7 +308,7 @@ export function EndlessGameArea({
             setDoubleTroubleGame(randomGame);
         } else if (type === 'synopsis' && game) {
             // Look up synopsis from DB first, then separate data file
-            const synopsis = game.synopsis || synopsisData[game.id.toString() as keyof typeof synopsisData];
+            const synopsis = gameSynopsis;
 
             // Check if synopsis is available - if not, don't consume the lifeline
             if (!synopsis) {
@@ -319,7 +329,8 @@ export function EndlessGameArea({
         if (guessedGame) {
             // Check if already guessed (won) in history
             const alreadyWon = state.history.some(h => h.gameId === guessedGame.id && h.status === 'won');
-            if (alreadyWon) {
+            // Never block the current answer (a bonus round win can log it in history)
+            if (alreadyWon && guessedGame.id !== game?.id) {
                 setErrorMessage(`Already guessed: ${guessedGame.name}`);
                 setTimeout(() => setErrorMessage(null), 3000);
                 return;
@@ -356,18 +367,15 @@ export function EndlessGameArea({
     useEffect(() => {
         setAnagramHint(null);
         setConsultantOptions(null);
+        setConsultantPicked(false);
         setDoubleTroubleGame(null);
         setShowCoverPeek(false);
-        setCoverPeekTimeLeft(5);
+        if (coverPeekTimerRef.current) {
+            clearTimeout(coverPeekTimerRef.current);
+            coverPeekTimerRef.current = null;
+        }
         setShowSynopsis(false);
         setSynopsisText(null);
-
-        // Cleanup previous cover image
-        if (coverImageSrc) {
-            URL.revokeObjectURL(coverImageSrc);
-            setCoverImageSrc(null);
-        }
-        setIsLoadingCover(false);
     }, [game?.id]);
 
     const { settings, isSettingsOpen } = useSettings();
@@ -399,8 +407,8 @@ export function EndlessGameArea({
                 }
             }
 
-            // Skip on Esc
-            if (state.status === 'playing' && e.key === 'Escape') {
+            // Skip on Esc (not while the shop, a bonus round or a Consultant pick is pending)
+            if (state.status === 'playing' && e.key === 'Escape' && !showShop && !state.bonusRound?.active && !isConsultantPending) {
                 if (settings.skipOnEsc) {
                     e.preventDefault();
                     onSkip();
@@ -410,7 +418,18 @@ export function EndlessGameArea({
 
         window.addEventListener('keydown', handleKeyDown);
         return () => window.removeEventListener('keydown', handleKeyDown);
-    }, [state.status, state.isGameOver, onNextLevel, onRequestHighScore, onSkip, settings, isHighScoreModalOpen, showCoverPeek, showSynopsis, adminModalOpen, isSettingsOpen, isStatsOpen]);
+    }, [state.status, state.isGameOver, state.bonusRound?.active, onNextLevel, onRequestHighScore, onSkip, settings, isHighScoreModalOpen, showCoverPeek, showSynopsis, showShop, isConsultantPending, adminModalOpen, isSettingsOpen, isStatsOpen]);
+
+    // Keyboard flow: once the round ends, move focus from the disabled input to Next Level
+    const nextLevelButtonRef = useRef<HTMLButtonElement>(null);
+    // A delayed Consultant pick can end the round while a modal is open; don't pull focus out of it
+    const focusNextLevel = useEffectEvent(() => {
+        if (isSettingsOpen || isStatsOpen || isHighScoreModalOpen || adminModalOpen) return;
+        nextLevelButtonRef.current?.focus({ preventScroll: true });
+    });
+    useEffect(() => {
+        if (state.status !== 'playing') focusNextLevel();
+    }, [state.status]);
 
     const [mounted, setMounted] = useState(false);
     useEffect(() => {
@@ -523,20 +542,24 @@ export function EndlessGameArea({
             "mx-auto pb-8 px-0 sm:px-4 game-container endless-game transition-all duration-500",
             containerWidthClass
         )}>
-            <AdminGameEditor
-                isOpen={adminModalOpen}
-                onClose={() => setAdminModalOpen(false)}
-                game={game}
-                onUpdate={(newName) => {
-                    setDisplayGameName(newName);
-                    // We don't mutate game.name directly here as it's a prop
-                    // The parent component or global state should handle the update if needed
-                    // But for display purposes in this component, setDisplayGameName is sufficient
-                }}
-                onDelete={() => {
-                    onSkip();
-                }}
-            />
+            {adminModalOpen && (
+                <Suspense fallback={null}>
+                    <AdminGameEditor
+                        isOpen={adminModalOpen}
+                        onClose={() => setAdminModalOpen(false)}
+                        game={game}
+                        onUpdate={(newName) => {
+                            setDisplayGameName(newName);
+                            // We don't mutate game.name directly here as it's a prop
+                            // The parent component or global state should handle the update if needed
+                            // But for display purposes in this component, setDisplayGameName is sufficient
+                        }}
+                        onDelete={() => {
+                            onSkip();
+                        }}
+                    />
+                </Suspense>
+            )}
             <div className="flex flex-col-reverse lg:flex-row gap-4 items-start">
                 {/* Left Column: Game Area */}
                 <div className="flex-1 w-full space-y-4 min-w-0">
@@ -556,12 +579,14 @@ export function EndlessGameArea({
                             miniaturesInPicture={settings.miniaturesInPicture}
                             isLoading={isLoading}
                             redactedRegions={game?.redactedRegions}
+                            nextGame={nextGame}
                         />
 
                         {state.status === 'playing' && !isLoading && (
                             <button
                                 onClick={onSkip}
-                                className="absolute top-4 left-4 bg-red-500/80 hover:bg-red-600 text-white px-4 py-2 rounded-lg font-bold shadow-lg backdrop-blur-sm transition-all hover:scale-105 z-20 active:animate-lifeline-slide ui-focus-ring"
+                                disabled={isConsultantPending}
+                                className="absolute top-4 left-4 bg-red-500/80 hover:bg-red-600 text-white px-4 py-2 rounded-lg font-bold shadow-lg backdrop-blur-sm transition-all hover:scale-105 z-20 active:animate-lifeline-slide ui-focus-ring disabled:opacity-50 disabled:pointer-events-none"
                             >
                                 SKIP
                             </button>
@@ -590,11 +615,13 @@ export function EndlessGameArea({
                         {showCoverPeek && game?.cover && state.status === 'playing' && (
                             <div className="absolute inset-0 z-30 bg-black/90 backdrop-blur-sm rounded-xl overflow-hidden animate-in fade-in duration-300 flex items-center justify-center">
                                 {/* Blurred Cover Art */}
-                                {isLoadingCover ? (
+                                {!coverImageSrc ? (
                                     <div className="text-white font-bold animate-pulse">Loading Cover...</div>
                                 ) : (
                                     <img
-                                        src={coverImageSrc || ''}
+                                        src={coverImageSrc}
+                                        onLoad={startCoverPeekCountdown}
+                                        onError={startCoverPeekCountdown}
                                         alt="Cover art"
                                         className="h-full w-auto object-contain"
                                         style={{
@@ -632,12 +659,9 @@ export function EndlessGameArea({
                         <div className="w-full max-w-md mx-auto animate-in fade-in duration-300">
                             <div className="bg-black/60 rounded-full p-1 backdrop-blur-sm border border-white/10">
                                 <div
-                                    className="h-3 bg-gradient-to-r from-purple-500 via-pink-500 to-purple-500 rounded-full transition-all duration-100 ease-linear"
-                                    style={{ width: `${(coverPeekTimeLeft / 5) * 100}%` }}
+                                    ref={coverPeekBarRef}
+                                    className="h-3 bg-gradient-to-r from-purple-500 via-pink-500 to-purple-500 rounded-full origin-left"
                                 />
-                            </div>
-                            <div className="text-center text-white font-bold mt-2 text-sm">
-                                {coverPeekTimeLeft.toFixed(1)}s remaining
                             </div>
                         </div>
                     )}
@@ -664,6 +688,7 @@ export function EndlessGameArea({
 
                             <div className="flex flex-wrap justify-center gap-3">
                                 <button
+                                    ref={nextLevelButtonRef}
                                     onClick={() => {
                                         consultantRef.current?.stopSounds();
                                         if (state.isGameOver) {
@@ -708,6 +733,7 @@ export function EndlessGameArea({
                                 ref={consultantRef}
                                 options={consultantOptions}
                                 correctGameId={game.id}
+                                onPick={() => setConsultantPicked(true)}
                                 onGuess={(guessedGame) => {
                                     if (guessedGame.id === game.id) {
                                         onGuess(guessedGame);
@@ -723,7 +749,7 @@ export function EndlessGameArea({
                                 onGuess={handleSearchInputGuess}
                                 disabled={state.status !== 'playing' || showShop || isLoading}
                                 autoFocus={true}
-                                correctAnswers={game ? (doubleTroubleGame ? [game.name, doubleTroubleGame.name] : [game.name]) : []}
+                                correctAnswers={correctAnswers}
                                 hideResults={showCoverPeek}
                                 onHorseTrigger={onHorseTrigger}
                             />
@@ -742,6 +768,7 @@ export function EndlessGameArea({
                                     .reverse()
                                     .map((guess, idx, arr) => {
                                         const originalIdx = arr.length - 1 - idx;
+                                        // Key by position in the original list so the enter animation plays on the new (top) row
                                         const isSimilar = guess.result === 'similar-name';
                                         const isSkipped = guess.result === 'skipped';
 
@@ -765,7 +792,7 @@ export function EndlessGameArea({
 
                                         return (
                                             <div
-                                                key={idx}
+                                                key={originalIdx}
                                                 className={`flex items-center justify-between p-2.5 rounded-lg glass-panel-soft border ${borderClass} text-muted animate-in slide-in-from-bottom-2 fade-in text-sm`}
                                                 style={{ animationDelay: `${idx * 50}ms` }}
                                             >
@@ -783,7 +810,7 @@ export function EndlessGameArea({
 
                     {/* Mobile Only: Bottom Stats (Ticker + HUD) */}
                     <div className="block lg:hidden space-y-3 mt-4 px-4 sm:px-0 pb-4">
-                        <TopScoresTicker />
+                        {isBelowLg && <TopScoresTicker />}
                         {hudCard}
                         {hotStreakCard}
                     </div>
@@ -794,10 +821,11 @@ export function EndlessGameArea({
                     "w-full flex-shrink-0 flex flex-col gap-3 transition-all duration-500 px-4 sm:px-0",
                     settings.miniaturesInPicture ? "lg:w-48" : "lg:w-72"
                 )}>
+                    {/* Top Scores Ticker: mounted once (it polls highscores) */}
+                    {!isBelowLg && <TopScoresTicker />}
+
                     {/* Desktop Only: Top Stats */}
                     <div className="hidden lg:flex flex-col gap-3">
-                        {/* Top Scores Ticker */}
-                        <TopScoresTicker />
                         {hudCard}
                         {hotStreakCard}
                     </div>
@@ -815,6 +843,9 @@ export function EndlessGameArea({
                             doubleTroubleGame={doubleTroubleGame}
                             consultantOptions={consultantOptions}
                             isShopOpen={showShop}
+                            hasSynopsis={!!gameSynopsis}
+                            anagramActive={!!anagramHint}
+                            isConsultantPending={isConsultantPending}
                         />,
                         document.getElementById('sidebar-lifelines-portal')!
                     )}

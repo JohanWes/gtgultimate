@@ -1,16 +1,17 @@
 import { useState, useEffect } from 'react';
 
-export function useIsMobile() {
+/** True when the viewport is narrower than `breakpoint` px (default 768, Tailwind `md`). */
+export function useIsMobile(breakpoint = 768) {
     const [isMobile, setIsMobile] = useState(() => {
         if (typeof window !== 'undefined') {
-            return window.innerWidth < 768;
+            return window.innerWidth < breakpoint;
         }
         return false;
     });
 
     useEffect(() => {
         const checkIsMobile = () => {
-            setIsMobile(window.innerWidth < 768);
+            setIsMobile(window.innerWidth < breakpoint);
         };
 
         // Listen for resize events
@@ -19,7 +20,7 @@ export function useIsMobile() {
         return () => {
             window.removeEventListener('resize', checkIsMobile);
         };
-    }, []);
+    }, [breakpoint]);
 
     return isMobile;
 }

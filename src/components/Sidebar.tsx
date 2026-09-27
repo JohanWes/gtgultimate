@@ -1,11 +1,23 @@
+import { memo, useState, type MouseEvent } from 'react';
 import { XCircle, Circle, Trophy } from 'lucide-react';
 import { clsx } from 'clsx';
-import gtgLogo from '../assets/gtgultimate.jpg';
-import retroLogo from '../assets/logo-retro.png';
-import midnightBlackLogo from '../assets/midnightblack.jpg';
-import horseLogo from '../assets/gtghorse.png';
-import type { LevelProgress, GameMode } from '../types';
+import gtgLogo from '../assets/gtgultimate.webp';
+import retroLogo from '../assets/logo-retro.webp';
+import midnightBlackLogo from '../assets/midnightblack.webp';
+import horseLogo from '../assets/gtghorse.webp';
+import type { LevelProgress, GameMode, GameStatus } from '../types';
 import { useSettings } from '../hooks/useSettings';
+
+// Intrinsic sizes (all 512px wide) so the <img> reserves space before it loads.
+const LOGOS = {
+    default: { src: gtgLogo, height: 280 },
+    retro: { src: retroLogo, height: 286 },
+    'midnight-black': { src: midnightBlackLogo, height: 286 },
+    horse: { src: horseLogo, height: 341 },
+};
+
+// Only render levels up to the furthest reached + this many; "Show more" extends it.
+const LEVEL_WINDOW = 30;
 
 interface SidebarProps {
     totalLevels: number;
@@ -22,18 +34,22 @@ interface SidebarProps {
 
 export function Sidebar({ totalLevels, currentLevel, progress, onSelectLevel, isOpen, onClose, currentMode, onModeSwitch, isHorseMode = false, collapsed = false }: SidebarProps) {
     const { settings } = useSettings();
-    const logoSrc =
-        isHorseMode
-            ? horseLogo
-            : settings.theme === 'retro'
-            ? retroLogo
-            : settings.theme === 'midnight-black'
-                ? midnightBlackLogo
-                : gtgLogo;
+    const logo = LOGOS[isHorseMode ? 'horse' : settings.theme] ?? LOGOS.default;
+    const [extraLevels, setExtraLevels] = useState(0);
 
-    const levels = Array.from({ length: totalLevels }, (_, i) => i + 1);
+    const furthestLevel = Math.max(currentLevel, ...Object.keys(progress).map(Number));
+    const visibleCount = Math.min(totalLevels, furthestLevel + LEVEL_WINDOW + extraLevels);
+    const levels = Array.from({ length: visibleCount }, (_, i) => i + 1);
 
     const completedCount = Object.values(progress).filter(p => p.status === 'won').length;
+
+    // One delegated handler keeps LevelRow props primitive so memo() can skip unchanged rows.
+    const handleLevelClick = (e: MouseEvent<HTMLDivElement>) => {
+        const button = (e.target as HTMLElement).closest<HTMLElement>('[data-level]');
+        if (!button) return;
+        onSelectLevel(Number(button.dataset.level));
+        if (window.innerWidth < 768 || collapsed) onClose();
+    };
 
     return (
         <>
@@ -55,7 +71,7 @@ export function Sidebar({ totalLevels, currentLevel, progress, onSelectLevel, is
                 "w-64"
             )}>
                 <div className="px-4 py-3 border-b border-white/10 flex-shrink-0 flex flex-col gap-3">
-                    <img src={logoSrc} alt="GuessTheGame" className="w-full h-auto rounded-md" />
+                    <img src={logo.src} width={512} height={logo.height} alt="GuessTheGame" className="w-full h-auto rounded-md" />
 
                     {/* Game Mode Toggles */}
                     <div className="flex bg-black/20 p-1 rounded-lg">
@@ -117,41 +133,29 @@ export function Sidebar({ totalLevels, currentLevel, progress, onSelectLevel, is
                 <div className={clsx(
                     "flex-1 px-3 pt-2 space-y-1",
                     currentMode === 'standard' ? "overflow-y-auto custom-scrollbar" : "overflow-hidden"
-                )} style={{ maxHeight: 'calc(min(150vh, 100vh + 800px) - 88px)' }}>
+                )} style={{ maxHeight: 'calc(min(150vh, 100vh + 800px) - 88px)' }}
+                    onClick={currentMode === 'standard' ? handleLevelClick : undefined}
+                >
                     {currentMode === 'standard' ? (
-                        levels.map((level, index) => {
-                            const levelStatus = progress[level]?.status || 'playing';
-                            const isCurrent = currentLevel === level;
-                            const isLast = index === levels.length - 1;
-
-                            return (
-                                <button
+                        <>
+                            {levels.map(level => (
+                                <LevelRow
                                     key={level}
-                                    onClick={() => {
-                                        onSelectLevel(level);
-                                        if (window.innerWidth < 768 || collapsed) onClose();
-                                    }}
-                                    className={clsx(
-                                        "w-full flex items-center justify-between px-3 py-2 rounded border border-transparent text-sm transition-all ui-focus-ring",
-                                        isCurrent
-                                            ? "bg-primary/20 border-primary/50 text-white"
-                                            : "hover:bg-white/8 text-muted hover:text-white",
-                                        isLast && "pb-2"
-                                    )}
+                                    level={level}
+                                    isCurrent={currentLevel === level}
+                                    status={progress[level]?.status || 'playing'}
+                                    guessCount={progress[level]?.guesses.length ?? 0}
+                                />
+                            ))}
+                            {visibleCount < totalLevels && (
+                                <button
+                                    onClick={() => setExtraLevels(n => n + 100)}
+                                    className="w-full px-3 py-2 mb-2 rounded text-xs font-bold text-muted hover:text-white hover:bg-white/8 transition-colors ui-focus-ring"
                                 >
-                                    <span className="font-medium">Level {level}</span>
-                                    {levelStatus === 'won' && (
-                                        <span className="text-success font-bold text-xs border border-success/30 px-1.5 py-0.5 rounded-md bg-success/10 min-w-[32px] text-center">
-                                            {progress[level].guesses.length}/5
-                                        </span>
-                                    )}
-                                    {levelStatus === 'lost' && <XCircle size={18} className="text-error" />}
-                                    {levelStatus === 'playing' && progress[level]?.guesses.length > 0 && (
-                                        <Circle size={18} className="text-yellow-500 fill-yellow-500/20" />
-                                    )}
+                                    Show more ({totalLevels - visibleCount} left)
                                 </button>
-                            );
-                        })
+                            )}
+                        </>
                     ) : (
                         <div id="sidebar-lifelines-portal" className="h-full" />
                     )}
@@ -160,3 +164,35 @@ export function Sidebar({ totalLevels, currentLevel, progress, onSelectLevel, is
         </>
     );
 }
+
+interface LevelRowProps {
+    level: number;
+    isCurrent: boolean;
+    status: GameStatus;
+    guessCount: number;
+}
+
+const LevelRow = memo(function LevelRow({ level, isCurrent, status, guessCount }: LevelRowProps) {
+    return (
+        <button
+            data-level={level}
+            className={clsx(
+                "w-full flex items-center justify-between px-3 py-2 rounded border border-transparent text-sm transition-all ui-focus-ring",
+                isCurrent
+                    ? "bg-primary/20 border-primary/50 text-white"
+                    : "hover:bg-white/8 text-muted hover:text-white"
+            )}
+        >
+            <span className="font-medium">Level {level}</span>
+            {status === 'won' && (
+                <span className="text-success font-bold text-xs border border-success/30 px-1.5 py-0.5 rounded-md bg-success/10 min-w-[32px] text-center">
+                    {guessCount}/5
+                </span>
+            )}
+            {status === 'lost' && <XCircle size={18} className="text-error" />}
+            {status === 'playing' && guessCount > 0 && (
+                <Circle size={18} className="text-yellow-500 fill-yellow-500/20" />
+            )}
+        </button>
+    );
+});

@@ -1,6 +1,5 @@
 import { clsx } from 'clsx';
 import type { Game, EndlessState, LifelineType, ConsultantOption } from '../types';
-import synopsisData from '../assets/synopsis.json';
 
 interface LifelinesProps {
     state: EndlessState;
@@ -10,6 +9,9 @@ interface LifelinesProps {
     doubleTroubleGame: Game | null;
     consultantOptions: ConsultantOption[] | null;
     isShopOpen?: boolean;
+    hasSynopsis?: boolean;
+    anagramActive?: boolean;
+    isConsultantPending?: boolean;
 }
 
 export function Lifelines({
@@ -19,7 +21,10 @@ export function Lifelines({
     animatingButton,
     doubleTroubleGame,
     consultantOptions,
-    isShopOpen = false
+    isShopOpen = false,
+    hasSynopsis = false,
+    anagramActive = false,
+    isConsultantPending = false
 }: LifelinesProps) {
     const buttonBaseClass = "w-full py-3 px-4 rounded-xl font-bold transition-all duration-200 border flex items-center justify-between ui-focus-ring";
     const enabledBaseClass = "glass-panel-soft border-white/10 text-text hover:brightness-110";
@@ -82,10 +87,10 @@ export function Lifelines({
 
                 <button
                     onClick={() => onUseLifeline('skip')}
-                    disabled={isShopOpen || state.lifelines.skip <= 0 || state.status !== 'playing'}
+                    disabled={isShopOpen || isConsultantPending || state.lifelines.skip <= 0 || state.status !== 'playing'}
                     className={clsx(
                         buttonBaseClass,
-                        state.lifelines.skip > 0 && state.status === 'playing'
+                        state.lifelines.skip > 0 && state.status === 'playing' && !isConsultantPending
                             ? `${enabledBaseClass} ${accentStyles.skip.button}`
                             : disabledBaseClass,
                         animatingButton === 'skip' && 'animate-lifeline-slide'
@@ -102,10 +107,10 @@ export function Lifelines({
 
                 <button
                     onClick={() => onUseLifeline('anagram')}
-                    disabled={isShopOpen || state.lifelines.anagram <= 0 || state.status !== 'playing' || !!doubleTroubleGame}
+                    disabled={isShopOpen || anagramActive || state.lifelines.anagram <= 0 || state.status !== 'playing' || !!doubleTroubleGame}
                     className={clsx(
                         buttonBaseClass,
-                        state.lifelines.anagram > 0 && state.status === 'playing' && !doubleTroubleGame
+                        state.lifelines.anagram > 0 && state.status === 'playing' && !doubleTroubleGame && !anagramActive
                             ? `${enabledBaseClass} ${accentStyles.anagram.button}`
                             : disabledBaseClass,
                         animatingButton === 'anagram' && 'animate-lifeline-shake'
@@ -162,10 +167,10 @@ export function Lifelines({
 
                 <button
                     onClick={() => onUseLifeline('zoom_out')}
-                    disabled={isShopOpen || state.lifelines.zoom_out <= 0 || state.status !== 'playing'}
+                    disabled={isShopOpen || state.zoomOutActive || state.lifelines.zoom_out <= 0 || state.status !== 'playing'}
                     className={clsx(
                         buttonBaseClass,
-                        state.lifelines.zoom_out > 0 && state.status === 'playing'
+                        state.lifelines.zoom_out > 0 && state.status === 'playing' && !state.zoomOutActive
                             ? `${enabledBaseClass} ${accentStyles.zoom_out.button}`
                             : disabledBaseClass,
                         animatingButton === 'zoom_out' && 'animate-lifeline-shake'
@@ -182,10 +187,10 @@ export function Lifelines({
 
                 <button
                     onClick={() => onUseLifeline('synopsis')}
-                    disabled={isShopOpen || state.lifelines.synopsis <= 0 || state.status !== 'playing' || !game || (!game.synopsis && !synopsisData[game.id.toString() as keyof typeof synopsisData])}
+                    disabled={isShopOpen || state.lifelines.synopsis <= 0 || state.status !== 'playing' || !hasSynopsis}
                     className={clsx(
                         buttonBaseClass,
-                        state.lifelines.synopsis > 0 && state.status === 'playing' && game && (game.synopsis || synopsisData[game.id.toString() as keyof typeof synopsisData])
+                        state.lifelines.synopsis > 0 && state.status === 'playing' && hasSynopsis
                             ? `${enabledBaseClass} ${accentStyles.synopsis.button}`
                             : disabledBaseClass,
                         animatingButton === 'synopsis' && 'animate-lifeline-pop'

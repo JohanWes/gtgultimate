@@ -1,22 +1,27 @@
 import React, { useState, useEffect, useRef, useImperativeHandle, forwardRef } from 'react';
 import type { Game, ConsultantOption, ConsultantOptionsHandle } from '../types';
 import { clsx } from 'clsx';
-import confetti from 'canvas-confetti';
 
 interface ConsultantOptionsProps {
     options: ConsultantOption[];
     correctGameId: number;
     onGuess: (game: Game) => void;
+    onPick?: () => void;
 }
 
 export const ConsultantOptions = forwardRef<ConsultantOptionsHandle, ConsultantOptionsProps>(
-    ({ options, correctGameId, onGuess }, ref) => {
+    ({ options, correctGameId, onGuess, onPick }, ref) => {
         const [selectedId, setSelectedId] = useState<number | string | null>(null);
         const [revealResult, setRevealResult] = useState<boolean>(false);
         // const [showSparkles, setShowSparkles] = useState<boolean>(false); // Removed old state
 
         // Refs for audio to avoid re-creating them
         const audioRef = useRef<{ [key: string]: HTMLAudioElement }>({});
+        const timersRef = useRef<ReturnType<typeof setTimeout>[]>([]);
+        useEffect(() => {
+            const timers = timersRef.current;
+            return () => timers.forEach(clearTimeout);
+        }, []);
 
         useImperativeHandle(ref, () => ({
             stopSounds: () => {
@@ -59,52 +64,57 @@ export const ConsultantOptions = forwardRef<ConsultantOptionsHandle, ConsultantO
             if (selectedId) return; // Prevent multiple selections
 
             setSelectedId(option.id);
+            onPick?.();
 
             // Capture button position for the effect
             const rect = e.currentTarget.getBoundingClientRect();
             const x = (rect.left + rect.width / 2) / window.innerWidth;
             const y = (rect.top + rect.height / 2) / window.innerHeight;
 
+            const later = (fn: () => void, ms: number) => { timersRef.current.push(setTimeout(fn, ms)); };
+
             // 3 second delay before reveal
-            setTimeout(() => {
+            later(() => {
                 setRevealResult(true);
 
                 const isCorrect = option.id === correctGameId;
                 if (isCorrect) {
-                    // Trigger grand confetti explosion
-                    confetti({
-                        particleCount: 100,
-                        spread: 70,
-                        origin: { x, y },
-                        colors: ['#FFD700', '#FFA500', '#FFFFFF'], // Gold, Orange, White
-                        shapes: ['star', 'circle'],
-                        scalar: 0.8, // Slightly smaller particles for "sparkle" look
-                        gravity: 0.8,
-                        ticks: 200,
-                        zIndex: 1000,
-                    });
-
-                    // Add a second smaller burst for extra effect
-                    setTimeout(() => {
+                    import('canvas-confetti').then(({ default: confetti }) => {
+                        // Trigger grand confetti explosion
                         confetti({
-                            particleCount: 50,
-                            spread: 100,
+                            particleCount: 100,
+                            spread: 70,
                             origin: { x, y },
-                            colors: ['#FFD700', '#FFFFFF'],
-                            shapes: ['star'],
-                            scalar: 0.6,
-                            startVelocity: 25,
-                            gravity: 1,
-                            ticks: 100,
+                            colors: ['#FFD700', '#FFA500', '#FFFFFF'], // Gold, Orange, White
+                            shapes: ['star', 'circle'],
+                            scalar: 0.8, // Slightly smaller particles for "sparkle" look
+                            gravity: 0.8,
+                            ticks: 200,
                             zIndex: 1000,
                         });
-                    }, 200);
+
+                        // Add a second smaller burst for extra effect
+                        later(() => {
+                            confetti({
+                                particleCount: 50,
+                                spread: 100,
+                                origin: { x, y },
+                                colors: ['#FFD700', '#FFFFFF'],
+                                shapes: ['star'],
+                                scalar: 0.6,
+                                startVelocity: 25,
+                                gravity: 1,
+                                ticks: 100,
+                                zIndex: 1000,
+                            });
+                        }, 200);
+                    });
                 }
                 playSound(isCorrect ? 'correct' : 'wrong');
 
                 // Small delay after reveal before actually triggering the game logic
                 // so the user can see the result color
-                setTimeout(() => {
+                later(() => {
                     if ('isBait' in option) {
                         // It's a bait option. Create a dummy game object to register a wrong guess.
                         const baitGame = {
