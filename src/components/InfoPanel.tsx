@@ -1,5 +1,5 @@
 
-import { Calendar, Monitor, Tag, Star } from 'lucide-react';
+import { Calendar, Monitor, Tag, Star, Lock } from 'lucide-react';
 import { clsx } from 'clsx';
 import type { Game } from '../types';
 
@@ -36,28 +36,28 @@ export function InfoPanel({ game, guessesMade, status, isLoading = false }: Info
             value: game.year,
             icon: Calendar,
             revealed: showAll || guessesMade >= 1,
-            color: 'text-blue-400'
+            unlocksAfter: 1,
         },
         {
             label: 'Platform',
             value: game.platform,
             icon: Monitor,
             revealed: showAll || guessesMade >= 2,
-            color: 'text-slate-400'
+            unlocksAfter: 2,
         },
         {
             label: 'Genre',
             value: game.genre,
             icon: Tag,
             revealed: showAll || guessesMade >= 3,
-            color: 'text-pink-400'
+            unlocksAfter: 3,
         },
         {
-            label: 'Rating (IGDB)',
+            label: 'Rating',
             value: `${game.rating}%`,
             icon: Star,
             revealed: showAll || guessesMade >= 4,
-            color: 'text-yellow-400'
+            unlocksAfter: 4,
         },
     ];
 
@@ -67,15 +67,23 @@ export function InfoPanel({ game, guessesMade, status, isLoading = false }: Info
                 <div
                     key={hint.label}
                     className={clsx(
-                        "glass-panel p-1.5 sm:p-2.5 rounded-lg flex flex-col items-center justify-center text-center transition-all duration-500 flex-1",
-                        hint.revealed ? "opacity-100 transform translate-y-0" : "opacity-50 blur-sm transform translate-y-2"
+                        "glass-panel min-w-0 p-1.5 sm:p-2.5 rounded-lg flex flex-col items-center justify-center text-center transition-all duration-500 flex-1",
+                        !hint.revealed && "opacity-60"
                     )}
                 >
-                    <hint.icon className={clsx("mb-1 sm:mb-1.5 w-3 h-3 sm:w-[18px] sm:h-[18px]", hint.revealed ? hint.color : "text-muted")} />
-                    <div className="text-[6px] sm:text-[8px] text-muted uppercase tracking-wider font-semibold mb-0.5 whitespace-nowrap">{hint.label}</div>
-                    <div className={clsx("font-bold text-xs sm:text-sm leading-tight", hint.revealed ? "text-white" : "text-transparent bg-white/10 rounded px-1 sm:px-2 py-0.5")}>
-                        {hint.revealed ? hint.value : "???"}
-                    </div>
+                    {hint.revealed
+                        ? <hint.icon aria-hidden="true" className="mb-1 sm:mb-1.5 w-3.5 h-3.5 sm:w-[18px] sm:h-[18px] text-primary" />
+                        : <Lock aria-hidden="true" className="mb-1 sm:mb-1.5 w-3.5 h-3.5 sm:w-4 sm:h-4 text-muted" />}
+                    <div className="text-[10px] sm:text-[11px] text-muted uppercase tracking-wider font-semibold mb-0.5 leading-tight">{hint.label}</div>
+                    {hint.revealed ? (
+                        <div className="font-bold text-xs sm:text-sm leading-tight text-text break-words line-clamp-3 max-w-full" title={String(hint.value)}>
+                            {hint.value}
+                        </div>
+                    ) : (
+                        <div className="text-[10px] sm:text-xs leading-tight text-muted">
+                            After guess {hint.unlocksAfter}
+                        </div>
+                    )}
                 </div>
             ))}
         </div>

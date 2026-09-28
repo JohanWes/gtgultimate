@@ -222,8 +222,8 @@ export function SearchInput({ games, onGuess, disabled, autoFocus, correctAnswer
         <div ref={containerRef} className="relative w-full z-20">
             <form onSubmit={handleSubmit} className="relative">
                 <div className="relative group">
-                    <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                        <Search className="text-muted group-focus-within:text-primary transition-colors" size={18} />
+                    <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none z-10">
+                        <Search className="text-muted group-focus-within:text-primary transition-colors" size={18} aria-hidden="true" />
                     </div>
                     <input
                         ref={inputRef}
@@ -246,13 +246,15 @@ export function SearchInput({ games, onGuess, disabled, autoFocus, correctAnswer
                         onClick={() => setIsOpen(true)}
                         onKeyDown={handleKeyDown}
                         disabled={disabled}
-                        placeholder={disabled ? "Game Over" : "Type to search for a game..."}
+                        placeholder={disabled ? "Round over" : "Type to search for a game…"}
+                        aria-label="Guess a game"
                         className="w-full pl-11 pr-11 py-2.5 glass-panel rounded-xl text-base text-text ui-focus-ring transition-all shadow-lg placeholder:text-muted"
                     />
                     <button
                         type="submit"
                         disabled={disabled || !displayValue}
-                        className="absolute inset-y-0 right-0 pr-3 flex items-center text-muted hover:text-white disabled:opacity-50 transition-colors ui-focus-ring rounded-md"
+                        aria-label="Submit guess"
+                        className="absolute inset-y-0 right-0 pr-3 z-10 flex items-center text-muted hover:text-text disabled:opacity-50 transition-colors ui-focus-ring rounded-md"
                     >
                         <Send size={18} />
                     </button>
@@ -267,8 +269,8 @@ export function SearchInput({ games, onGuess, disabled, autoFocus, correctAnswer
                     {results.map((result, idx) => {
                         const isSelected = idx === selectedIndex;
                         const buttonClass = isSelected
-                            ? "bg-primary/25 text-white border-l-2 border-primary"
-                            : "text-muted hover:bg-white/8 hover:text-white";
+                            ? "bg-primary/25 text-text"
+                            : "text-muted hover:bg-white/8 hover:text-text";
                         const label = result.type === 'game' ? result.game.name : result.label;
 
                         return (

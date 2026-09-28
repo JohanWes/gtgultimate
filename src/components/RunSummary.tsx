@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
+import { SkipForward, Shuffle, HelpCircle, Gamepad2, ZoomOut, Eye, FileText, type LucideIcon } from 'lucide-react';
 import { getProxyImageUrl } from '../utils/api';
 import type { Game, LifelineType, GuessWithResult } from '../types';
 
@@ -25,17 +26,20 @@ interface RunSummaryProps {
     onPlay: () => void;
 }
 
+// Same icons the tutorial uses for each lifeline
+const LIFELINE_ICONS: Record<LifelineType, { icon: LucideIcon; label: string }> = {
+    skip: { icon: SkipForward, label: 'Skip' },
+    anagram: { icon: Shuffle, label: 'Anagram' },
+    consultant: { icon: HelpCircle, label: 'Consultant' },
+    double_trouble: { icon: Gamepad2, label: 'Double Trouble' },
+    zoom_out: { icon: ZoomOut, label: 'Zoom Out' },
+    cover_peek: { icon: Eye, label: 'Cover Peek' },
+    synopsis: { icon: FileText, label: 'Synopsis' },
+};
+
 const LifelineIcon = ({ type }: { type: LifelineType }) => {
-    const icons: Record<LifelineType, string> = {
-        skip: '⏭️',
-        anagram: '🔠',
-        consultant: '🧙‍♂️',
-        double_trouble: '👯',
-        zoom_out: '🔍',
-        cover_peek: '🫣',
-        synopsis: '📝'
-    };
-    return <span title={type} className="text-lg">{icons[type]}</span>;
+    const { icon: Icon, label } = LIFELINE_ICONS[type];
+    return <Icon size={16} className="text-accent" aria-label={label} />;
 };
 
 export function RunSummary({ runId, allGames, onPlay }: RunSummaryProps) {
@@ -56,8 +60,8 @@ export function RunSummary({ runId, allGames, onPlay }: RunSummaryProps) {
 
     if (loading) {
         return (
-            <div className="min-h-screen flex items-center justify-center bg-background text-white">
-                <div className="animate-pulse text-xl">Loading run details...</div>
+            <div className="min-h-screen flex items-center justify-center bg-background text-muted">
+                <div className="animate-pulse text-xl">Loading run…</div>
             </div>
         );
     }
@@ -65,29 +69,30 @@ export function RunSummary({ runId, allGames, onPlay }: RunSummaryProps) {
     if (error || !data) {
         return (
             <div className="min-h-screen flex flex-col items-center justify-center bg-background text-error gap-4">
-                <h1 className="text-2xl font-bold">Error Loading Run</h1>
+                <h1 className="text-2xl font-bold">Couldn't load this run</h1>
                 <p>{error}</p>
                 <button
                     onClick={onPlay}
-                    className="px-6 py-2 bg-primary text-black font-bold rounded-lg hover:bg-primary-hover"
+                    className="px-6 py-2 bg-primary text-onPrimary font-bold rounded-lg ui-pressable ui-focus-ring"
                 >
-                    Play Endless Mode
+                    Play Endless mode
                 </button>
             </div>
         );
     }
 
     return (
-        <div className="min-h-screen bg-background text-white p-4 overflow-y-auto">
+        <div className="min-h-screen bg-background text-text p-4 overflow-y-auto">
             <div className="max-w-4xl mx-auto space-y-8 pb-20">
                 {/* Header */}
                 <div className="text-center space-y-2 mt-8">
-                    <h1 className="text-4xl font-black text-transparent bg-clip-text bg-gradient-to-r from-primary to-secondary">
-                        ENDLESS RUN SUMMARY
+                    <h1 className="text-4xl font-bold text-text">
+                        Endless run summary
                     </h1>
-                    <div className="text-2xl text-gray-400">
-                        Score: <span className="text-white font-bold">{data.totalScore}</span> •
-                        Games: <span className="text-white font-bold">{data.totalGames}</span>
+                    <div className="text-2xl text-muted tabular-nums">
+                        Score <span className="text-warning font-bold">{data.totalScore}</span>
+                        <span className="mx-3 text-white/20" aria-hidden="true">/</span>
+                        Games <span className="text-text font-bold">{data.totalGames}</span>
                     </div>
                 </div>
 
@@ -95,9 +100,9 @@ export function RunSummary({ runId, allGames, onPlay }: RunSummaryProps) {
                 <div className="flex justify-center">
                     <button
                         onClick={onPlay}
-                        className="px-8 py-3 bg-primary text-black font-bold text-lg rounded-xl shadow-lg hover:scale-105 transition-transform"
+                        className="px-8 py-3 bg-primary text-onPrimary font-bold text-lg rounded-xl shadow-lg ui-pressable ui-focus-ring"
                     >
-                        Try to Beat This Score!
+                        Try to beat this score
                     </button>
                 </div>
 
@@ -115,17 +120,17 @@ export function RunSummary({ runId, allGames, onPlay }: RunSummaryProps) {
                                 initial={{ opacity: 0, y: 20 }}
                                 animate={{ opacity: 1, y: 0 }}
                                 transition={{ delay: index * 0.05 }}
-                                className={`bg-gray-900/50 border border-gray-800 rounded-xl p-4 overflow-hidden relative ${item.status === 'lost' ? 'border-red-500/50 bg-red-900/10' : ''
+                                className={`bg-surface/50 border border-white/10 rounded-xl p-4 overflow-hidden relative ${item.status === 'lost' ? 'border-error/50 bg-error/5' : ''
                                     }`}
                             >
                                 <div className="flex flex-col md:flex-row gap-4 items-start">
 
                                     {/* Game Cover (Small) */}
-                                    <div className="w-24 h-32 flex-shrink-0 bg-black rounded-lg overflow-hidden shadow-lg border border-gray-700">
+                                    <div className="w-24 h-32 flex-shrink-0 bg-black rounded-lg overflow-hidden shadow-lg border border-white/10">
                                         {coverUrl ? (
                                             <img src={coverUrl} alt="Cover" className="w-full h-full object-cover" />
                                         ) : (
-                                            <div className="w-full h-full flex items-center justify-center text-xs text-gray-600">No Image</div>
+                                            <div className="w-full h-full flex items-center justify-center text-xs text-muted">No image</div>
                                         )}
                                     </div>
 
@@ -133,9 +138,9 @@ export function RunSummary({ runId, allGames, onPlay }: RunSummaryProps) {
                                     <div className="flex-grow space-y-2 w-full">
                                         <div className="flex justify-between items-start">
                                             <h3 className="text-xl font-bold truncate pr-2">{index + 1}. {gameName}</h3>
-                                            <div className={`text-sm font-bold px-2 py-1 rounded ${item.status === 'won' ? 'bg-green-500/20 text-green-400' :
-                                                item.status === 'skipped' ? 'bg-yellow-500/20 text-yellow-400' :
-                                                    'bg-red-500/20 text-red-400'
+                                            <div className={`text-sm font-bold px-2 py-1 rounded ${item.status === 'won' ? 'bg-success/20 text-success' :
+                                                item.status === 'skipped' ? 'bg-warning/20 text-warning' :
+                                                    'bg-error/20 text-error'
                                                 }`}>
                                                 +{item.score} pts
                                             </div>
@@ -143,28 +148,28 @@ export function RunSummary({ runId, allGames, onPlay }: RunSummaryProps) {
 
                                         {/* Guesses */}
                                         <div className="text-sm bg-black/30 p-2 rounded-lg">
-                                            <div className="text-gray-400 text-xs mb-1">GUESSES ({item.guesses.length}/5)</div>
+                                            <div className="text-muted text-xs mb-1 uppercase tracking-wider font-semibold">Guesses ({item.guesses.length}/5)</div>
                                             <div className="flex flex-wrap gap-2">
                                                 {item.guesses.map((g, i) => (
-                                                    <div key={i} className={`px-2 py-0.5 rounded text-xs border ${g.result === 'correct' ? 'border-green-500/50 bg-green-500/10 text-green-300' :
-                                                        g.result === 'skipped' ? 'border-yellow-500/50 bg-yellow-500/10 text-yellow-300' :
-                                                            g.result === 'similar-name' ? 'border-orange-500/50 bg-orange-500/10 text-orange-300' :
-                                                                'border-red-500/50 bg-red-500/10 text-red-300 line-through'
+                                                    <div key={i} className={`px-2 py-0.5 rounded text-xs border ${g.result === 'correct' ? 'border-success/50 bg-success/10 text-success' :
+                                                        g.result === 'skipped' ? 'border-white/15 bg-white/5 text-muted' :
+                                                            g.result === 'similar-name' ? 'border-warning/50 bg-warning/10 text-warning' :
+                                                                'border-error/50 bg-error/10 text-error line-through'
                                                         }`}>
                                                         {g.name}
                                                     </div>
                                                 ))}
-                                                {item.guesses.length === 0 && <span className="text-gray-600 italic">No guesses made</span>}
+                                                {item.guesses.length === 0 && <span className="text-muted italic">No guesses made</span>}
                                             </div>
                                         </div>
 
                                         {/* Lifelines Used */}
                                         {item.lifelinesUsed && item.lifelinesUsed.length > 0 && (
                                             <div className="flex gap-2 items-center text-sm">
-                                                <span className="text-gray-400 text-xs">LIFELINES:</span>
+                                                <span className="text-muted text-xs uppercase tracking-wider font-semibold">Lifelines</span>
                                                 <div className="flex gap-1">
                                                     {item.lifelinesUsed.map((type, i) => (
-                                                        <div key={i} className="bg-gray-800 p-1 rounded border border-gray-700" title={type}>
+                                                        <div key={i} className="bg-surface p-1 rounded border border-white/10" title={LIFELINE_ICONS[type].label}>
                                                             <LifelineIcon type={type} />
                                                         </div>
                                                     ))}
@@ -174,7 +179,7 @@ export function RunSummary({ runId, allGames, onPlay }: RunSummaryProps) {
 
                                         {/* Screenshots Grid (Miniatures) */}
                                         <div className="w-full mt-4 bg-black/20 p-2 rounded-lg">
-                                            <div className="text-gray-400 text-xs mb-2 uppercase tracking-wider font-semibold">Screenshots</div>
+                                            <div className="text-muted text-xs mb-2 uppercase tracking-wider font-semibold">Screenshots</div>
                                             <div className="grid grid-cols-5 gap-2">
                                                 {game && game.screenshots ? (
                                                     game.screenshots.map((screenData, screenIdx) => {
@@ -221,7 +226,7 @@ export function RunSummary({ runId, allGames, onPlay }: RunSummaryProps) {
                                                         const screenUrl = `/api/image-proxy?${params.toString()}`;
 
                                                         return (
-                                                            <div key={screenIdx} className="aspect-video relative rounded-md overflow-hidden border border-gray-700/50 bg-gray-800">
+                                                            <div key={screenIdx} className="aspect-video relative rounded-md overflow-hidden border border-white/10 bg-surface">
                                                                 <img
                                                                     src={screenUrl}
                                                                     alt={`Screenshot ${screenIdx + 1}`}
@@ -275,7 +280,7 @@ export function RunSummary({ runId, allGames, onPlay }: RunSummaryProps) {
                                                         );
                                                     })
                                                 ) : (
-                                                    <div className="col-span-5 text-center text-gray-500 text-xs py-2">No screenshots available</div>
+                                                    <div className="col-span-5 text-center text-muted text-xs py-2">No screenshots available</div>
                                                 )}
                                             </div>
                                         </div>
@@ -291,9 +296,9 @@ export function RunSummary({ runId, allGames, onPlay }: RunSummaryProps) {
                 <div className="flex justify-center pt-8">
                     <button
                         onClick={onPlay}
-                        className="px-8 py-3 bg-primary text-black font-bold text-lg rounded-xl shadow-lg hover:scale-105 transition-transform"
+                        className="px-8 py-3 bg-primary text-onPrimary font-bold text-lg rounded-xl shadow-lg ui-pressable ui-focus-ring"
                     >
-                        Start Your Own Run
+                        Start your own run
                     </button>
                 </div>
 

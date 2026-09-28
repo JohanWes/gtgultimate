@@ -152,9 +152,9 @@ export function ScreenshotViewer({ screenshots, revealedCount, status, cropPosit
             >
                 {/* Main Image Layer */}
                 {isLoading ? (
-                    <div className="absolute inset-0 w-full h-full flex flex-col items-center justify-center bg-gray-900/50 backdrop-blur-sm animate-pulse">
-                        <div className="w-16 h-16 border-4 border-primary border-t-transparent rounded-full animate-spin mb-4" />
-                        <span className="text-white font-bold tracking-wider">Loading game data...</span>
+                    <div className="absolute inset-0 w-full h-full flex flex-col items-center justify-center bg-surface/50">
+                        <div className="w-12 h-12 border-4 border-primary border-t-transparent rounded-full animate-spin mb-4" />
+                        <span className="text-muted font-bold tracking-wider">Loading games…</span>
                     </div>
                 ) : (
                     <>
@@ -216,18 +216,18 @@ export function ScreenshotViewer({ screenshots, revealedCount, status, cropPosit
                             e.stopPropagation();
                             setShowCropped(!showCropped);
                         }}
-                        className="absolute top-4 right-4 bg-black/70 hover:bg-black/90 backdrop-blur px-4 py-2 rounded-lg text-xs font-bold border border-white/20 hover:border-white/40 transition-all hover:scale-105 z-20 flex items-center gap-2"
-                        title={showCropped ? "Show Full Image" : "Show Cropped Image"}
+                        className="absolute top-4 right-4 bg-black/70 hover:bg-black/90 backdrop-blur px-4 py-2 rounded-lg text-xs font-bold border border-white/20 hover:border-white/40 ui-pressable ui-focus-ring z-20 flex items-center gap-2"
+                        title={showCropped ? "Show full image" : "Show cropped image"}
                     >
                         {showCropped ? (
                             <>
                                 <Maximize2 size={14} />
-                                Full Image
+                                Full image
                             </>
                         ) : (
                             <>
                                 <Minimize2 size={14} />
-                                Cropped Image
+                                Cropped image
                             </>
                         )}
                     </button>
@@ -252,6 +252,8 @@ export function ScreenshotViewer({ screenshots, revealedCount, status, cropPosit
                                 <button
                                     key={`overlay-${idx}`}
                                     disabled={!isRevealed}
+                                    aria-label={isRevealed ? `Show screenshot ${idx + 1}` : `Screenshot ${idx + 1}, locked`}
+                                    aria-pressed={isSelected}
                                     onClick={(e) => {
                                         e.stopPropagation();
                                         setSelectedIndex(idx);
@@ -298,7 +300,7 @@ export function ScreenshotViewer({ screenshots, revealedCount, status, cropPosit
                                         </div>
                                     ) : (
                                         <div className="w-full h-full bg-surface/80 flex items-center justify-center">
-                                            <Lock size={10} className="text-white" />
+                                            <Lock size={10} className="text-muted" aria-hidden="true" />
                                         </div>
                                     )}
                                 </button>
@@ -309,9 +311,9 @@ export function ScreenshotViewer({ screenshots, revealedCount, status, cropPosit
 
                 {/* Click-to-Lock Tip */}
                 {miniaturesInPicture && !hasSeenLockTip && !isOverlayLocked && showTip && (
-                    <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-40 pointer-events-none animate-bounce">
-                        <div className="bg-primary text-primary-foreground px-4 py-2 rounded-full shadow-xl font-bold text-sm border-2 border-white flex items-center gap-2">
-                            <span>Click image to lock miniatures!</span>
+                    <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-40 pointer-events-none animate-in fade-in zoom-in duration-300">
+                        <div className="bg-primary text-onPrimary px-4 py-2 rounded-full shadow-xl font-bold text-sm flex items-center gap-2">
+                            <span>Click the image to pin the thumbnails</span>
                             <ArrowRight className="rotate-90" size={16} />
                         </div>
                     </div>
@@ -321,7 +323,7 @@ export function ScreenshotViewer({ screenshots, revealedCount, status, cropPosit
             {/* Thumbnails (Standard Mode) */}
             {
                 !miniaturesInPicture && (
-                    <div className="grid grid-cols-5 gap-1.5">
+                    <div className="grid grid-cols-5 gap-1.5 px-4 sm:px-0">
                         {screenshots.map((_, idx) => {
                             const isRevealed = idx < revealedCount;
                             const isSelected = idx === selectedIndex;
@@ -332,9 +334,12 @@ export function ScreenshotViewer({ screenshots, revealedCount, status, cropPosit
                                     key={idx}
                                     disabled={!isRevealed}
                                     onClick={() => setSelectedIndex(idx)}
+                                    aria-label={isRevealed ? `Show screenshot ${idx + 1}` : `Screenshot ${idx + 1}, locked`}
+                                    aria-pressed={isSelected}
                                     className={clsx(
                                         "relative aspect-video rounded-lg overflow-hidden border transition-all duration-300",
-                                        isSelected ? "border-primary ring-2 ring-primary/50 scale-105 z-10" : "border-white/10 hover:border-white/30",
+                                        isSelected ? "border-primary ring-2 ring-primary/50 z-10" : "border-white/10 hover:border-white/30",
+                                        "ui-focus-ring",
                                         !isRevealed && "cursor-not-allowed opacity-50"
                                     )}
                                 >
@@ -376,7 +381,7 @@ export function ScreenshotViewer({ screenshots, revealedCount, status, cropPosit
                                         </div>
                                     ) : (
                                         <div className="w-full h-full bg-surface flex items-center justify-center">
-                                            <Lock size={16} className="text-muted" />
+                                            <Lock size={16} className="text-muted" aria-hidden="true" />
                                         </div>
                                     )}
                                 </button>

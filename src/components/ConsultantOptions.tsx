@@ -141,26 +141,26 @@ export const ConsultantOptions = forwardRef<ConsultantOptionsHandle, ConsultantO
             <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                 {options.map((option) => {
                     const isSelected = selectedId === option.id;
-                    let stateClass = "bg-gray-800 border-gray-700 hover:bg-gray-700"; // Default
+                    let stateClass = "bg-surface border-white/10 hover:bg-white/10"; // Default
 
                     if (isSelected) {
                         if (!revealResult) {
                             // Selected, waiting for reveal (Orange/Yellowish)
-                            stateClass = "bg-orange-600 border-orange-400 text-white animate-lifeline-pulse";
+                            stateClass = "bg-accent border-accent text-onAccent animate-lifeline-pulse";
                         } else {
                             // Revealed
                             if (option.id === correctGameId) {
-                                stateClass = "bg-green-600 border-green-400 text-white";
+                                stateClass = "bg-success border-success text-black";
                             } else {
-                                stateClass = "bg-red-600 border-red-400 text-white";
+                                stateClass = "bg-error border-error text-white";
                             }
                         }
                     } else if (revealResult && option.id === correctGameId) {
                         // Show correct answer even if not selected (optional, but good for learning)
-                        stateClass = "bg-green-600/50 border-green-400/50 text-white";
+                        stateClass = "bg-success/20 border-success/60 text-text";
                     } else if (selectedId) {
                         // Dim other options when one is selected
-                        stateClass = "bg-gray-800/50 border-gray-700/50 opacity-50";
+                        stateClass = "bg-surface/50 border-white/10 opacity-50";
                     }
 
                     return (

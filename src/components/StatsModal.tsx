@@ -1,4 +1,4 @@
-import { X, RotateCcw, Trophy, Target, TrendingUp } from 'lucide-react';
+import { X, RotateCcw, Trophy, Target, TrendingUp, BarChart2 } from 'lucide-react';
 import { motion, useReducedMotion } from 'framer-motion';
 import type { EndlessStats } from '../hooks/useEndlessStats';
 import { buildTransition, motionDurations } from '../utils/motion';
@@ -73,29 +73,31 @@ export function StatsModal({ stats, totalGames, winRate, averageGuesses, onReset
                 <button
                     onClick={onClose}
                     className="absolute top-4 right-4 text-muted hover:text-text transition-colors ui-focus-ring rounded-md"
+                    aria-label="Close statistics"
                 >
                     <X size={24} />
                 </button>
 
                 <h2 className="text-2xl font-bold mb-6 text-text flex items-center gap-2 font-display">
-                    📊 Your Statistics
+                    <BarChart2 size={22} className="text-primary" aria-hidden="true" />
+                    Your statistics
                 </h2>
 
                 {/* Summary Cards */}
                 <div className="grid grid-cols-3 gap-3 mb-6">
                     <div className="glass-panel-soft rounded-lg p-3 text-center border border-white/10">
-                        <Trophy className="w-5 h-5 text-yellow-400 mx-auto mb-1" />
-                        <div className="text-2xl font-bold text-white">{stats.totalCorrect}</div>
+                        <Trophy className="w-5 h-5 text-primary mx-auto mb-1" aria-hidden="true" />
+                        <div className="text-2xl font-bold text-text tabular-nums">{stats.totalCorrect}</div>
                         <div className="text-xs text-muted">Correct Guesses</div>
                     </div>
                     <div className="glass-panel-soft rounded-lg p-3 text-center border border-white/10">
-                        <Target className="w-5 h-5 text-blue-400 mx-auto mb-1" />
-                        <div className="text-2xl font-bold text-white">{winRate.toFixed(0)}%</div>
+                        <Target className="w-5 h-5 text-primary mx-auto mb-1" aria-hidden="true" />
+                        <div className="text-2xl font-bold text-text tabular-nums">{winRate.toFixed(0)}%</div>
                         <div className="text-xs text-muted">Guess Accuracy</div>
                     </div>
                     <div className="glass-panel-soft rounded-lg p-3 text-center border border-white/10">
-                        <TrendingUp className="w-5 h-5 text-green-400 mx-auto mb-1" />
-                        <div className="text-2xl font-bold text-white">{averageGuesses.toFixed(1)}</div>
+                        <TrendingUp className="w-5 h-5 text-primary mx-auto mb-1" aria-hidden="true" />
+                        <div className="text-2xl font-bold text-text tabular-nums">{averageGuesses.toFixed(1)}</div>
                         <div className="text-xs text-muted">Avg Guesses</div>
                     </div>
                 </div>
@@ -172,7 +174,7 @@ export function StatsModal({ stats, totalGames, winRate, averageGuesses, onReset
                                 onReset();
                             }
                         }}
-                        className="flex items-center gap-2 px-3 py-1.5 text-sm text-red-400 hover:text-red-300 hover:bg-red-500/10 rounded-lg transition-colors ui-focus-ring"
+                        className="flex items-center gap-2 px-3 py-1.5 text-sm text-error hover:bg-error/10 rounded-lg transition-colors ui-focus-ring"
                     >
                         <RotateCcw size={14} />
                         Reset Stats

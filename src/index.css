@@ -98,6 +98,16 @@
     background-attachment: fixed;
   }
 
+  ::selection {
+    background-color: rgb(var(--primary) / 0.35);
+    color: rgb(var(--text));
+  }
+
+  input,
+  textarea {
+    caret-color: rgb(var(--primary));
+  }
+
   h1, h2, h3, .font-display {
     font-family: var(--font-display), var(--font-body), ui-sans-serif, system-ui, sans-serif;
   }
@@ -194,14 +204,6 @@
     transform: scale(0.98);
   }
 
-  .text-shadow {
-    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.5);
-  }
-
-  [data-theme='retro'] .text-shadow {
-    text-shadow: 0 0 5px rgb(var(--primary)), 0 0 10px rgb(var(--secondary));
-  }
-
   .custom-scrollbar {
     scrollbar-width: thin;
     scrollbar-color: rgb(var(--secondary)) rgb(var(--surface));
@@ -229,24 +231,6 @@
 
   .stable-scrollbar-gutter {
     scrollbar-gutter: stable;
-  }
-
-  .animate-pulse-fire {
-    animation: pulse-fire 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
-  }
-
-  @keyframes pulse-fire {
-
-    0%,
-    100% {
-      box-shadow: 0 0 20px 5px rgba(239, 68, 68, 0.5), 0 0 40px 10px rgba(249, 115, 22, 0.3);
-      border-color: rgba(239, 68, 68, 0.8);
-    }
-
-    50% {
-      box-shadow: 0 0 30px 10px rgba(239, 68, 68, 0.7), 0 0 60px 20px rgba(249, 115, 22, 0.5);
-      border-color: rgba(249, 115, 22, 1);
-    }
   }
 
   @keyframes enter {

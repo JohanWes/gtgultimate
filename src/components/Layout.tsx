@@ -60,6 +60,7 @@ export function Layout({ children, gameState, currentMode, onModeSwitch, isHorse
                     <button
                         onClick={() => setIsSidebarOpen(true)}
                         className="p-2 -ml-2 hover:bg-white/8 rounded-lg transition-colors ui-focus-ring"
+                        aria-label="Open levels menu"
                     >
                         <Menu size={24} />
                     </button>
@@ -69,6 +70,7 @@ export function Layout({ children, gameState, currentMode, onModeSwitch, isHorse
                             <button
                                 onClick={() => onStatsOpenChange?.(true)}
                                 className="p-2 hover:bg-white/8 rounded-lg transition-colors ui-focus-ring"
+                                aria-label="Statistics"
                             >
                                 <BarChart2 size={24} />
                             </button>
@@ -76,6 +78,7 @@ export function Layout({ children, gameState, currentMode, onModeSwitch, isHorse
                         <button
                             onClick={() => setIsSettingsOpen(true)}
                             className="p-2 -mr-2 hover:bg-white/8 rounded-lg transition-colors ui-focus-ring"
+                            aria-label="Settings"
                         >
                             <Settings size={24} />
                         </button>
@@ -86,8 +89,9 @@ export function Layout({ children, gameState, currentMode, onModeSwitch, isHorse
                 {isSidebarCollapsed && (
                     <button
                         onClick={() => setIsSidebarOpen(true)}
-                        className="hidden md:flex absolute top-4 left-4 z-40 p-2 glass-panel-soft hover:border-white/20 rounded-lg transition-all hover:scale-105 shadow-lg text-muted hover:text-text ui-focus-ring"
+                        className="hidden md:flex absolute top-4 left-4 z-40 p-2 glass-panel-soft hover:border-white/20 rounded-lg ui-pressable shadow-lg text-muted hover:text-text ui-focus-ring"
                         title="Open sidebar"
+                        aria-label="Open sidebar"
                     >
                         <Menu size={20} />
                     </button>
@@ -98,16 +102,18 @@ export function Layout({ children, gameState, currentMode, onModeSwitch, isHorse
                     {showStatsButton && (
                         <button
                             onClick={() => onStatsOpenChange?.(true)}
-                            className="p-2 glass-panel-soft hover:border-white/20 rounded-lg transition-all hover:scale-105 shadow-lg text-muted hover:text-text ui-focus-ring"
+                            className="p-2 glass-panel-soft hover:border-white/20 rounded-lg ui-pressable shadow-lg text-muted hover:text-text ui-focus-ring"
                             title="Statistics"
+                            aria-label="Statistics"
                         >
                             <BarChart2 size={20} />
                         </button>
                     )}
                     <button
                         onClick={() => setIsSettingsOpen(true)}
-                        className="p-2 glass-panel-soft hover:border-white/20 rounded-lg transition-all hover:scale-105 shadow-lg text-muted hover:text-text ui-focus-ring"
+                        className="p-2 glass-panel-soft hover:border-white/20 rounded-lg ui-pressable shadow-lg text-muted hover:text-text ui-focus-ring"
                         title="Settings"
+                        aria-label="Settings"
                     >
                         <Settings size={20} />
                     </button>

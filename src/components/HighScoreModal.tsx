@@ -111,16 +111,17 @@ export const HighScoreModal: React.FC<HighScoreModalProps> = ({ score, onPlayAga
                 <button
                     onClick={onClose}
                     className="absolute top-4 right-4 text-muted hover:text-text transition-colors z-10 p-1 hover:bg-white/10 rounded-full ui-focus-ring"
+                    aria-label="Close"
                 >
                     <X size={24} />
                 </button>
 
                 {/* Header */}
-                <div className="p-6 bg-gradient-to-br from-primary/30 to-accent/20 border-b border-white/10 text-center">
-                    <h2 className="text-3xl font-black text-white mb-2 tracking-tight font-display">GAME OVER</h2>
+                <div className="p-6 border-b border-white/10 text-center">
+                    <h2 className="text-3xl font-bold text-text mb-2 font-display">Game over</h2>
                     <div className="flex flex-col items-center justify-center gap-1">
-                        <span className="text-muted text-sm uppercase tracking-widest font-bold">Final Score</span>
-                        <span className="text-5xl font-black text-transparent bg-clip-text bg-gradient-to-r from-yellow-400 to-orange-500 drop-shadow-lg">
+                        <span className="text-muted text-sm uppercase tracking-widest font-bold">Final score</span>
+                        <span className="text-5xl font-bold font-display text-warning tabular-nums">
                             {score}
                         </span>
                     </div>
@@ -146,6 +147,7 @@ export const HighScoreModal: React.FC<HighScoreModalProps> = ({ score, onPlayAga
                                 <button
                                     type="submit"
                                     disabled={!name.trim() || submitting}
+                                    aria-label="Submit score"
                                     className="bg-primary hover:brightness-110 disabled:bg-white/10 disabled:text-muted text-onPrimary px-4 py-2 rounded-lg font-bold transition-colors flex items-center justify-center ui-focus-ring"
                                 >
                                     {submitting ? (
@@ -157,22 +159,22 @@ export const HighScoreModal: React.FC<HighScoreModalProps> = ({ score, onPlayAga
                             </div>
                         </form>
                     ) : (
-                        <div className="mb-6 p-4 bg-green-500/10 border border-green-500/20 rounded-xl text-center animate-in zoom-in duration-300">
-                            <p className="text-green-400 font-bold">Score Submitted!</p>
+                        <div className="mb-6 p-4 bg-success/10 border border-success/20 rounded-xl text-center animate-in zoom-in duration-300">
+                            <p className="text-success font-bold">Score submitted</p>
                         </div>
                     )}
 
                     <div className="space-y-3">
                         <div className="flex items-center justify-between mb-4">
-                            <h3 className="text-lg font-bold text-white flex items-center gap-2">
-                                <Trophy className="text-yellow-400" size={20} />
-                                Global Leaderboard
+                            <h3 className="text-lg font-bold text-text flex items-center gap-2">
+                                <Trophy className="text-warning" size={20} />
+                                Global leaderboard
                             </h3>
                         </div>
 
                         {loading ? (
                             <div className="flex justify-center py-8">
-                                <div className="w-8 h-8 border-4 border-blue-500/30 border-t-blue-500 rounded-full animate-spin" />
+                                <div className="w-8 h-8 border-4 border-primary/30 border-t-blue-500 rounded-full animate-spin" />
                             </div>
                         ) : highScores.length === 0 ? (
                             <div className="text-center py-8 text-muted italic">
@@ -216,7 +218,7 @@ export const HighScoreModal: React.FC<HighScoreModalProps> = ({ score, onPlayAga
                                                 </div>
                                             </div>
                                         </div>
-                                        <span className="font-mono font-bold text-yellow-500">
+                                        <span className="font-mono font-bold text-warning">
                                             {s.score}
                                         </span>
                                     </div>

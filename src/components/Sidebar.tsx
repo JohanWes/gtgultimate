@@ -78,12 +78,12 @@ export function Sidebar({ totalLevels, currentLevel, progress, onSelectLevel, is
                         <button
                             onClick={() => {
                                 onModeSwitch('standard');
-                                if (collapsed) onClose();
+                                if (collapsed || window.innerWidth < 768) onClose();
                             }}
                             className={clsx(
                                 "flex-1 py-1.5 text-xs font-bold rounded-md transition-all ui-focus-ring",
                                 isHorseMode
-                                    ? "text-gray-300 bg-white/5 hover:bg-white/10"
+                                    ? "text-muted bg-white/5 hover:bg-white/10"
                                     : currentMode === 'standard'
                                     ? "bg-primary text-onPrimary shadow-sm"
                                     : "text-muted hover:text-white hover:bg-white/5"
@@ -94,12 +94,12 @@ export function Sidebar({ totalLevels, currentLevel, progress, onSelectLevel, is
                         <button
                             onClick={() => {
                                 onModeSwitch('endless');
-                                if (collapsed) onClose();
+                                if (collapsed || window.innerWidth < 768) onClose();
                             }}
                             className={clsx(
                                 "flex-1 py-1.5 text-xs font-bold rounded-md transition-all ui-focus-ring",
                                 isHorseMode
-                                    ? "text-gray-300 bg-white/5 hover:bg-white/10"
+                                    ? "text-muted bg-white/5 hover:bg-white/10"
                                     : currentMode === 'endless'
                                     ? "bg-accent text-onAccent shadow-sm"
                                     : "text-muted hover:text-white hover:bg-white/5"
@@ -119,7 +119,7 @@ export function Sidebar({ totalLevels, currentLevel, progress, onSelectLevel, is
                                     </>
                                 ) : (
                                     <>
-                                        <Trophy size={14} className="text-yellow-500" />
+                                        <Trophy size={14} className="text-warning" aria-hidden="true" />
                                         <span>{completedCount} / {totalLevels} Completed</span>
                                     </>
                                 )}
@@ -189,9 +189,9 @@ const LevelRow = memo(function LevelRow({ level, isCurrent, status, guessCount }
                     {guessCount}/5
                 </span>
             )}
-            {status === 'lost' && <XCircle size={18} className="text-error" />}
+            {status === 'lost' && <XCircle size={18} className="text-error" aria-label="Lost" />}
             {status === 'playing' && guessCount > 0 && (
-                <Circle size={18} className="text-yellow-500 fill-yellow-500/20" />
+                <Circle size={18} className="text-warning fill-warning/20" aria-label="In progress" />
             )}
         </button>
     );

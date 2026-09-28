@@ -26,13 +26,13 @@ const TOTAL_STEPS = 4;
 const SWIPE_THRESHOLD = 50;
 
 const lifelines = [
-    { icon: Eye, name: 'Cover Peek', color: 'text-purple-400' },
-    { icon: SkipForward, name: 'Skip', color: 'text-red-400' },
-    { icon: Shuffle, name: 'Anagram', color: 'text-purple-400' },
-    { icon: HelpCircle, name: 'Consultant', color: 'text-green-400' },
-    { icon: Gamepad2, name: 'Double Trouble', color: 'text-yellow-400' },
-    { icon: ZoomOut, name: 'Zoom Out', color: 'text-blue-400' },
-    { icon: FileText, name: 'Synopsis', color: 'text-green-400' },
+    { icon: Eye, name: 'Cover Peek', color: 'text-accent' },
+    { icon: SkipForward, name: 'Skip', color: 'text-accent' },
+    { icon: Shuffle, name: 'Anagram', color: 'text-accent' },
+    { icon: HelpCircle, name: 'Consultant', color: 'text-accent' },
+    { icon: Gamepad2, name: 'Double Trouble', color: 'text-accent' },
+    { icon: ZoomOut, name: 'Zoom Out', color: 'text-accent' },
+    { icon: FileText, name: 'Synopsis', color: 'text-accent' },
 ];
 
 const contentVariants = {

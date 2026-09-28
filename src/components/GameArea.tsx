@@ -198,16 +198,16 @@ export function GameArea({ game, allGames, guesses, status, allProgress, onGuess
                         {status === 'playing' && !isLoading && (
                             <button
                                 onClick={onSkip}
-                                className="absolute top-4 left-4 z-20 bg-red-500/80 hover:bg-red-600 text-white px-4 py-2 rounded-lg font-bold shadow-lg backdrop-blur-sm transition-all hover:scale-105 text-sm active:animate-lifeline-slide ui-focus-ring"
+                                className="absolute top-4 left-4 z-20 bg-error/85 hover:bg-error text-white px-4 py-2 rounded-lg font-bold shadow-lg text-sm uppercase tracking-wider ui-pressable active:animate-lifeline-slide ui-focus-ring"
                             >
-                                SKIP
+                                Skip
                             </button>
                         )}
                         {similarNameMessage && (
                             <div className="absolute top-4 left-0 right-0 flex justify-center pointer-events-none z-50">
-                                <div className="bg-warning text-black px-4 py-2 rounded-full shadow-lg font-bold animate-in fade-in slide-in-from-bottom-2 border border-yellow-500 flex items-center gap-2">
+                                <div className="bg-warning text-black px-4 py-2 rounded-full shadow-lg font-bold animate-in fade-in slide-in-from-bottom-2 flex items-center gap-2">
                                     <AlertCircle size={18} />
-                                    <span>Similar Name!</span>
+                                    <span>Similar name, not quite</span>
                                 </div>
                             </div>
                         )}
@@ -233,17 +233,17 @@ export function GameArea({ game, allGames, guesses, status, allProgress, onGuess
                         "text-2xl font-bold mb-2",
                         status === 'won' ? "text-success" : "text-error"
                     )}>
-                        {status === 'won' ? "You Got It!" : "Game Over"}
+                        {status === 'won' ? "You got it!" : "Game over"}
                     </h2>
-                    <p className="text-base text-white mb-4">
+                    <p className="text-base text-text mb-4">
                         The game was <span className="font-bold">{displayGameName}</span>
                     </p>
                     <button
                         ref={nextLevelButtonRef}
                         onClick={onNextLevel}
-                        className="inline-flex items-center gap-2 px-5 py-2 bg-white text-black font-bold rounded-full hover:scale-105 transition-transform text-sm ui-focus-ring"
+                        className="inline-flex items-center gap-2 px-5 py-2 bg-primary text-onPrimary font-bold rounded-full ui-pressable text-sm ui-focus-ring"
                     >
-                        Next Level <ArrowRight size={20} />
+                        Next level <ArrowRight size={18} />
                     </button>
                 </div>
             )}
@@ -252,7 +252,7 @@ export function GameArea({ game, allGames, guesses, status, allProgress, onGuess
             <div className={clsx("px-4 sm:px-0 transition-opacity duration-500 relative z-30", status !== 'playing' && "opacity-50 pointer-events-none")}>
                 {errorMessage && (
                     <div className="absolute -top-12 left-0 right-0 flex justify-center pointer-events-none z-50">
-                        <div className="bg-red-500 text-white px-4 py-2 rounded-full shadow-lg font-bold animate-in fade-in slide-in-from-bottom-2 border border-red-400">
+                        <div className="bg-error text-white px-4 py-2 rounded-full shadow-lg font-bold animate-in fade-in slide-in-from-bottom-2">
                             {errorMessage}
                         </div>
                     </div>
@@ -287,9 +287,9 @@ export function GameArea({ game, allGames, guesses, status, allProgress, onGuess
                                     : 'text-error';
 
                                 const label = isSimilar
-                                    ? 'Similar Name'
+                                    ? 'Similar name'
                                     : isSkipped
-                                        ? `SKIPPED ${originalIdx + 1}`
+                                        ? `Skipped ${originalIdx + 1}`
                                         : 'Wrong';
 
                                 const icon = isSimilar
@@ -306,7 +306,7 @@ export function GameArea({ game, allGames, guesses, status, allProgress, onGuess
                                         className={`flex items-center justify-between p-2 rounded-lg bg-surface/50 border ${borderClass} text-muted animate-in slide-in-from-bottom-2 fade-in text-sm`}
                                         style={{ animationDelay: `${idx * 50}ms` }}
                                     >
-                                        <span className="font-medium text-white">{guess.name}</span>
+                                        <span className="font-medium text-text">{guess.name}</span>
                                         <div className={`flex items-center gap-2 ${colorClass}`}>
                                             <span className="text-xs uppercase font-bold">{label}</span>
                                             {icon}

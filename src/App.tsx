@@ -167,8 +167,8 @@ function App() {
   if (shareId) {
     if (isLoading) {
       return (
-        <div className="min-h-screen flex items-center justify-center bg-background text-white">
-          <div className="animate-pulse text-xl">Loading...</div>
+        <div className="min-h-screen flex items-center justify-center bg-background text-muted">
+          <div className="animate-pulse text-xl">Loading…</div>
         </div>
       );
     }
@@ -186,11 +186,11 @@ function App() {
     return (
       <div className="min-h-screen flex items-center justify-center bg-background text-error">
         <div className="text-center">
-          <h1 className="text-2xl font-bold mb-2">Error Loading Data</h1>
-          <p>{error}</p>
+          <h1 className="text-2xl font-bold mb-2">Couldn't load the games</h1>
+          <p className="text-muted">{error}</p>
           <button
             onClick={() => window.location.reload()}
-            className="mt-4 px-4 py-2 bg-white text-black rounded-lg hover:bg-gray-200"
+            className="mt-4 px-4 py-2 bg-primary text-onPrimary font-bold rounded-lg ui-pressable ui-focus-ring"
           >
             Retry
           </button>

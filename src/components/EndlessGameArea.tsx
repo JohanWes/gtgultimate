@@ -15,7 +15,7 @@ import type { ConsultantOptionsHandle } from '../types';
 import { TopScoresTicker } from './TopScoresTicker';
 import { BonusRound } from './BonusRound'; // Import BonusRound
 import { clsx } from 'clsx';
-import { AlertCircle, X, ArrowRight, Flame } from 'lucide-react';
+import { AlertCircle, X, ArrowRight, Flame, BookOpen, Link2 } from 'lucide-react';
 import { useSettings } from '../hooks/useSettings';
 import { useIsMobile } from '../hooks/useIsMobile';
 import { prefetchImages, useObfuscatedImages } from '../hooks/useObfuscatedImages';
@@ -484,20 +484,16 @@ export function EndlessGameArea({
             <div className="grid grid-cols-3 gap-2 text-center">
                 <div className="flex flex-col">
                     <span className="text-[10px] text-muted uppercase tracking-wider font-bold">Score</span>
-                    <span className={clsx(
-                        "text-xl font-bold transition-all duration-200 tabular-nums",
-                        state.score >= state.highScore && state.score > 0
-                            ? "text-transparent bg-clip-text bg-gradient-to-r from-orange-500 via-yellow-400 to-orange-500 animate-flame-flicker"
-                            : "text-yellow-400"
-                    )}>
-                        {state.score >= state.highScore && state.score > 0 && "🔥 "}
+                    <span className="inline-flex items-center justify-center gap-1 text-xl font-bold tabular-nums text-warning">
+                        {state.score >= state.highScore && state.score > 0 && (
+                            <Flame size={16} className="text-accent" fill="currentColor" aria-label="New best" />
+                        )}
                         {displayedScore}
-                        {state.score >= state.highScore && state.score > 0 && " "}
                     </span>
                 </div>
                 <div className="flex flex-col border-x border-white/10">
                     <span className="text-[10px] text-muted uppercase tracking-wider font-bold">Streak</span>
-                    <span className="text-xl font-black text-white tabular-nums">{state.streak}</span>
+                    <span className="text-xl font-bold text-text tabular-nums">{state.streak}</span>
                 </div>
                 <div className="flex flex-col">
                     <span className="text-[10px] text-muted uppercase tracking-wider font-bold">Best</span>
@@ -508,14 +504,11 @@ export function EndlessGameArea({
     );
 
     const hotStreakCard = state.isHotStreakActive && state.guesses.length < 2 && (
-        <div className="bg-gradient-to-r from-red-600 to-orange-500 p-0.5 rounded-xl shadow-lg animate-in slide-in-from-right fade-in duration-300">
-            <div className="glass-panel-soft rounded-[10px] p-3 flex items-center justify-center gap-3">
-                <Flame className="text-orange-500 animate-pulse" size={24} fill="currentColor" />
-                <div className="flex flex-col">
-                    <span className="text-orange-500 font-black text-lg tracking-wider leading-none">HOT STREAK</span>
-                    <span className="text-orange-300/85 text-[10px] font-bold uppercase tracking-widest">2x Score Multiplier Active!</span>
-                </div>
-                <Flame className="text-orange-500 animate-pulse" size={24} fill="currentColor" />
+        <div className="glass-panel-soft rounded-xl border !border-accent/60 p-3 flex items-center justify-center gap-3 animate-in slide-in-from-right fade-in duration-300">
+            <Flame className="text-accent shrink-0" size={22} fill="currentColor" />
+            <div className="flex flex-col">
+                <span className="text-accent font-display font-bold text-lg tracking-wide leading-none">Hot streak</span>
+                <span className="text-muted text-xs font-bold mt-1">2× score this level</span>
             </div>
         </div>
     );
@@ -566,7 +559,7 @@ export function EndlessGameArea({
                     {/* Screenshot Viewer */}
                     <div className={clsx(
                         "relative rounded-none sm:rounded-xl transition-all duration-500",
-                        showFireEffect && state.guesses.length < 2 && "animate-pulse-fire border-2 border-orange-500/50"
+                        showFireEffect && state.guesses.length < 2 && "ring-2 ring-accent/70"
                     )}>
                         <ScreenshotViewer
                             screenshots={game?.screenshots || []}
@@ -586,16 +579,16 @@ export function EndlessGameArea({
                             <button
                                 onClick={onSkip}
                                 disabled={isConsultantPending}
-                                className="absolute top-4 left-4 bg-red-500/80 hover:bg-red-600 text-white px-4 py-2 rounded-lg font-bold shadow-lg backdrop-blur-sm transition-all hover:scale-105 z-20 active:animate-lifeline-slide ui-focus-ring disabled:opacity-50 disabled:pointer-events-none"
+                                className="absolute top-4 left-4 bg-error/85 hover:bg-error text-white px-4 py-2 rounded-lg font-bold text-sm uppercase tracking-wider shadow-lg z-20 ui-pressable active:animate-lifeline-slide ui-focus-ring disabled:opacity-50 disabled:pointer-events-none"
                             >
-                                SKIP
+                                Skip
                             </button>
                         )}
 
                         {/* Anagram Hint Overlay */}
                         {anagramHint && state.status === 'playing' && (
                             <div className="absolute top-4 left-28 right-4 flex justify-start pointer-events-none z-20">
-                                <div className="bg-black/30 text-yellow-300 px-4 py-2 rounded-xl text-base font-mono tracking-wider border border-yellow-500/30 shadow-lg backdrop-blur-sm animate-lifeline-shake break-words whitespace-normal leading-tight text-left">
+                                <div className="bg-black/60 text-warning px-4 py-2 rounded-xl text-base font-mono tracking-wider border border-warning/30 shadow-lg backdrop-blur-sm animate-lifeline-shake break-words whitespace-normal leading-tight text-left">
                                     {anagramHint}
                                 </div>
                             </div>
@@ -604,9 +597,9 @@ export function EndlessGameArea({
                         {/* Similar Name Popup */}
                         {similarNameMessage && (
                             <div className="absolute top-4 left-0 right-0 flex justify-center pointer-events-none z-50">
-                                <div className="bg-yellow-500 text-black px-4 py-2 rounded-full shadow-lg font-bold animate-in fade-in slide-in-from-bottom-2 border border-yellow-400 flex items-center gap-2">
+                                <div className="bg-warning text-black px-4 py-2 rounded-full shadow-lg font-bold animate-in fade-in slide-in-from-bottom-2 flex items-center gap-2">
                                     <AlertCircle size={18} />
-                                    <span>Similar Name!</span>
+                                    <span>Similar name, not quite</span>
                                 </div>
                             </div>
                         )}
@@ -616,7 +609,7 @@ export function EndlessGameArea({
                             <div className="absolute inset-0 z-30 bg-black/90 backdrop-blur-sm rounded-xl overflow-hidden animate-in fade-in duration-300 flex items-center justify-center">
                                 {/* Blurred Cover Art */}
                                 {!coverImageSrc ? (
-                                    <div className="text-white font-bold animate-pulse">Loading Cover...</div>
+                                    <div className="text-muted font-bold animate-pulse">Loading cover…</div>
                                 ) : (
                                     <img
                                         src={coverImageSrc}
@@ -637,17 +630,17 @@ export function EndlessGameArea({
                         {showSynopsis && synopsisText && state.status === 'playing' && (
                             <div className="absolute inset-0 z-30 bg-black/95 backdrop-blur-sm rounded-xl overflow-hidden animate-in fade-in duration-300 flex items-center justify-center p-6">
                                 <div className="max-w-lg text-center">
-                                    <h3 className="text-green-400 font-bold text-lg mb-4 uppercase tracking-wider flex items-center justify-center gap-2">
-                                        <span>📖</span> Synopsis
+                                    <h3 className="text-success font-bold text-lg mb-4 uppercase tracking-wider flex items-center justify-center gap-2">
+                                        <BookOpen size={20} aria-hidden="true" /> Synopsis
                                     </h3>
-                                    <p className="text-gray-200 text-base leading-relaxed">
+                                    <p className="text-text/90 text-base leading-relaxed">
                                         {synopsisText}
                                     </p>
                                     <button
                                         onClick={() => setShowSynopsis(false)}
-                                        className="mt-6 px-4 py-2 bg-green-600 hover:bg-green-500 text-white font-bold rounded-lg transition-colors ui-focus-ring"
+                                        className="mt-6 px-4 py-2 bg-surface hover:bg-white/10 border border-white/15 text-text font-bold rounded-lg transition-colors ui-focus-ring"
                                     >
-                                        Got it!
+                                        Close
                                     </button>
                                 </div>
                             </div>
@@ -660,7 +653,7 @@ export function EndlessGameArea({
                             <div className="bg-black/60 rounded-full p-1 backdrop-blur-sm border border-white/10">
                                 <div
                                     ref={coverPeekBarRef}
-                                    className="h-3 bg-gradient-to-r from-purple-500 via-pink-500 to-purple-500 rounded-full origin-left"
+                                    className="h-3 bg-accent rounded-full origin-left"
                                 />
                             </div>
                         </div>
@@ -670,15 +663,15 @@ export function EndlessGameArea({
                     {state.status !== 'playing' && (
                         <div className={clsx(
                             "mx-4 sm:mx-0 p-4 rounded-xl border text-center animate-in zoom-in duration-300",
-                            state.status === 'won' ? "bg-green-500/10 border-green-500/20" : "bg-red-500/10 border-red-500/20"
+                            state.status === 'won' ? "bg-success/10 border-success/20" : "bg-error/10 border-error/20"
                         )}>
                             <h2 className={clsx(
                                 "text-2xl font-bold mb-2",
-                                state.status === 'won' ? "text-green-400" : "text-red-500"
+                                state.status === 'won' ? "text-success" : "text-error"
                             )}>
-                                {state.status === 'won' ? "LEVEL CLEARED" : "GAME OVER"}
+                                {state.status === 'won' ? "Level cleared" : "Game over"}
                             </h2>
-                            <p className="text-base text-white mb-4">
+                            <p className="text-base text-text mb-4">
                                 {doubleTroubleGame ? (
                                     <>The games were <span className="font-bold">{displayGameName}</span> / <span className="font-bold">{doubleTroubleGame.name}</span></>
                                 ) : (
@@ -697,9 +690,9 @@ export function EndlessGameArea({
                                             onNextLevel();
                                         }
                                     }}
-                                    className="inline-flex items-center gap-2 px-5 py-2 bg-white text-black font-bold rounded-full hover:scale-105 transition-transform text-sm ui-focus-ring"
+                                    className="inline-flex items-center gap-2 px-5 py-2 bg-primary text-onPrimary font-bold rounded-full ui-pressable text-sm ui-focus-ring"
                                 >
-                                    {state.isGameOver ? 'Try Again' : 'Next Level'} <ArrowRight size={20} />
+                                    {state.isGameOver ? 'Try again' : 'Next level'} <ArrowRight size={18} />
                                 </button>
 
                                 {state.isGameOver && (
@@ -707,12 +700,12 @@ export function EndlessGameArea({
                                         onClick={handleShareRun}
                                         disabled={isSharing}
                                         className={clsx(
-                                            "inline-flex items-center gap-2 px-5 py-2 font-bold rounded-full transition-all text-sm ui-focus-ring",
-                                            shareCopied ? "bg-green-500 text-white" : "bg-blue-600 text-white hover:bg-blue-500 hover:scale-105"
+                                            "inline-flex items-center gap-2 px-5 py-2 font-bold rounded-full ui-pressable text-sm ui-focus-ring border",
+                                            shareCopied ? "bg-success/15 border-success/40 text-success" : "bg-surface border-white/15 text-text hover:bg-white/10"
                                         )}
                                     >
-                                        {isSharing ? 'Saving...' : shareCopied ? 'Link Copied!' : 'Share Run'}
-                                        {!isSharing && !shareCopied && <span className="text-lg">🔗</span>}
+                                        {isSharing ? 'Saving…' : shareCopied ? 'Link copied' : 'Share run'}
+                                        {!isSharing && !shareCopied && <Link2 size={16} aria-hidden="true" />}
                                     </button>
                                 )}
                             </div>
@@ -723,7 +716,7 @@ export function EndlessGameArea({
                     <div className={clsx("px-4 sm:px-0 transition-opacity duration-500 relative z-30", state.status !== 'playing' && "opacity-50 pointer-events-none")}>
                         {errorMessage && (
                             <div className="absolute -top-12 left-0 right-0 flex justify-center pointer-events-none z-50">
-                                <div className="bg-red-500 text-white px-4 py-2 rounded-full shadow-lg font-bold animate-in fade-in slide-in-from-bottom-2 border border-red-400">
+                                <div className="bg-error text-white px-4 py-2 rounded-full shadow-lg font-bold animate-in fade-in slide-in-from-bottom-2">
                                     {errorMessage}
                                 </div>
                             </div>
@@ -777,9 +770,9 @@ export function EndlessGameArea({
                                             : 'text-error';
 
                                         const label = isSimilar
-                                            ? 'Similar Name'
+                                            ? 'Similar name'
                                             : isSkipped
-                                                ? `SKIPPED ${originalIdx + 1}`
+                                                ? `Skipped ${originalIdx + 1}`
                                                 : 'Wrong';
 
                                         const icon = isSimilar
@@ -796,7 +789,7 @@ export function EndlessGameArea({
                                                 className={`flex items-center justify-between p-2.5 rounded-lg glass-panel-soft border ${borderClass} text-muted animate-in slide-in-from-bottom-2 fade-in text-sm`}
                                                 style={{ animationDelay: `${idx * 50}ms` }}
                                             >
-                                                <span className="font-medium text-white">{guess.name}</span>
+                                                <span className="font-medium text-text">{guess.name}</span>
                                                 <div className={`flex items-center gap-2 ${colorClass}`}>
                                                     <span className="text-[10px] uppercase font-bold">{label}</span>
                                                     {icon}
@@ -818,7 +811,8 @@ export function EndlessGameArea({
 
                 {/* Right Column: Sidebar (HUD + Info + Lifelines) */}
                 <div className={clsx(
-                    "w-full flex-shrink-0 flex flex-col gap-3 transition-all duration-500 px-4 sm:px-0",
+                    // lg:pt-11 keeps the HUD clear of the fixed Stats/Settings buttons in the top-right corner
+                    "w-full flex-shrink-0 flex flex-col gap-3 transition-all duration-500 px-4 sm:px-0 lg:pt-11",
                     settings.miniaturesInPicture ? "lg:w-48" : "lg:w-72"
                 )}>
                     {/* Top Scores Ticker: mounted once (it polls highscores) */}

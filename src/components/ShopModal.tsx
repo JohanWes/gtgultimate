@@ -1,3 +1,4 @@
+import { AlertTriangle } from 'lucide-react';
 import React, { useState, useEffect } from 'react';
 import { motion, useReducedMotion } from 'framer-motion';
 import { clsx } from 'clsx';
@@ -113,26 +114,27 @@ export const ShopModal: React.FC<ShopModalProps> = ({ score, onBuy, onContinue }
         >
             <motion.div
                 ref={modalRef}
-                className="glass-panel-strong rounded-2xl p-6 max-w-2xl w-full animate-in fade-in zoom-in-95 relative z-[60]"
+                className="glass-panel-strong rounded-2xl p-6 max-w-2xl w-full relative z-[60] max-h-[90vh] overflow-y-auto custom-scrollbar"
                 initial={{ opacity: 0, scale: shouldReduceMotion ? 1 : 0.96, y: shouldReduceMotion ? 0 : 8 }}
                 animate={{ opacity: 1, scale: 1, y: 0 }}
                 exit={{ opacity: 0, scale: shouldReduceMotion ? 1 : 0.98, y: shouldReduceMotion ? 0 : 6 }}
                 transition={panelTransition}
             >
-                <h2 className="text-3xl font-bold text-white mb-2 text-center">The Shop</h2>
+                <h2 className="text-3xl font-bold text-text mb-2 text-center">The shop</h2>
                 <p className="text-muted text-center mb-8">Spend your hard-earned points to survive longer.</p>
 
                 <div className="flex justify-center mb-8">
-                    <div className="glass-panel-soft px-6 py-3 rounded-xl border border-yellow-500/30">
-                        <span className="text-muted mr-2">Current Score:</span>
-                        <span className="text-2xl font-bold text-yellow-400">{score}</span>
+                    <div className="glass-panel-soft px-6 py-3 rounded-xl">
+                        <span className="text-muted mr-2">Your score</span>
+                        <span className="text-2xl font-bold text-warning tabular-nums">{score}</span>
                     </div>
                 </div>
 
                 {greedPurchased && (
-                    <div className="mb-4 p-3 glass-panel-soft border border-orange-500/40 rounded-xl bg-orange-500/10">
-                        <p className="text-orange-300 text-sm text-center font-medium">
-                            ⚠️ You chose Greed is Good - all other shop items are now unavailable!
+                    <div className="mb-4 p-3 border border-warning/40 rounded-xl bg-warning/10">
+                        <p className="text-warning text-sm font-medium flex items-center justify-center gap-2">
+                            <AlertTriangle size={16} aria-hidden="true" />
+                            You chose Greed is Good, so the other items are locked.
                         </p>
                     </div>
                 )}
@@ -154,10 +156,6 @@ export const ShopModal: React.FC<ShopModalProps> = ({ score, onBuy, onContinue }
                             (isGreed && otherItemPurchased) ||
                             (!isGreed && greedPurchased);
 
-                        // Enhanced description for Greed is Good
-                        const description = isGreed
-                            ? `${item.description} ⚠️ WARNING: Choosing this will lock out all other shop items!`
-                            : item.description;
 
                         return (
                             <div
@@ -165,28 +163,34 @@ export const ShopModal: React.FC<ShopModalProps> = ({ score, onBuy, onContinue }
                                 className={clsx(
                                     "glass-panel-soft border rounded-xl p-4 flex flex-col transition-all duration-200 relative overflow-hidden",
                                     isDisabled && !canAfford ? 'opacity-45' : isDisabled ? 'opacity-55' : 'opacity-100',
-                                    isGreed && !isDisabled ? 'border-orange-500/50' : 'border-white/10',
+                                    isGreed && !isDisabled ? 'border-warning/50' : 'border-white/10',
                                     !isDisabled && "hover:border-white/20 hover:brightness-105"
                                 )}
                             >
                                 {isDiscounted && !isDisabled && !alreadyPurchased && (
-                                    <div className="absolute top-0 right-0 bg-red-600 text-white text-[10px] uppercase font-bold px-2 py-0.5 rounded-bl-lg shadow-md animate-pulse">
-                                        Discount!
+                                    <div className="absolute top-0 right-0 bg-success text-black text-[10px] uppercase tracking-wider font-bold px-2 py-0.5 rounded-bl-lg">
+                                        −1 pt
                                     </div>
                                 )}
-                                <h3 className="text-lg font-bold text-white mb-1">{item.name}</h3>
-                                <p className={`text-sm mb-4 flex-grow ${isGreed ? 'text-orange-300' : 'text-muted'}`}>
-                                    {description}
-                                </p>
+                                <h3 className="text-lg font-bold text-text mb-1">{item.name}</h3>
+                                <div className="text-sm mb-4 flex-grow text-muted">
+                                    <p>{item.description}</p>
+                                    {isGreed && (
+                                        <p className="mt-2 text-warning flex items-start gap-1.5">
+                                            <AlertTriangle size={14} className="mt-0.5 shrink-0" aria-hidden="true" />
+                                            Locks every other item in this shop.
+                                        </p>
+                                    )}
+                                </div>
                                 <div className="flex items-center justify-between mt-auto">
                                     <div className="flex flex-col">
                                         {isDiscounted ? (
                                             <div className="flex items-center gap-2">
                                                 <span className="text-xs text-muted/60 line-through">{originalCost} pts</span>
-                                                <span className="font-bold text-green-400">{finalCost} pts</span>
+                                                <span className="font-bold text-success">{finalCost} pts</span>
                                             </div>
                                         ) : (
-                                            <span className={`font-bold ${item.cost < 0 ? 'text-green-400' : 'text-yellow-400'}`}>
+                                            <span className={`font-bold ${item.cost < 0 ? 'text-success' : 'text-warning'}`}>
                                                 {item.cost < 0 ? `+${Math.abs(item.cost)}` : item.cost} pts
                                             </span>
                                         )}
@@ -212,9 +216,9 @@ export const ShopModal: React.FC<ShopModalProps> = ({ score, onBuy, onContinue }
                 <div className="flex justify-center">
                     <button
                         onClick={onContinue}
-                        className="px-8 py-3 bg-success hover:brightness-110 text-onPrimary font-bold rounded-xl transition-all duration-200 text-lg active:scale-[0.98] ui-focus-ring"
+                        className="px-8 py-3 bg-primary text-onPrimary font-bold rounded-xl ui-pressable text-lg ui-focus-ring"
                     >
-                        Continue Run
+                        Continue run
                     </button>
                 </div>
             </motion.div>
